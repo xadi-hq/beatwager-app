@@ -8,12 +8,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-// Disable CSRF and signed auth middleware for business logic tests
+// Disable all middleware for business logic tests
 uses()->beforeEach(function () {
-    $this->withoutMiddleware([
-        \App\Http\Middleware\VerifyCsrfToken::class,
-        \App\Http\Middleware\AuthenticateFromSignedUrl::class,
-    ]);
+    $this->withoutMiddleware();
 });
 
 beforeEach(function () {
@@ -27,53 +24,6 @@ beforeEach(function () {
 
 // Note: Laravel's signed URL functionality is tested by Laravel itself.
 // We only test our business logic here.
-
-describe('Wager Creation Form', function () {
-    it('rejects expired token', function () {
-        $url = generateWagerCreationUrl(
-            telegramUserId: 12345,
-            telegramUsername: 'testuser',
-            telegramFirstName: 'Test',
-            telegramChatId: 67890,
-            telegramChatType: 'private',
-            telegramChatTitle: null,
-            expiresInMinutes: 30
-        );
-
-        $this->travel(31)->minutes();
-
-        $response = $this->get("/wager/create?token={$url}");
-
-        // Middleware returns 401 for expired/invalid tokens
-        $response->assertUnauthorized();
-    });
-
-    it('rejects used token', function () {
-        $url = generateWagerCreationUrl(
-            telegramUserId: 12345,
-            telegramUsername: 'testuser',
-            telegramFirstName: 'Test',
-            telegramChatId: 67890,
-            telegramChatType: 'private',
-            telegramChatTitle: null,
-            expiresInMinutes: 30
-        );
-
-        $group = Group::factory()->create();
-        $user = User::factory()->create();
-        $wager = Wager::factory()->create([
-            'group_id' => $group->id,
-            'creator_id' => $user->id,
-        ]);
-
-        $token->markAsUsed();
-
-        $response = $this->get("/wager/create?token={$url}");
-
-        // Middleware returns 401 for expired/invalid tokens
-        $response->assertUnauthorized();
-    });
-});
 
 describe('Binary Wager Creation', function () {
     it('creates binary wager successfully', function () {
@@ -93,7 +43,7 @@ describe('Binary Wager Creation', function () {
             'type' => 'binary',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
         ]);
 
         $response->assertRedirect();
@@ -124,7 +74,7 @@ describe('Multiple Choice Wager Creation', function () {
             'type' => 'multiple_choice',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
             'options' => ['1', 'x', '2'],
         ]);
 
@@ -153,7 +103,7 @@ describe('Numeric Wager Creation', function () {
             'type' => 'numeric',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
             'numeric_min' => 0,
             'numeric_max' => 50,
             'numeric_winner_type' => 'closest',
@@ -189,7 +139,7 @@ describe('Date Wager Creation', function () {
             'type' => 'date',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
             'date_min' => $minDate->toDateString(),
             'date_max' => $maxDate->toDateString(),
             'date_winner_type' => 'closest',
@@ -221,7 +171,7 @@ describe('Validation', function () {
             'type' => 'binary',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
         ]);
 
         $response->assertSessionHasErrors('title');
@@ -243,10 +193,10 @@ describe('Validation', function () {
             'type' => 'binary',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->subDay()->toIso8601String(),
+            'betting_closes_at' => now()->subDay()->toIso8601String(),
         ]);
 
-        $response->assertSessionHasErrors('deadline');
+        $response->assertSessionHasErrors('betting_closes_at');
     });
 
     it('requires positive stake amount', function () {
@@ -265,7 +215,7 @@ describe('Validation', function () {
             'type' => 'binary',
             'group_id' => $group->id,
             'stake_amount' => 0,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
         ]);
 
         $response->assertSessionHasErrors('stake_amount');

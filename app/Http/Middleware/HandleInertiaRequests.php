@@ -40,6 +40,15 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
+            'auth' => [
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'telegram_username' => $request->user()->getTelegramService()?->username,
+                    // 'taunt_line' => $request->user()->taunt_line, // Hidden - not yet implemented in bot
+                    'birthday' => $request->user()->birthday?->format('Y-m-d'),
+                ] : null,
+            ],
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

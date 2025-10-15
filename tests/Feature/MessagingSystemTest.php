@@ -34,7 +34,7 @@ describe('MessageService', function () {
             'description' => 'Weather bet',
             'type' => 'binary',
             'stake_amount' => 100,
-            'deadline' => now()->addDay(),
+            'betting_closes_at' => now()->addDay(),
             'status' => 'open',
             'total_points_wagered' => 0,
             'participants_count' => 0,
@@ -45,9 +45,12 @@ describe('MessageService', function () {
 
         expect($message)->toBeInstanceOf(Message::class);
         expect($message->type)->toBe(MessageType::Announcement);
-        expect($message->variables)->toHaveKey('title');
-        expect($message->variables)->toHaveKey('stake');
-        expect($message->buttons)->toHaveCount(3); // yes, no, view progress
+        expect($message->content)->toBeString();
+        expect($message->content)->not->toBeEmpty();
+        // Buttons are now organized in rows: [[yes, no], [track, view]]
+        expect($message->buttons)->toHaveCount(2); // 2 rows
+        expect($message->buttons[0])->toHaveCount(2); // Row 1: yes, no
+        expect($message->buttons[1])->toHaveCount(2); // Row 2: track progress, view details
     });
 
     it('generates settlement reminder message', function () {
@@ -60,7 +63,7 @@ describe('MessageService', function () {
             'title' => 'Past deadline wager',
             'type' => 'binary',
             'stake_amount' => 100,
-            'deadline' => now()->subDay(),
+            'betting_closes_at' => now()->subDay(),
             'status' => 'open',
             'total_points_wagered' => 200,
             'participants_count' => 2,
@@ -71,7 +74,8 @@ describe('MessageService', function () {
 
         expect($message)->toBeInstanceOf(Message::class);
         expect($message->type)->toBe(MessageType::Reminder);
-        expect($message->variables)->toHaveKey('title');
+        expect($message->content)->toBeString();
+        expect($message->content)->not->toBeEmpty();
         expect($message->buttons)->toHaveCount(1); // settle button
     });
 
@@ -90,7 +94,8 @@ describe('MessengerFactory', function () {
 
         $messenger = MessengerFactory::for($group);
 
-        expect($messenger)->toBeInstanceOf(TelegramMessenger::class);
+        // Factory now returns MessengerBridge that implements MessengerInterface
+        expect($messenger)->toBeInstanceOf(\App\Contracts\MessengerInterface::class);
     });
 
     it('throws exception for unsupported platforms', function () {
@@ -111,9 +116,9 @@ describe('Group Messaging', function () {
         $messageService = app(MessageService::class);
         $message = $messageService->joinConfirmation();
 
-        // Verify MessengerFactory resolves correctly
+        // Verify MessengerFactory resolves correctly (now returns bridge to new system)
         $messenger = \App\Services\MessengerFactory::for($group);
-        expect($messenger)->toBeInstanceOf(\App\Services\Messengers\TelegramMessenger::class);
+        expect($messenger)->toBeInstanceOf(\App\Contracts\MessengerInterface::class);
 
         // Note: Actual sending is mocked via HTTP::fake in beforeEach
         // This test verifies the factory pattern works correctly

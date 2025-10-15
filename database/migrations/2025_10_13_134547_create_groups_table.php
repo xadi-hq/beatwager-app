@@ -11,26 +11,60 @@ return new class extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
+            $table->string('platform')->default('telegram');
             $table->text('description')->nullable();
-            
-            // Telegram group integration
-            $table->bigInteger('telegram_chat_id')->unique();
-            $table->string('telegram_chat_title')->nullable();
-            $table->string('telegram_chat_type')->nullable(); // group, supergroup, channel
-            
+
+            // Platform-agnostic group integration
+            $table->bigInteger('platform_chat_id');
+            $table->string('platform_chat_title')->nullable();
+            $table->string('platform_chat_type')->nullable(); // group, supergroup, channel
+
+            // Customization fields
+            $table->string('points_currency_name')->default('points');
+            $table->json('notification_preferences')->nullable();
+
+            // LLM Configuration
+            $table->text('llm_api_key')->nullable();
+            $table->text('bot_tone')->nullable();
+            $table->boolean('allow_nsfw')->default(false);
+            $table->string('llm_provider')->default('anthropic'); // anthropic, openai, etc.
+            $table->enum('group_type', ['friends', 'family', 'colleagues', 'other'])->default('friends');
+
+            // Additional settings as JSON for flexibility
+            $table->json('settings')->nullable();
+
+            // Enable/disable automatic season milestone drops
+            $table->boolean('surprise_drops_enabled')->default(false);
+
+            // Track which milestones have been triggered for current season
+            // JSON array: ["50", "75", "90"] to prevent duplicate drops
+            $table->json('season_milestones_triggered')->nullable();
+
+            // Season management (foreign key added later in group_seasons migration)
+            $table->uuid('current_season_id')->nullable();
+            $table->timestamp('season_ends_at')->nullable();
+
             // Point economy settings
             $table->integer('starting_balance')->default(1000);
             $table->boolean('point_decay_enabled')->default(false);
             $table->integer('point_decay_rate')->default(5); // percentage
             $table->integer('point_decay_grace_days')->default(14);
-            
+
             // Group settings
             $table->boolean('is_active')->default(true);
+            $table->timestamp('last_activity_at')->nullable();
+            $table->integer('inactivity_threshold_days')->default(14);
+
+            // Timezone
+            $table->string('timezone', 50)->default('UTC')->after('starting_balance');
             
             $table->timestamps();
-            
-            $table->index('telegram_chat_id');
+
+            $table->unique(['platform', 'platform_chat_id']);
+            $table->index('platform_chat_id');
             $table->index('is_active');
+            $table->index('last_activity_at');
+            $table->index('timezone');
         });
     }
 

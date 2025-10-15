@@ -6,6 +6,15 @@ namespace App\Contracts;
 
 use App\DTOs\Message;
 
+/**
+ * @deprecated Use App\Messaging\MessengerAdapterInterface instead
+ *
+ * This interface is being phased out in favor of the newer MessengerAdapterInterface
+ * which provides DM support, webhook handling, and a more comprehensive feature set.
+ *
+ * Existing code using this interface will continue to work via MessengerBridge,
+ * but new code should inject MessengerAdapterInterface directly.
+ */
 interface MessengerInterface
 {
     /**

@@ -13,7 +13,77 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register Telegram BotApi as singleton for dependency injection
+        $this->app->singleton(\TelegramBot\Api\BotApi::class, function ($app) {
+            $token = config('telegram.bot_token');
+
+            if (empty($token)) {
+                throw new \RuntimeException(
+                    'Telegram bot token not configured. Set TELEGRAM_BOT_TOKEN in .env'
+                );
+            }
+
+            return new \TelegramBot\Api\BotApi($token);
+        });
+
+        // Register TelegramAdapter as MessengerAdapterInterface
+        $this->app->singleton(
+            \App\Messaging\MessengerAdapterInterface::class,
+            \App\Messaging\Adapters\TelegramAdapter::class
+        );
+
+        // Register CommandRegistry with all command handlers
+        $this->app->singleton(\App\Commands\CommandRegistry::class, function ($app) {
+            $registry = new \App\Commands\CommandRegistry();
+            $messenger = $app->make(\App\Messaging\MessengerAdapterInterface::class);
+
+            // Register all command handlers
+            $registry->register(new \App\Commands\Handlers\StartCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\LoginCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\HelpCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\NewWagerCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\NewEventCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\NewChallengeCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\JoinCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\MyWagersCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\BalanceCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\DonateCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\LeaderboardCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\WagersCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\ChallengesCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\EventsCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\SettleCommandHandler($messenger));
+
+            // Set fallback handler for unknown commands
+            $registry->setFallbackHandler(new \App\Commands\Handlers\UnknownCommandHandler($messenger));
+
+            return $registry;
+        });
+
+        // Register CallbackRegistry with all callback handlers
+        $this->app->singleton(\App\Callbacks\CallbackRegistry::class, function ($app) {
+            $registry = new \App\Callbacks\CallbackRegistry();
+            $messenger = $app->make(\App\Messaging\MessengerAdapterInterface::class);
+            $challengeService = $app->make(\App\Services\ChallengeService::class);
+            $wagerService = $app->make(\App\Services\WagerService::class);
+
+            // Register all callback handlers
+            $registry->register(new \App\Callbacks\Handlers\ChallengeAcceptCallbackHandler($messenger, $challengeService));
+            $registry->register(new \App\Callbacks\Handlers\ChallengeViewCallbackHandler($messenger));
+            $registry->register(new \App\Callbacks\Handlers\TrackChallengeProgressCallbackHandler($messenger));
+            $registry->register(new \App\Callbacks\Handlers\EventRsvpCallbackHandler($messenger));
+            $registry->register(new \App\Callbacks\Handlers\TrackEventProgressCallbackHandler($messenger));
+            $registry->register(new \App\Callbacks\Handlers\ViewEventDetailsCallbackHandler($messenger));
+            $registry->register(new \App\Callbacks\Handlers\WagerCallbackHandler($messenger, $wagerService));
+            $registry->register(new \App\Callbacks\Handlers\JoinComplexWagerCallbackHandler($messenger));
+            $registry->register(new \App\Callbacks\Handlers\TrackWagerProgressCallbackHandler($messenger));
+            $registry->register(new \App\Callbacks\Handlers\ViewWagerCallbackHandler($messenger));
+            $registry->register(new \App\Callbacks\Handlers\SettleWagerCallbackHandler($messenger, $wagerService));
+            $registry->register(new \App\Callbacks\Handlers\SettleChallengeCallbackHandler($messenger, $challengeService));
+            $registry->register(new \App\Callbacks\Handlers\SettleItemCallbackHandler($messenger));
+
+            return $registry;
+        });
     }
 
     /**

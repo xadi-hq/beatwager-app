@@ -22,10 +22,26 @@ class Group extends Model
         'platform_chat_title',
         'platform_chat_type',
         'starting_balance',
+        'timezone',
+        'language',
         'point_decay_enabled',
         'point_decay_rate',
         'point_decay_grace_days',
         'is_active',
+        'last_activity_at',
+        'inactivity_threshold_days',
+        'points_currency_name',
+        'notification_preferences',
+        'llm_api_key',
+        'llm_provider',
+        'bot_tone',
+        'allow_nsfw',
+        'group_type',
+        'settings',
+        'current_season_id',
+        'season_ends_at',
+        'surprise_drops_enabled',
+        'season_milestones_triggered',
     ];
 
     protected function casts(): array
@@ -37,12 +53,21 @@ class Group extends Model
             'point_decay_rate' => 'integer',
             'point_decay_grace_days' => 'integer',
             'is_active' => 'boolean',
+            'last_activity_at' => 'datetime',
+            'inactivity_threshold_days' => 'integer',
+            'allow_nsfw' => 'boolean',
+            'notification_preferences' => 'array',
+            'llm_api_key' => 'encrypted',
+            'settings' => 'array',
+            'season_ends_at' => 'datetime',
+            'surprise_drops_enabled' => 'boolean',
+            'season_milestones_triggered' => 'array',
         ];
     }
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_group')
+        return $this->belongsToMany(User::class)
             ->using(UserGroup::class)
             ->withPivot([
                 'points',
@@ -65,12 +90,35 @@ class Group extends Model
         return $this->hasMany(WagerTemplate::class);
     }
 
+    public function events(): HasMany
+    {
+        return $this->hasMany(GroupEvent::class);
+    }
+
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
     }
+
+    public function seasons(): HasMany
+    {
+        return $this->hasMany(GroupSeason::class)->orderBy('season_number', 'desc');
+    }
+
+    public function currentSeason(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(GroupSeason::class, 'current_season_id');
+    }
+
+    public function scheduledMessages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ScheduledMessage::class);
+    }
+
     /**
      * Send a message to this group via its platform messenger
+     *
+     * Note: LLM enhancement already handled in MessageService via ContentGenerator
      */
     public function sendMessage(\App\DTOs\Message $message): void
     {
@@ -84,6 +132,30 @@ class Group extends Model
     public function getChatId(): string
     {
         return $this->platform_chat_id;
+    }
+
+    /**
+     * Convert a UTC datetime to the group's timezone
+     */
+    public function toGroupTimezone(\DateTime|\DateTimeImmutable|string $datetime): \Carbon\Carbon
+    {
+        $carbon = $datetime instanceof \Carbon\Carbon
+            ? $datetime
+            : \Carbon\Carbon::parse($datetime);
+
+        return $carbon->copy()->setTimezone($this->timezone ?? 'UTC');
+    }
+
+    /**
+     * Convert a datetime from the group's timezone to UTC
+     */
+    public function toUtc(\DateTime|\DateTimeImmutable|string $datetime): \Carbon\Carbon
+    {
+        // Parse the datetime string assuming it's in the group's timezone
+        $carbon = \Carbon\Carbon::parse($datetime, $this->timezone ?? 'UTC');
+
+        // Convert to UTC
+        return $carbon->setTimezone('UTC');
     }
 
 }

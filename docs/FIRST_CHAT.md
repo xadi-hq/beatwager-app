@@ -673,6 +673,7 @@ Okay. I'm loving this. I'm having fun. One final thought, for our consideration 
 
 Oh this is brilliant - you're essentially creating real-world checkpoint events that bridge the digital wagering with actual social gatherings. I love it.
 
+### Social events
 The Concept: Social Events with Point Bonuses
 The Dynamic: Your friend group has regular meetups (monthly dinners, game nights, trips). Attending should be rewarded in the wager economy, creating a feedback loop:
 
@@ -713,9 +714,7 @@ Create Event
 ├─ Attendance Bonus: 150 points
 ├─ RSVP Deadline: Dec 13, 2025
 └─ Check-in Method:
-    ├─ Manual (creator confirms later)
-    ├─ QR Code (generated, scan at venue)
-    └─ Code Word (reveal at event)
+    └─ Manual (creator confirms later)
 Announced to Group (Telegram):
 
 🎉 New Event: December Dinner
@@ -729,27 +728,13 @@ Announced to Group (Telegram):
 
 Current RSVPs (3/8):
 ✅ @Alice, @Bob, @Charlie
-2. Check-in Methods
-Option A: QR Code (Recommended)
-
-Event creator gets unique QR code URL
-Shows code on phone at venue
-Attendees scan with camera → auto check-in
-Bonus instantly credited
-Option B: Code Word
-
-Creator reveals code at event: "Tonight's code is PIZZA42"
-Users type /checkin PIZZA42 in group chat
-Only works during event window (±2 hours)
-Option C: Manual Confirmation
+2. Check-in Method
+Manual Confirmation
 
 After event, creator goes to web UI
 Checkboxes: "Who attended?"
 Bulk awards bonuses
-3. Post-Event
-Automatic:
 
-Points awarded immediately on check-in
 Transaction: event_attendance_bonus
 Announcement in group:
 🎊 December Dinner completed!
@@ -760,17 +745,18 @@ Attendees earned +150 points:
 🏆 @Charlie (now 1,280pts)
 
 @Dave, @Eve - you missed out! 😢
-Next event: [link]
-Advanced Features
-Event Wagers (Meta!)
-Allow creating wagers about the event itself:
+Next event (if any): [link]
+
+#### Advanced Features
+##### Event Wagers (Meta!) >> skip for now
+Suggest creating wagers about the event itself:
 
 "Will Dave actually show up this time?" (Yes/No)
 "How many people will attend?" (Numeric: 4-8)
 "Who will arrive last?" (Multiple choice: list names)
-These resolve automatically based on check-ins. Inception level engagement.
+Some might resolve automatically based on check-ins. Inception level engagement.
 
-Attendance Streaks
+##### Attendance Streaks >> could be cool
 sql
 user_group:
   + event_attendance_streak (integer, default: 0)
@@ -885,11 +871,11 @@ Auto-awards points
 Much better UX
 ⏸️ Phase 2: Advanced features
 
-Code word check-ins
 Event wagers
 Attendance streaks
 No-show penalties
 Technical Complexity
+
 Low-Medium - It's essentially:
 
 Another CRUD resource (events)
@@ -936,7 +922,7 @@ Bot posts to group:
 
 📋 Who attended December Dinner?
 
-Anyone can report attendance. Tap names who were there:
+Anyone can report attendance via link where they tap names who were there:
 
 [ ] @Alice
 [ ] @Bob  

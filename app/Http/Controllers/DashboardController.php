@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Challenge;
 use App\Models\OneTimeToken;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wager;
+use App\Services\EventService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -15,6 +17,9 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly EventService $eventService
+    ) {}
     /**
      * Display the user's dashboard
      *
@@ -35,10 +40,13 @@ class DashboardController extends Controller
             'name' => $g->name,
             'balance' => $g->pivot->points,
             'role' => $g->pivot->role,
+            'currency' => $g->points_currency_name ?? 'points',
         ]);
 
         // Get user's active wagers (created or joined) - split by deadline
-        $activeWagersQuery = Wager::where('status', 'open')
+        // Using active() scope to exclude expired wagers with no participants
+        $activeWagersQuery = Wager::active()
+            ->where('status', 'open')
             ->where(function($query) use ($user) {
                 $query->where('creator_id', $user->id)
                       ->orWhereHas('entries', function($q) use ($user) {
@@ -46,7 +54,7 @@ class DashboardController extends Controller
                       });
             })
             ->with(['group', 'entries.user'])
-            ->orderBy('deadline', 'asc')
+            ->orderBy('betting_closes_at', 'asc')
             ->get();
 
         $now = now();
@@ -63,7 +71,8 @@ class DashboardController extends Controller
                 'group' => ['id' => $wager->group->id, 'name' => $wager->group->name],
                 'type' => $wager->type,
                 'stake_amount' => $wager->stake_amount,
-                'deadline' => $wager->deadline->toIso8601String(),
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'expected_settlement_at' => $wager->expected_settlement_at?->toIso8601String(),
                 'status' => $wager->status,
                 'participants_count' => $wager->participants_count,
                 'total_points_wagered' => $wager->total_points_wagered,
@@ -72,7 +81,7 @@ class DashboardController extends Controller
                 'user_points_wagered' => $userEntry?->points_wagered,
             ];
 
-            if ($wager->deadline > $now) {
+            if ($wager->betting_closes_at > $now) {
                 $openWagers->push($wagerData);
             } else {
                 $awaitingSettlement->push($wagerData);
@@ -89,7 +98,8 @@ class DashboardController extends Controller
                 'group' => ['id' => $wager->group->id, 'name' => $wager->group->name],
                 'type' => $wager->type,
                 'stake_amount' => $wager->stake_amount,
-                'deadline' => $wager->deadline->toIso8601String(),
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'expected_settlement_at' => $wager->expected_settlement_at?->toIso8601String(),
                 'status' => $wager->status,
                 'participants_count' => $wager->participants_count,
                 'total_points_wagered' => $wager->total_points_wagered,
@@ -138,7 +148,12 @@ class DashboardController extends Controller
         }
 
         $recentTransactions = $transactionsQuery
-            ->with(['group:id,name', 'wager:id,title'])
+            ->with([
+                'group:id,name,points_currency_name',
+                'transactionable' => function ($query) {
+                    $query->with('wager:id,title');
+                }
+            ])
             ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get()
@@ -149,6 +164,7 @@ class DashboardController extends Controller
                 'balance_before' => $tx->balance_before,
                 'balance_after' => $tx->balance_after,
                 'description' => $tx->description,
+                'currency' => $tx->group ? ($tx->group->points_currency_name ?? 'points') : 'points',
                 'group' => $tx->group ? ['id' => $tx->group->id, 'name' => $tx->group->name] : null,
                 'wager' => $tx->wager ? ['id' => $tx->wager->id, 'title' => $tx->wager->title] : null,
                 'created_at' => $tx->created_at->toIso8601String(),
@@ -175,6 +191,88 @@ class DashboardController extends Controller
         // Get Telegram username (platform-agnostic approach)
         $telegramService = $user->getTelegramService();
 
+        // Load events for all user's groups
+        $upcomingEvents = collect();
+        $pastProcessedEvents = collect();
+        $pastUnprocessedEvents = collect();
+
+        foreach ($user->groups as $group) {
+            $groupEvents = $this->eventService->getEventsForGroup($group);
+
+            // Transform events to match frontend expectations
+            $transformEvent = function($event) {
+                $rsvpCounts = $this->eventService->getRsvpCounts($event);
+                return [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    'event_date' => $event->event_date->toIso8601String(),
+                    'location' => $event->location,
+                    'attendance_bonus' => $event->attendance_bonus,
+                    'status' => $event->status,
+                    'group' => [
+                        'id' => $event->group->id,
+                        'name' => $event->group->name ?? $event->group->platform_chat_title,
+                    ],
+                    'rsvps' => [
+                        'going' => $rsvpCounts['going'],
+                        'maybe' => $rsvpCounts['maybe'],
+                        'not_going' => $rsvpCounts['not_going'],
+                    ],
+                    'url' => route('events.show', $event->id),
+                ];
+            };
+
+            $upcomingEvents = $upcomingEvents->merge($groupEvents['upcoming']->map($transformEvent));
+            $pastProcessedEvents = $pastProcessedEvents->merge($groupEvents['past_processed']->map($transformEvent));
+            $pastUnprocessedEvents = $pastUnprocessedEvents->merge($groupEvents['past_unprocessed']->map($transformEvent));
+        }
+
+        // Sort events by date
+        $upcomingEvents = $upcomingEvents->sortBy('event_date')->values();
+        $pastProcessedEvents = $pastProcessedEvents->sortByDesc('event_date')->values();
+        $pastUnprocessedEvents = $pastUnprocessedEvents->sortByDesc('event_date')->values();
+
+        // Load challenges (created by or accepted by user)
+        // Using active() scope to exclude expired challenges with no acceptor
+        $userChallenges = Challenge::active()
+            ->where(function($q) use ($user) {
+                $q->where('creator_id', $user->id)
+                  ->orWhere('acceptor_id', $user->id);
+            })
+            ->with(['group', 'creator', 'acceptor'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($c) use ($user) {
+                return [
+                    'id' => $c->id,
+                    'description' => $c->description,
+                    'amount' => $c->amount,
+                    'status' => $c->status,
+                    'completion_deadline' => $c->completion_deadline?->toIso8601String(),
+                    'acceptance_deadline' => $c->acceptance_deadline?->toIso8601String(),
+                    'accepted_at' => $c->accepted_at?->toIso8601String(),
+                    'submitted_at' => $c->submitted_at?->toIso8601String(),
+                    'completed_at' => $c->completed_at?->toIso8601String(),
+                    'failed_at' => $c->failed_at?->toIso8601String(),
+                    'is_creator' => $c->creator_id === $user->id,
+                    'is_acceptor' => $c->acceptor_id === $user->id,
+                    'group' => [
+                        'id' => $c->group->id,
+                        'name' => $c->group->name ?? $c->group->platform_chat_title,
+                    ],
+                    'creator' => [
+                        'id' => $c->creator->id,
+                        'name' => $c->creator->name,
+                    ],
+                    'acceptor' => $c->acceptor ? [
+                        'id' => $c->acceptor->id,
+                        'name' => $c->acceptor->name,
+                    ] : null,
+                    'url' => route('challenges.show', $c->id),
+                ];
+            });
+
         return Inertia::render('Dashboard/Me', [
             'user' => [
                 'id' => $user->id,
@@ -196,6 +294,10 @@ class DashboardController extends Controller
             'awaitingSettlement' => $awaitingSettlement,
             'settledWagers' => $settledWagers,
             'recentTransactions' => $recentTransactions,
+            'upcomingEvents' => $upcomingEvents,
+            'pastProcessedEvents' => $pastProcessedEvents,
+            'pastUnprocessedEvents' => $pastUnprocessedEvents,
+            'userChallenges' => $userChallenges,
             'focus' => $focus,
         ]);
     }

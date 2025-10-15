@@ -1,16 +1,27 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { ref, onMounted, computed } from 'vue';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
+import Drawer from '@/Components/Drawer.vue';
+import UserProfileForm from '@/Components/UserProfileForm.vue';
 
 defineProps<{
     title?: string;
 }>();
 
 const page = usePage();
-const user = page.props.user as any;
+const user = (page.props.auth as any)?.user || page.props.user as any;
 
 // Dark mode management
 const isDark = ref(false);
+
+// Profile drawer state
+const showProfileDrawer = ref(false);
+
+// Handle profile update
+const handleProfileUpdated = () => {
+    // Reload to get fresh user data
+    router.reload({ only: ['auth'] });
+};
 
 onMounted(() => {
     // Check if user has dark mode preference or system preference
@@ -70,14 +81,18 @@ function toggleDarkMode() {
                                 </svg>
                             </button>
 
-                            <!-- User Info -->
-                            <div v-if="user" class="flex items-center gap-2">
+                            <!-- User Info (clickable) -->
+                            <button
+                                v-if="user"
+                                @click="showProfileDrawer = true"
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                            >
                                 <div class="text-sm">
                                     <div class="font-medium text-neutral-900 dark:text-neutral-100">
                                         {{ user.name || (user.telegram_username ? `@${user.telegram_username}` : 'User') }}
                                     </div>
                                 </div>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -90,5 +105,18 @@ function toggleDarkMode() {
                 </div>
             </main>
         </div>
+
+        <!-- Profile Drawer -->
+        <Drawer
+            :show="showProfileDrawer"
+            title="Profile Settings"
+            @close="showProfileDrawer = false"
+        >
+            <UserProfileForm
+                v-if="user"
+                :user="user"
+                @updated="handleProfileUpdated"
+            />
+        </Drawer>
     </div>
 </template>

@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Group;
 use App\Models\User;
+use App\Models\Wager;
 use App\Services\UserMessengerService;
 use App\Services\WagerService;
 use Illuminate\Http\Request;
@@ -25,13 +26,11 @@ class WagerController extends Controller
     public function create(Request $request): Response
     {
         // Signature already validated by middleware
-        // User already authenticated by middleware (if exists)
-
-        // Get or create user from URL parameters
-        $user = $this->getOrCreateUser($request);
+        // User already authenticated by middleware
+        $user = Auth::user();
 
         // Get or create group from URL parameters (if from a group chat)
-        $group = $this->getOrCreateGroup($request);
+        $group = $this->getOrCreateGroup($request, $user);
 
         // Get user's groups for dropdown - only show actual groups (negative chat IDs for Telegram)
         $userGroups = $user->groups()
@@ -77,70 +76,70 @@ class WagerController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'resolution_criteria' => 'nullable|string',
-            'type' => 'required|in:binary,multiple_choice,numeric,date',
+            'type' => 'required|in:binary,multiple_choice,numeric,date,short_answer,top_n_ranking',
             'group_id' => 'required|uuid|exists:groups,id',
             'stake_amount' => 'required|integer|min:1',
-            'deadline' => 'required|date|after:now',
+            'betting_closes_at' => 'required|date|after:now',
+            'expected_settlement_at' => 'nullable|date|after:betting_closes_at',
+
+            // Binary flexible labels
+            'label_option_a' => 'nullable|string|max:50',
+            'label_option_b' => 'nullable|string|max:50',
+            'threshold_value' => 'nullable|numeric',
+            'threshold_date' => 'nullable|date',
 
             // Type-specific fields
-            'options' => 'required_if:type,multiple_choice|array|min:2',
+            'options' => 'required_if:type,multiple_choice,top_n_ranking|array|min:2',
             'numeric_min' => 'nullable|integer',
             'numeric_max' => 'nullable|integer|gt:numeric_min',
             'numeric_winner_type' => 'nullable|in:exact,closest',
             'date_min' => 'nullable|date',
             'date_max' => 'nullable|date|after:date_min',
             'date_winner_type' => 'nullable|in:exact,closest',
+
+            // Complex type fields
+            'max_length' => 'nullable|integer|min:10|max:500',
+            'n' => 'required_if:type,top_n_ranking|integer|min:2',
         ]);
 
         // User is already authenticated by middleware
         $user = Auth::user();
         $group = Group::findOrFail($validated['group_id']);
 
+        // Convert datetime inputs from group timezone to UTC for storage
+        $validated['betting_closes_at'] = $group->toUtc($validated['betting_closes_at']);
+        if (!empty($validated['expected_settlement_at'])) {
+            $validated['expected_settlement_at'] = $group->toUtc($validated['expected_settlement_at']);
+        }
+
         // Create wager
         $wager = $this->wagerService->createWager($group, $user, $validated);
         $wager->load("creator");
 
-        // Post to Telegram group
-        $this->postWagerToTelegram($wager, $group);
+        // Dispatch event for async announcement (non-blocking)
+        \App\Events\WagerCreated::dispatch($wager);
 
         return redirect()->route('wager.success', ['wager' => $wager->id]);
     }
 
     /**
-     * Get or create user from platform data (platform-agnostic)
-     */
-    private function getOrCreateUser(Request $request): User
-    {
-        // Get platform and user_id from 'u' parameter (already decrypted by middleware)
-        $encryptedUserId = $request->query('u');
-        $userId = decrypt($encryptedUserId);
-        [$platform, $platformUserId] = explode(':', $userId, 2);
-
-        return UserMessengerService::findOrCreate(
-            platform: $platform,
-            platformUserId: $platformUserId,
-            userData: [
-                'username' => $request->query('username'),
-                'first_name' => $request->query('first_name'),
-                'last_name' => $request->query('last_name'),
-            ]
-        );
-    }
-
-    /**
      * Get or create group from platform chat data (platform-agnostic)
      */
-    private function getOrCreateGroup(Request $request): Group
+    private function getOrCreateGroup(Request $request, User $user): ?Group
     {
-        // Get platform from 'u' parameter
-        $encryptedUserId = $request->query('u');
-        $userId = decrypt($encryptedUserId);
-        [$platform, $platformUserId] = explode(':', $userId, 2);
-
         $chatId = $request->query('chat_id');
         if (!$chatId) {
             return null; // No group context (private chat)
         }
+
+        // Get platform from user's primary messenger service
+        $messengerService = $user->messengerServices()->where('is_primary', true)->first();
+        if (!$messengerService) {
+            // Fallback to any messenger service
+            $messengerService = $user->messengerServices()->first();
+        }
+
+        $platform = $messengerService->platform ?? 'telegram';
 
         $group = Group::firstOrCreate(
             [
@@ -151,11 +150,11 @@ class WagerController extends Controller
                 'name' => $request->query('chat_title') ?? 'Chat ' . $chatId,
                 'platform_chat_title' => $request->query('chat_title'),
                 'platform_chat_type' => $request->query('chat_type'),
+                'timezone' => 'Europe/Amsterdam',  // Default timezone for new groups
             ]
         );
 
         // Ensure user is in the group
-        $user = $this->getOrCreateUser($request);
         if (!$group->users()->where('user_id', $user->id)->exists()) {
             $group->users()->attach($user->id, [
                 'id' => \Illuminate\Support\Str::uuid(),
@@ -167,30 +166,13 @@ class WagerController extends Controller
         return $group;
     }
 
-    /**
-     * Post wager announcement to group (platform-agnostic)
-     */
-    private function postWagerToTelegram($wager, $group): void
-    {
-        // Platform-agnostic messaging - Group determines which messenger to use
-        $message = app(\App\Services\MessageService::class)->wagerAnnouncement($wager);
-        $group->sendMessage($message);
-        
-        /* OLD IMPLEMENTATION (60 lines of hardcoded Telegram HTML):
-        $bot = new \TelegramBot\Api\BotApi(config('telegram.bot_token'));
-        $deadline = $wager->deadline->setTimezone('Europe/Amsterdam')->format('d M Y H:i');
-        $message = "🎲 <b>New Wager Created!</b>\n\n";
-        $message .= "<b>Question:</b> {$wager->title}\n";
-        ... [56 more lines of hardcoded formatting and keyboard building]
-        */
-    }
 
     /**
      * Show success page
      */
     public function success($wagerId)
     {
-        $wager = \App\Models\Wager::findOrFail($wagerId);
+        $wager = Wager::findOrFail($wagerId);
 
         return Inertia::render('Wager/Success', [
             'wager' => [
@@ -198,7 +180,8 @@ class WagerController extends Controller
                 'title' => $wager->title,
                 'type' => $wager->type,
                 'stake_amount' => $wager->stake_amount,
-                'deadline' => $wager->deadline->toIso8601String(),
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'expected_settlement_at' => $wager->expected_settlement_at?->toIso8601String(),
             ],
         ]);
     }
@@ -217,14 +200,15 @@ class WagerController extends Controller
         }
 
         $wager = $token->wager;
-        $wager->load(['creator:id,name', 'group:id,name,platform_chat_title', 'entries.user:id,name']);
-
-        // Eager load user balances for all entry users to avoid N+1
-        $userIds = $wager->entries->pluck('user_id')->unique();
-        $userBalances = \DB::table('group_user')
-            ->where('group_id', $wager->group_id)
-            ->whereIn('user_id', $userIds)
-            ->pluck('points', 'user_id');
+        $wager->load([
+            'creator:id,name',
+            'group:id,name,platform_chat_title,points_currency_name',
+            'entries.user:id,name',
+            'entries.user.groups' => function ($query) use ($wager) {
+                $query->where('groups.id', $wager->group_id)
+                    ->withPivot('points');
+            }
+        ]);
 
         return Inertia::render('Wager/Settle', [
             'token' => $token->token,
@@ -233,10 +217,12 @@ class WagerController extends Controller
                 'title' => $wager->title,
                 'description' => $wager->description,
                 'type' => $wager->type,
-                'deadline' => $wager->deadline->toIso8601String(),
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'expected_settlement_at' => $wager->expected_settlement_at?->toIso8601String(),
                 'stake_amount' => $wager->stake_amount,
                 'total_points_wagered' => $wager->total_points_wagered,
                 'participants_count' => $wager->participants_count,
+                'currency' => $wager->group->points_currency_name ?? 'points',
                 'creator' => [
                     'id' => $wager->creator->id,
                     'name' => $wager->creator->name,
@@ -248,11 +234,16 @@ class WagerController extends Controller
                 'entries' => $wager->entries->map(fn($entry) => [
                     'id' => $entry->id,
                     'user_name' => $entry->user->name,
-                    'user_balance' => $userBalances[$entry->user_id] ?? 0,
+                    'user_balance' => $entry->user->groups->first()?->pivot->points ?? 0,
                     'answer_value' => $entry->answer_value,
                     'points_wagered' => $entry->points_wagered,
                 ]),
                 'options' => $wager->type === 'multiple_choice' ? $wager->options : null,
+                'type_config' => match ($wager->type) {
+                    'short_answer' => ['max_length' => $wager->max_length],
+                    'top_n_ranking' => ['options' => $wager->options, 'n' => $wager->n],
+                    default => null,
+                },
             ],
         ]);
     }
@@ -264,7 +255,7 @@ class WagerController extends Controller
     {
         $validated = $request->validate([
             'token' => 'required|string',
-            'outcome_value' => 'required|string',
+            'outcome_value' => 'required', // Can be string or array depending on wager type
             'settlement_note' => 'nullable|string|max:500',
         ]);
 
@@ -286,8 +277,8 @@ class WagerController extends Controller
         // Mark token as used
         $token->markAsUsed();
 
-        // Post result to Telegram
-        $this->postSettlementToTelegram($settledWager);
+        // Dispatch async settlement announcement
+        \App\Events\WagerSettled::dispatch($settledWager);
 
         return redirect()->route('wager.settle.success', ['wager' => $settledWager->id]);
     }
@@ -297,7 +288,7 @@ class WagerController extends Controller
      */
     public function settlementSuccess($wagerId)
     {
-        $wager = \App\Models\Wager::with(['creator:id,name', 'group:id,name,platform_chat_title', 'settler:id,name'])->findOrFail($wagerId);
+        $wager = Wager::with(['creator:id,name', 'group:id,name,platform_chat_title', 'settler:id,name'])->findOrFail($wagerId);
 
         return Inertia::render('Wager/SettlementSuccess', [
             'wager' => [
@@ -319,48 +310,6 @@ class WagerController extends Controller
     }
 
     /**
-     * Post settlement result to Telegram group
-     */
-    private function postSettlementToTelegram($wager): void
-    {
-        $bot = new \TelegramBot\Api\BotApi(config('telegram.bot_token'));
-
-        $message = "🏁 <b>Wager Settled!</b>\n\n";
-        $message .= "<b>Question:</b> {$wager->title}\n";
-        $message .= "<b>Outcome:</b> {$wager->outcome_value}\n";
-
-        if ($wager->settlement_note) {
-            $message .= "<b>Note:</b> {$wager->settlement_note}\n";
-        }
-
-        $message .= "\n<b>Winners:</b>\n";
-
-        // Get winning entries
-        $winners = $wager->entries()->where('is_winner', true)->with('user')->get();
-
-        if ($winners->count() > 0) {
-            foreach ($winners as $winner) {
-                $message .= "✅ {$winner->user->name} won {$winner->points_won} points\n";
-            }
-        } else {
-            $message .= "No winners for this wager.\n";
-        }
-
-        try {
-            $bot->sendMessage(
-                $wager->group->platform_chat_id,
-                $message,
-                'HTML'
-            );
-        } catch (\Exception $e) {
-            \Log::error('Failed to post settlement to Telegram', [
-                'wager_id' => $wager->id,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
      * Show wager landing page with progress, stats, and conditional settlement
      *
      * Authentication handled by 'signed.auth' middleware - user is already authenticated via session
@@ -370,21 +319,25 @@ class WagerController extends Controller
         // Get authenticated user from session (middleware handles auth)
         $user = Auth::user();
 
-        // Find wager
-        $wager = \App\Models\Wager::with(['creator:id,name', 'group:id,name,platform_chat_title', 'entries.user:id,name', 'settler:id,name'])->findOrFail($wagerId);
+        // Find wager with optimized eager loading including user balances
+        $wager = Wager::with([
+            'creator:id,name',
+            'group:id,name,platform_chat_title,points_currency_name',
+            'entries.user:id,name',
+            'settler:id,name'
+        ])->findOrFail($wagerId);
 
-        $isPastDeadline = $wager->deadline < now();
+        // Eager load user balances for entry users
+        $wager->load(['entries.user.groups' => function ($query) use ($wager) {
+            $query->where('groups.id', $wager->group_id)
+                ->withPivot('points');
+        }]);
+
+        $isPastDeadline = $wager->isPastBettingDeadline();
         $canSettle = $isPastDeadline && $wager->status === 'open';
 
         // Get user's Telegram username for display
         $telegramService = $user->getTelegramService();
-
-        // Eager load user balances for all entry users to avoid N+1
-        $userIds = $wager->entries->pluck('user_id')->unique();
-        $userBalances = \DB::table('group_user')
-            ->where('group_id', $wager->group_id)
-            ->whereIn('user_id', $userIds)
-            ->pluck('points', 'user_id');
 
         return Inertia::render('Wager/Show', [
             'wager' => [
@@ -392,7 +345,8 @@ class WagerController extends Controller
                 'title' => $wager->title,
                 'description' => $wager->description,
                 'type' => $wager->type,
-                'deadline' => $wager->deadline->toIso8601String(),
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'expected_settlement_at' => $wager->expected_settlement_at?->toIso8601String(),
                 'stake_amount' => $wager->stake_amount,
                 'total_points_wagered' => $wager->total_points_wagered,
                 'participants_count' => $wager->participants_count,
@@ -400,6 +354,7 @@ class WagerController extends Controller
                 'outcome_value' => $wager->outcome_value,
                 'settlement_note' => $wager->settlement_note,
                 'settled_at' => $wager->settled_at?->toIso8601String(),
+                'currency' => $wager->group->points_currency_name ?? 'points',
                 'settler' => $wager->settler ? [
                     'id' => $wager->settler->id,
                     'name' => $wager->settler->name,
@@ -415,7 +370,7 @@ class WagerController extends Controller
                 'entries' => $wager->entries->map(fn($entry) => [
                     'id' => $entry->id,
                     'user_name' => $entry->user->name,
-                    'user_balance' => $userBalances[$entry->user_id] ?? 0,
+                    'user_balance' => $entry->user->groups->first()?->pivot->points ?? 0,
                     'answer_value' => $isPastDeadline ? $entry->answer_value : null,
                     'points_wagered' => $entry->points_wagered,
                     'is_winner' => $entry->is_winner,
@@ -430,6 +385,7 @@ class WagerController extends Controller
             ],
             'canSettle' => $canSettle,
             'isPastDeadline' => $isPastDeadline,
+            'type_config' => $wager->type_config,
         ]);
     }
 
@@ -440,19 +396,20 @@ class WagerController extends Controller
     {
         $validated = $request->validate([
             'user_id' => 'required|uuid',
-            'outcome_value' => 'required|string',
+            'outcome_value' => 'required', // Can be string or array depending on wager type
             'settlement_note' => 'nullable|string|max:500',
         ]);
 
         // Find wager
-        $wager = \App\Models\Wager::findOrFail($wagerId);
+        $wager = Wager::findOrFail($wagerId);
 
         // Verify wager can be settled
         if ($wager->status !== 'open') {
             abort(403, 'Wager is not open for settlement');
         }
 
-        if ($wager->deadline >= now()) {
+        // Allow settlement after deadline has passed
+        if ($wager->isBettingOpen()) {
             abort(403, 'Cannot settle wager before deadline');
         }
 
@@ -467,9 +424,168 @@ class WagerController extends Controller
             $settler->id
         );
 
-        // Post result to Telegram
-        $this->postSettlementToTelegram($settledWager);
+        // Dispatch async settlement announcement
+        \App\Events\WagerSettled::dispatch($settledWager);
 
         return redirect()->route('wager.settle.success', ['wager' => $settledWager->id]);
+    }
+
+    /**
+     * Show wager join form (for complex input types)
+     * User authenticated via signed.auth middleware (consistent with wager.create)
+     */
+    public function showJoinForm(Request $request, Wager $wager)
+    {
+        // User already authenticated by signed.auth middleware
+        $user = Auth::user();
+
+        // Load relationships
+        $wager->load(['group', 'creator']);
+
+        // Check if betting is still open
+        if (!$wager->isBettingOpen()) {
+            return Inertia::render('Wager/JoinClosed', [
+                'wager' => [
+                    'id' => $wager->id,
+                    'title' => $wager->title,
+                    'betting_closes_at' => $wager->betting_closes_at,
+                    'status' => $wager->status,
+                    'group' => [
+                        'name' => $wager->group->platform_chat_title ?? $wager->group->name,
+                    ],
+                ],
+            ]);
+        }
+
+        // Check if user already joined
+        if ($wager->entries()->where('user_id', $user->id)->exists()) {
+            return redirect()->route('wager.show', ['wager' => $wager->id]);
+        }
+
+        // Get user's balance in this group
+        $balance = \Illuminate\Support\Facades\DB::table('group_user')
+            ->where('user_id', $user->id)
+            ->where('group_id', $wager->group_id)
+            ->value('points') ?? 0;
+
+        // Check sufficient balance
+        if ($balance < $wager->stake_amount) {
+            return Inertia::render('Wager/InsufficientBalance', [
+                'wager' => [
+                    'id' => $wager->id,
+                    'title' => $wager->title,
+                    'stake_amount' => $wager->stake_amount,
+                    'group' => [
+                        'name' => $wager->group->platform_chat_title ?? $wager->group->name,
+                    ],
+                ],
+                'user' => [
+                    'name' => $user->name,
+                    'balance' => $balance,
+                ],
+            ]);
+        }
+
+        return Inertia::render('Wager/Join', [
+            'wager' => [
+                'id' => $wager->id,
+                'title' => $wager->title,
+                'description' => $wager->description,
+                'type' => $wager->type,
+                'type_config' => $wager->getTypeConfig(),
+                'stake_amount' => $wager->stake_amount,
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'group' => [
+                    'id' => $wager->group->id,
+                    'name' => $wager->group->platform_chat_title ?? $wager->group->name,
+                ],
+                'creator' => [
+                    'name' => $wager->creator->name,
+                ],
+            ],
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'balance' => $balance,
+            ],
+        ]);
+    }
+
+    /**
+     * Submit wager entry from join form
+     * User authenticated via signed.auth middleware (consistent with wager.store)
+     */
+    public function submitJoin(Request $request, Wager $wager)
+    {
+        // User already authenticated by signed.auth middleware
+        $user = Auth::user();
+
+        // Basic validation
+        $validated = $request->validate([
+            'answer_value' => 'required',
+        ]);
+
+        try {
+            // Place wager entry (WagerService handles all validation)
+            $entry = $this->wagerService->placeWager(
+                $wager,
+                $user,
+                $validated['answer_value'],
+                $wager->stake_amount
+            );
+
+            // Dispatch join event (async announcement)
+            \App\Events\WagerJoined::dispatch($wager, $entry, $user);
+
+            return redirect()->route('wager.join.success', ['entry' => $entry->id]);
+
+        } catch (\App\Exceptions\InvalidAnswerException $e) {
+            return back()->withErrors(['answer_value' => $e->getMessage()]);
+        } catch (\App\Exceptions\UserAlreadyJoinedException $e) {
+            return redirect()->route('wager.show', ['wager' => $wager->id])
+                ->with('message', 'You have already joined this wager.');
+        } catch (\App\Exceptions\InvalidStakeException $e) {
+            return back()->withErrors(['stake' => $e->getMessage()]);
+        } catch (\App\Exceptions\WagerNotOpenException $e) {
+            return back()->withErrors(['wager' => 'This wager is no longer open for entries.']);
+        }
+    }
+
+    /**
+     * Show join success page
+     */
+    public function joinSuccess($entryId)
+    {
+        $entry = \App\Models\WagerEntry::with(['wager.group', 'user'])
+            ->findOrFail($entryId);
+
+        // Get user's updated balance in this group
+        $balance = \Illuminate\Support\Facades\DB::table('group_user')
+            ->where('user_id', $entry->user_id)
+            ->where('group_id', $entry->wager->group_id)
+            ->value('points') ?? 0;
+
+        return Inertia::render('Wager/JoinSuccess', [
+            'entry' => [
+                'id' => $entry->id,
+                'answer_value' => $entry->answer_value,
+                'stake_amount' => $entry->points_wagered,
+                'created_at' => $entry->created_at->toIso8601String(),
+            ],
+            'wager' => [
+                'id' => $entry->wager->id,
+                'title' => $entry->wager->title,
+                'type' => $entry->wager->type,
+                'betting_closes_at' => $entry->wager->betting_closes_at->toIso8601String(),
+                'currency' => $entry->wager->group->points_currency_name ?? 'points',
+                'group' => [
+                    'name' => $entry->wager->group->platform_chat_title ?? $entry->wager->group->name,
+                ],
+            ],
+            'user' => [
+                'name' => $entry->user->name,
+                'balance' => $balance,
+            ],
+        ]);
     }
 }

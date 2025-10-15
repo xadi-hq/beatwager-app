@@ -12,4 +12,5 @@ enum MessageType: string
     case Error = 'error';
     case Result = 'result';
     case Info = 'info';
+    case Warning = 'warning';
 }

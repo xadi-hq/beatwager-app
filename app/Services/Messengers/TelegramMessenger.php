@@ -13,8 +13,13 @@ use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
 
 /**
  * Telegram messenger adapter
- * 
+ *
  * Formats platform-agnostic messages for Telegram and sends them.
+ *
+ * @deprecated Use App\Messaging\Adapters\TelegramAdapter instead
+ * This class is being replaced by TelegramAdapter which provides DM support
+ * and a more comprehensive feature set. MessengerBridge now wraps TelegramAdapter
+ * for backward compatibility.
  */
 class TelegramMessenger implements MessengerInterface
 {
@@ -58,18 +63,41 @@ class TelegramMessenger implements MessengerInterface
     {
         // Get content with variables replaced
         $content = $message->getFormattedContent();
-        
+
+        // Convert Markdown-style formatting to HTML with escaping
+        // Bold: **text** -> <b>escaped(text)</b>
+        $content = preg_replace_callback('/\*\*(.+?)\*\*/s', function($matches) {
+            return '<b>' . htmlspecialchars($matches[1], ENT_QUOTES, 'UTF-8') . '</b>';
+        }, $content);
+
+        // Italic: *text* or _text_ -> <i>escaped(text)</i>
+        $content = preg_replace_callback('/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/s', function($matches) {
+            return '<i>' . htmlspecialchars($matches[1], ENT_QUOTES, 'UTF-8') . '</i>';
+        }, $content);
+        $content = preg_replace_callback('/_(.+?)_/s', function($matches) {
+            return '<i>' . htmlspecialchars($matches[1], ENT_QUOTES, 'UTF-8') . '</i>';
+        }, $content);
+
+        // Code: `text` -> <code>escaped(text)</code>
+        $content = preg_replace_callback('/`(.+?)`/s', function($matches) {
+            return '<code>' . htmlspecialchars($matches[1], ENT_QUOTES, 'UTF-8') . '</code>';
+        }, $content);
+
+        // Escape any remaining unformatted text
+        // Split by HTML tags we just created, escape the parts between them
+        $content = preg_replace_callback('/(<[^>]+>)|([^<]+)/', function($matches) {
+            // If it's an HTML tag, keep it as is
+            if (!empty($matches[1])) {
+                return $matches[1];
+            }
+            // Otherwise escape it
+            return htmlspecialchars($matches[2], ENT_QUOTES, 'UTF-8');
+        }, $content);
+
         // Apply Telegram-specific formatting
-        // Bold for emphasized text (first line usually)
-        $lines = explode("\n", $content);
-        if (isset($lines[0])) {
-            $lines[0] = "<b>{$lines[0]}</b>";
-        }
-        
-        // Bold key-value pairs like "Question: ..." 
-        $content = implode("\n", $lines);
+        // Bold key-value pairs like "Question: ..."
         $content = preg_replace('/^(\w+:)/m', '<b>$1</b>', $content);
-        
+
         return $content;
     }
 
@@ -82,42 +110,28 @@ class TelegramMessenger implements MessengerInterface
             return null;
         }
 
-        // Group buttons by rows based on wager buttons vs view progress
-        // First buttons are wager options (chunk by 3 for multiple choice, or 2 for binary)
-        // Last button is usually View Progress (full width)
-        
+        // Normalize buttons to handle both flat arrays and pre-organized rows
         $rows = [];
-        $currentRow = [];
-        $lastButtonIndex = count($buttons) - 1;
-        
-        foreach ($buttons as $index => $button) {
-            $telegramButton = match ($button->action) {
-                ButtonAction::Callback => ['text' => $button->label, 'callback_data' => $button->value],
-                ButtonAction::Url => ['text' => $button->label, 'url' => $button->value],
-            };
 
-            // If this is the last button and it's a View Progress or URL button, put it on its own row
-            if ($index === $lastButtonIndex &&
-                ($button->action === ButtonAction::Url || str_contains($button->value, 'view:'))) {
-                if (!empty($currentRow)) {
-                    $rows[] = $currentRow;
-                    $currentRow = []; // Clear to prevent duplicate addition
+        foreach ($buttons as $item) {
+            // If item is an array, it's already a row of buttons
+            if (is_array($item) && !empty($item) && $item[0] instanceof Button) {
+                $row = [];
+                foreach ($item as $button) {
+                    $row[] = match ($button->action) {
+                        ButtonAction::Callback => ['text' => $button->label, 'callback_data' => $button->value],
+                        ButtonAction::Url => ['text' => $button->label, 'url' => $button->value],
+                    };
                 }
-                $rows[] = [$telegramButton];
-            } else {
-                $currentRow[] = $telegramButton;
-                
-                // For wager buttons, chunk by 3 for multiple choice
-                if (count($currentRow) === 3) {
-                    $rows[] = $currentRow;
-                    $currentRow = [];
-                }
+                $rows[] = $row;
             }
-        }
-
-        // Add any remaining buttons
-        if (!empty($currentRow)) {
-            $rows[] = $currentRow;
+            // Otherwise it's a single Button object (legacy flat array)
+            elseif ($item instanceof Button) {
+                $rows[] = [match ($item->action) {
+                    ButtonAction::Callback => ['text' => $item->label, 'callback_data' => $item->value],
+                    ButtonAction::Url => ['text' => $item->label, 'url' => $item->value],
+                }];
+            }
         }
 
         return new InlineKeyboardMarkup($rows);

@@ -13,6 +13,7 @@ use App\Models\Group;
 use App\Models\User;
 use App\Models\Wager;
 use App\Models\WagerEntry;
+use App\Services\AuditEventService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -39,13 +40,19 @@ class WagerService
                 'resolution_criteria' => $data['resolution_criteria'] ?? null,
                 'type' => $data['type'],
                 'stake_amount' => $data['stake_amount'],
-                'deadline' => $data['deadline'],
+                'betting_closes_at' => $data['betting_closes_at'],
+                'expected_settlement_at' => $data['expected_settlement_at'] ?? null,
                 'status' => 'open',
             ];
 
             // Add type-specific fields
             $typeSpecificFields = match ($data['type']) {
-                'binary' => [], // No additional fields needed
+                'binary' => [
+                    'label_option_a' => $data['label_option_a'] ?? 'Yes',
+                    'label_option_b' => $data['label_option_b'] ?? 'No',
+                    'threshold_value' => $data['threshold_value'] ?? null,
+                    'threshold_date' => $data['threshold_date'] ?? null,
+                ],
                 'multiple_choice' => [
                     'options' => $data['options'],
                 ],
@@ -58,6 +65,17 @@ class WagerService
                     'date_min' => $data['date_min'] ?? null,
                     'date_max' => $data['date_max'] ?? null,
                     'date_winner_type' => $data['date_winner_type'] ?? 'closest',
+                ],
+                'short_answer' => [
+                    'type_config' => [
+                        'max_length' => $data['max_length'] ?? 100,
+                    ],
+                ],
+                'top_n_ranking' => [
+                    'type_config' => [
+                        'options' => $data['options'],
+                        'n' => $data['n'],
+                    ],
                 ],
             };
 
@@ -87,7 +105,7 @@ class WagerService
     public function placeWager(
         Wager $wager,
         User $user,
-        string $answerValue,
+        string|array $answerValue,
         int $points
     ): WagerEntry {
         return DB::transaction(function () use ($wager, $user, $answerValue, $points) {
@@ -109,21 +127,30 @@ class WagerService
                 throw new InvalidStakeException($points, $wager->stake_amount);
             }
 
-            // Deduct points
-            $this->pointService->deductPoints($user, $wager->group, $points, 'wager_placed', $wager);
+            // Create entry first
+            // Convert array answers to JSON for complex types (top_n_ranking, etc.)
+            $storedAnswerValue = is_array($answerValue) ? json_encode($answerValue) : $answerValue;
 
-            // Create entry
             $entry = WagerEntry::create([
                 'wager_id' => $wager->id,
                 'user_id' => $user->id,
                 'group_id' => $wager->group_id,
-                'answer_value' => $answerValue,
+                'answer_value' => $storedAnswerValue,
                 'points_wagered' => $points,
             ]);
+
+            // Deduct points and link to entry
+            $this->pointService->deductPoints($user, $wager->group, $points, 'wager_placed', $entry);
 
             // Update wager stats
             $wager->increment('total_points_wagered', $points);
             $wager->increment('participants_count');
+
+            // Update last_wager_joined_at for decay tracking
+            DB::table('group_user')
+                ->where('user_id', $user->id)
+                ->where('group_id', $wager->group_id)
+                ->update(['last_wager_joined_at' => now()]);
 
             // Audit log
             AuditService::log(
@@ -144,13 +171,15 @@ class WagerService
     /**
      * Validate answer based on wager type
      */
-    private function validateAnswer(Wager $wager, string $answerValue): void
+    private function validateAnswer(Wager $wager, string|array $answerValue): void
     {
         match ($wager->type) {
             'binary' => $this->validateBinaryAnswer($answerValue),
             'multiple_choice' => $this->validateMultipleChoiceAnswer($wager, $answerValue),
             'numeric' => $this->validateNumericAnswer($wager, $answerValue),
             'date' => $this->validateDateAnswer($wager, $answerValue),
+            'short_answer' => $this->validateShortAnswer($wager, $answerValue),
+            'top_n_ranking' => $this->validateRanking($wager, $answerValue),
         };
     }
 
@@ -197,7 +226,7 @@ class WagerService
             );
         }
 
-        if ($wager->date_min && $date < new \DateTime($wager->date_min)) {
+        if ($wager->date_min && $date < new \DateTime($wager->date_min->format('Y-m-d'))) {
             throw InvalidAnswerException::forDate(
                 $answer,
                 $wager->date_min?->format('Y-m-d'),
@@ -205,12 +234,58 @@ class WagerService
             );
         }
 
-        if ($wager->date_max && $date > new \DateTime($wager->date_max)) {
+        if ($wager->date_max && $date > new \DateTime($wager->date_max->format('Y-m-d'))) {
             throw InvalidAnswerException::forDate(
                 $answer,
                 $wager->date_min?->format('Y-m-d'),
                 $wager->date_max?->format('Y-m-d')
             );
+        }
+    }
+
+    private function validateShortAnswer(Wager $wager, string|array $answer): void
+    {
+        if (!is_string($answer)) {
+            throw new InvalidAnswerException('Short answer must be a string');
+        }
+
+        $answer = trim($answer);
+        if (empty($answer)) {
+            throw new InvalidAnswerException('Short answer cannot be empty');
+        }
+
+        $config = $wager->getTypeConfig();
+        $maxLength = $config['max_length'] ?? 100;
+
+        if (mb_strlen($answer) > $maxLength) {
+            throw new InvalidAnswerException("Short answer must be {$maxLength} characters or less");
+        }
+    }
+
+    private function validateRanking(Wager $wager, string|array $answer): void
+    {
+        if (!is_array($answer)) {
+            throw new InvalidAnswerException('Ranking must be an array');
+        }
+
+        $config = $wager->getTypeConfig();
+        $expectedN = $config['n'] ?? 3;
+        $validOptions = $config['options'] ?? [];
+
+        if (count($answer) !== $expectedN) {
+            throw new InvalidAnswerException("Ranking must contain exactly {$expectedN} items");
+        }
+
+        // Check all items are valid options
+        foreach ($answer as $item) {
+            if (!in_array($item, $validOptions)) {
+                throw new InvalidAnswerException("Invalid option in ranking: {$item}");
+            }
+        }
+
+        // Check no duplicates
+        if (count($answer) !== count(array_unique($answer))) {
+            throw new InvalidAnswerException('Ranking cannot contain duplicate items');
         }
     }
 
@@ -236,7 +311,7 @@ class WagerService
      */
     public function settleWager(
         Wager $wager,
-        string $outcomeValue,
+        string|array $outcomeValue,
         ?string $settlementNote = null,
         ?string $settlerId = null
     ): Wager {
@@ -249,9 +324,12 @@ class WagerService
             $this->validateAnswer($wager, $outcomeValue);
 
             // Update wager
+            // Convert array outcomes to JSON for complex types (top_n_ranking, etc.)
+            $storedOutcomeValue = is_array($outcomeValue) ? json_encode($outcomeValue) : $outcomeValue;
+
             $updateData = [
                 'status' => 'settled',
-                'outcome_value' => $outcomeValue,
+                'outcome_value' => $storedOutcomeValue,
                 'settlement_note' => $settlementNote,
                 'settled_at' => now(),
             ];
@@ -268,6 +346,8 @@ class WagerService
                 'binary', 'multiple_choice' => $this->settleCategoricalWager($wager, $entries, $outcomeValue),
                 'numeric' => $this->settleNumericWager($wager, $entries, (int) $outcomeValue),
                 'date' => $this->settleDateWager($wager, $entries, $outcomeValue),
+                'short_answer' => $this->settleShortAnswerWager($wager, $entries, $outcomeValue),
+                'top_n_ranking' => $this->settleRankingWager($wager, $entries, $outcomeValue),
             };
 
             // Audit log
@@ -283,6 +363,9 @@ class WagerService
                 ],
                 actor: $settler
             );
+
+            // Create audit events for LLM context
+            $this->createAuditEvents($wager);
 
             return $wager->fresh();
         });
@@ -404,6 +487,99 @@ class WagerService
         }
     }
 
+    /**
+     * Settle short answer wager
+     * Outcome value is an array of winning entry IDs selected by settler
+     */
+    private function settleShortAnswerWager(Wager $wager, Collection $entries, string|array $outcome): void
+    {
+        // Outcome should be array of entry IDs that are considered matching
+        $winningEntryIds = is_array($outcome) ? $outcome : json_decode($outcome, true);
+
+        if (!is_array($winningEntryIds)) {
+            // Fallback: treat as no winners
+            foreach ($entries as $entry) {
+                $this->refundEntry($entry);
+            }
+            return;
+        }
+
+        $winners = $entries->whereIn('id', $winningEntryIds);
+        $losers = $entries->whereNotIn('id', $winningEntryIds);
+
+        if ($winners->isEmpty()) {
+            // No winners - refund everyone
+            foreach ($entries as $entry) {
+                $this->refundEntry($entry);
+            }
+            return;
+        }
+
+        $totalPot = $wager->total_points_wagered;
+        $winnersTotal = $winners->sum('points_wagered');
+
+        foreach ($winners as $entry) {
+            $winnings = (int) (($entry->points_wagered / $winnersTotal) * $totalPot);
+            $this->awardWinner($entry, $winnings);
+        }
+
+        foreach ($losers as $entry) {
+            $this->recordLoss($entry);
+        }
+    }
+
+    /**
+     * Settle top N ranking wager
+     * Outcome value is the actual ranking (array) set by settler
+     * Winners are those with exact match
+     */
+    private function settleRankingWager(Wager $wager, Collection $entries, string|array $outcome): void
+    {
+        // Outcome should be the actual ranking as array
+        $actualRanking = is_array($outcome) ? $outcome : json_decode($outcome, true);
+
+        if (!is_array($actualRanking)) {
+            // Fallback: refund everyone
+            foreach ($entries as $entry) {
+                $this->refundEntry($entry);
+            }
+            return;
+        }
+
+        // Find exact matches
+        $winners = collect();
+        foreach ($entries as $entry) {
+            $userRanking = is_string($entry->answer_value)
+                ? json_decode($entry->answer_value, true)
+                : $entry->answer_value;
+
+            if (is_array($userRanking) && $userRanking === $actualRanking) {
+                $winners->push($entry);
+            }
+        }
+
+        if ($winners->isEmpty()) {
+            // No winners - refund everyone
+            foreach ($entries as $entry) {
+                $this->refundEntry($entry);
+            }
+            return;
+        }
+
+        $totalPot = $wager->total_points_wagered;
+        $winnersTotal = $winners->sum('points_wagered');
+
+        foreach ($winners as $entry) {
+            $winnings = (int) (($entry->points_wagered / $winnersTotal) * $totalPot);
+            $this->awardWinner($entry, $winnings);
+        }
+
+        $losers = $entries->whereNotIn('id', $winners->pluck('id'));
+        foreach ($losers as $entry) {
+            $this->recordLoss($entry);
+        }
+    }
+
     private function awardWinner(WagerEntry $entry, int $winnings): void
     {
         $entry->update([
@@ -417,8 +593,7 @@ class WagerService
             $entry->group,
             $winnings,
             'wager_won',
-            $entry->wager,
-            $entry
+            $entry  // Pass the entry only
         );
     }
 
@@ -433,7 +608,6 @@ class WagerService
             $entry->user,
             $entry->group,
             $entry->points_wagered,
-            $entry->wager,
             $entry
         );
     }
@@ -446,7 +620,6 @@ class WagerService
             $entry->user,
             $entry->group,
             $entry->points_wagered,
-            $entry->wager,
             $entry
         );
     }
@@ -471,5 +644,72 @@ class WagerService
 
             return $wager->fresh();
         });
+    }
+
+    /**
+     * Create audit events for LLM context after wager settlement
+     */
+    private function createAuditEvents(Wager $wager): void
+    {
+        // Refresh wager to get latest entries with results
+        $wager->load(['entries.user', 'group']);
+        
+        // For 1v1 wagers, create detailed winner/loser events
+        if ($wager->entries->count() === 2) {
+            $winner = $wager->entries->firstWhere('is_winner', true);
+            $loser = $wager->entries->firstWhere('is_winner', false);
+            
+            if ($winner && $loser) {
+                $pointsGained = $winner->points_won - $winner->points_wagered;
+                
+                AuditEventService::wagerWon(
+                    group: $wager->group,
+                    winner: $winner->user,
+                    loser: $loser->user,
+                    points: $pointsGained,
+                    wagerTitle: $wager->title,
+                    wagerId: $wager->id
+                );
+            }
+            return;
+        }
+        
+        // For multi-participant wagers, create a generic summary
+        $winners = $wager->entries->where('is_winner', true);
+        $losers = $wager->entries->where('is_winner', false);
+        
+        if ($winners->isNotEmpty()) {
+            $winnerNames = $winners->pluck('user.username')->join(', ');
+            $totalWon = $winners->sum(fn($e) => $e->points_won - $e->points_wagered);
+            
+            $summary = $winners->count() === 1
+                ? "{$winnerNames} won '{$wager->title}' and gained {$totalWon} points"
+                : "{$winnerNames} won '{$wager->title}' and split {$totalWon} points";
+            
+            AuditEventService::create(
+                group: $wager->group,
+                eventType: 'wager.multi_winner',
+                summary: $summary,
+                participants: $winners->map(fn($e) => [
+                    'user_id' => $e->user_id,
+                    'username' => $e->user->username,
+                    'role' => 'winner',
+                ])->toArray(),
+                impact: ['total_points_won' => $totalWon],
+                metadata: ['wager_id' => $wager->id]
+            );
+        } elseif ($losers->isNotEmpty()) {
+            // All refunded or no winners
+            $summary = "'{$wager->title}' ended with no winners - all {$wager->entries->count()} participants were refunded";
+            
+            AuditEventService::create(
+                group: $wager->group,
+                eventType: 'wager.no_winner',
+                summary: $summary,
+                participants: [],
+                impact: ['refund_count' => $wager->entries->count()],
+                metadata: ['wager_id' => $wager->id]
+            );
+        }
     }
 }

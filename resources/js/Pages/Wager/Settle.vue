@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
-import { Head } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { useForm, Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import RankingInput from '@/Components/RankingInput.vue';
 
 const props = defineProps<{
     token: string;
@@ -10,6 +11,11 @@ const props = defineProps<{
         title: string;
         description?: string;
         type: string;
+        type_config?: {
+            max_length?: number;
+            options?: string[];
+            n?: number;
+        };
         deadline: string;
         stake_amount: number;
         total_points_wagered: number;
@@ -19,18 +25,54 @@ const props = defineProps<{
         entries: Array<{
             id: string;
             user_name: string;
-            answer_value: string;
+            answer_value: string | string[];
             points_wagered: number;
         }>;
         options?: string[];
     };
 }>();
 
+// For short_answer: array of selected entry IDs
+// For top_n_ranking: actual ranking array
 const form = useForm({
     token: props.token,
-    outcome_value: '',
+    outcome_value: props.wager.type === 'short_answer' ? [] : (props.wager.type === 'top_n_ranking' ? [] : ''),
     settlement_note: '',
 });
+
+// Short answer: selected entry IDs
+const selectedEntryIds = ref<string[]>([]);
+
+// Computed for checkbox state
+const isEntrySelected = (entryId: string) => {
+    return selectedEntryIds.value.includes(entryId);
+};
+
+const toggleEntry = (entryId: string) => {
+    const index = selectedEntryIds.value.indexOf(entryId);
+    if (index > -1) {
+        selectedEntryIds.value.splice(index, 1);
+    } else {
+        selectedEntryIds.value.push(entryId);
+    }
+    form.outcome_value = selectedEntryIds.value;
+};
+
+// Format ranking display
+const formatRanking = (ranking: string | string[]): string => {
+    if (Array.isArray(ranking)) {
+        return ranking.map((item, index) => `${index + 1}. ${item}`).join(', ');
+    }
+    try {
+        const parsed = JSON.parse(ranking);
+        if (Array.isArray(parsed)) {
+            return parsed.map((item, index) => `${index + 1}. ${item}`).join(', ');
+        }
+    } catch (e) {
+        // Not JSON
+    }
+    return ranking;
+};
 
 const submit = () => {
     form.post('/wager/settle');
@@ -61,10 +103,53 @@ const submit = () => {
                     </div>
                 </div>
 
-                <!-- Entries Table -->
+                <!-- Entries Table/List -->
                 <div class="mb-6">
                     <h3 class="font-bold mb-3">Entries:</h3>
-                    <div class="overflow-x-auto">
+
+                    <!-- Short Answer: Checkbox list -->
+                    <div v-if="wager.type === 'short_answer'" class="space-y-2">
+                        <div
+                            v-for="entry in wager.entries"
+                            :key="entry.id"
+                            @click="toggleEntry(entry.id)"
+                            class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors"
+                            :class="isEntrySelected(entry.id) ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700'"
+                        >
+                            <input
+                                type="checkbox"
+                                :checked="isEntrySelected(entry.id)"
+                                @click.stop="toggleEntry(entry.id)"
+                                class="mt-1 h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                            />
+                            <div class="flex-1">
+                                <div class="font-medium text-neutral-900 dark:text-white">{{ entry.user_name }}</div>
+                                <div class="text-sm text-neutral-600 dark:text-neutral-300 mt-1">{{ entry.answer_value }}</div>
+                                <div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{{ entry.points_wagered }} points</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-neutral-600 dark:text-neutral-400 italic">
+                            Select all entries with correct/matching answers
+                        </p>
+                    </div>
+
+                    <!-- Top N Ranking: Display list -->
+                    <div v-else-if="wager.type === 'top_n_ranking'" class="space-y-2">
+                        <div
+                            v-for="entry in wager.entries"
+                            :key="entry.id"
+                            class="flex items-start gap-3 p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg"
+                        >
+                            <div class="flex-1">
+                                <div class="font-medium text-neutral-900 dark:text-white">{{ entry.user_name }}</div>
+                                <div class="text-sm text-neutral-600 dark:text-neutral-300 mt-1">{{ formatRanking(entry.answer_value) }}</div>
+                                <div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{{ entry.points_wagered }} points</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Standard table for other types -->
+                    <div v-else class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                             <thead class="bg-neutral-50 dark:bg-neutral-700">
                                 <tr>
@@ -84,16 +169,85 @@ const submit = () => {
                     </div>
                 </div>
 
+                <!-- Debug Panel -->
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded text-sm space-y-2">
+                    <div><strong>Debug Info:</strong></div>
+                    <div>Wager Type: <code>{{ wager.type }}</code></div>
+                    <div>Type Config: <code>{{ JSON.stringify(wager.type_config) }}</code></div>
+                    <div>Has Options: {{ wager.type_config?.options ? 'Yes (' + wager.type_config.options.length + ')' : 'No' }}</div>
+                </div>
+
                 <!-- Settlement Form -->
                 <form @submit.prevent="submit" class="space-y-6">
                     <!-- Outcome Selection -->
                     <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
-                            What was the outcome? *
-                        </label>
-                        
+                        <!-- Short Answer: Winners already selected via checkboxes above -->
+                        <div v-if="wager.type === 'short_answer'">
+                            <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+                                Selected {{ selectedEntryIds.length }} matching {{ selectedEntryIds.length === 1 ? 'answer' : 'answers' }} as winners
+                            </p>
+                            <p v-if="selectedEntryIds.length === 0" class="text-sm text-amber-600 dark:text-amber-400">
+                                ⚠️ No entries selected. This will refund everyone.
+                            </p>
+                        </div>
+
+                        <!-- Top N Ranking: Input actual ranking -->
+                        <div v-else-if="wager.type === 'top_n_ranking'">
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
+                                What was the actual ranking? *
+                            </label>
+                            <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                                Set the correct top {{ wager.type_config?.n || 3 }} ranking. Only exact matches will win.
+                            </p>
+                            <!-- Debug info -->
+                            <div v-if="!wager.type_config?.options || wager.type_config.options.length === 0" class="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded text-sm">
+                                ⚠️ Debug: No options available. type_config = {{ JSON.stringify(wager.type_config) }}
+                            </div>
+                            <RankingInput
+                                v-model="form.outcome_value"
+                                :options="wager.type_config?.options || []"
+                                :n="wager.type_config?.n || 3"
+                            />
+                        </div>
+
+                        <!-- Numeric: Input actual number -->
+                        <div v-else-if="wager.type === 'numeric'">
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
+                                What was the actual number? *
+                            </label>
+                            <input
+                                v-model.number="form.outcome_value"
+                                type="number"
+                                required
+                                placeholder="Enter the actual number"
+                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                            />
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                Winner determination: {{ wager.type === 'numeric' && (wager as any).numeric_winner_type === 'exact' ? 'Exact match only' : 'Closest guess wins' }}
+                            </p>
+                        </div>
+
+                        <!-- Date: Input actual date -->
+                        <div v-else-if="wager.type === 'date'">
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
+                                What was the actual date? *
+                            </label>
+                            <input
+                                v-model="form.outcome_value"
+                                type="date"
+                                required
+                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                            />
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                Winner determination: {{ wager.type === 'date' && (wager as any).date_winner_type === 'exact' ? 'Exact date only' : 'Closest date wins' }}
+                            </p>
+                        </div>
+
                         <!-- Binary: Yes/No -->
-                        <div v-if="wager.type === 'binary'" class="space-y-2">
+                        <div v-else-if="wager.type === 'binary'" class="space-y-2">
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
+                                What was the outcome? *
+                            </label>
                             <label class="flex items-center">
                                 <input
                                     v-model="form.outcome_value"
@@ -118,6 +272,9 @@ const submit = () => {
 
                         <!-- Multiple Choice -->
                         <div v-else-if="wager.type === 'multiple_choice' && wager.options" class="space-y-2">
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
+                                What was the outcome? *
+                            </label>
                             <label v-for="option in wager.options" :key="option" class="flex items-center">
                                 <input
                                     v-model="form.outcome_value"
@@ -128,6 +285,11 @@ const submit = () => {
                                 />
                                 <span>{{ option }}</span>
                             </label>
+                        </div>
+
+                        <!-- Debug fallback -->
+                        <div v-if="wager.type !== 'short_answer' && wager.type !== 'top_n_ranking' && wager.type !== 'numeric' && wager.type !== 'date' && wager.type !== 'binary' && wager.type !== 'multiple_choice'" class="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded text-sm">
+                            ⚠️ Unknown wager type: {{ wager.type }}
                         </div>
 
                         <div v-if="form.errors.outcome_value" class="text-red-600 text-sm mt-1">

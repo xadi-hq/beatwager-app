@@ -14,6 +14,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Telegram Bot Username
+    |--------------------------------------------------------------------------
+    |
+    | The username of your bot (without the @ symbol).
+    | Used for directing users to start a private chat with the bot.
+    |
+    */
+    'bot_username' => env('TELEGRAM_BOT_USERNAME', 'WagerBot'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Webhook Configuration
     |--------------------------------------------------------------------------
     |

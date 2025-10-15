@@ -14,23 +14,16 @@ return new class extends Migration
             $table->foreignUuid('group_id')->constrained()->cascadeOnDelete();
 
             // Transaction details
-            $table->enum('type', [
-                'wager_placed',
-                'wager_won',
-                'wager_lost',
-                'wager_refunded',
-                'point_decay',
-                'admin_adjustment',
-                'initial_balance'
-            ]);
+            // Type is validated via App\Enums\TransactionType enum, not database constraint
+            $table->string('type', 50);
 
             $table->integer('amount'); // Positive for credit, negative for debit
             $table->integer('balance_before');
             $table->integer('balance_after');
 
-            // Related entities
-            $table->foreignUuid('wager_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignUuid('wager_entry_id')->nullable()->constrained()->cascadeOnDelete();
+            // Polymorphic relationship
+            $table->string('transactionable_type')->nullable()->after('group_id');
+            $table->uuid('transactionable_id')->nullable()->after('transactionable_type');
 
             // Metadata
             $table->text('description')->nullable();
@@ -39,9 +32,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['user_id', 'group_id']);
-            $table->index('wager_id');
             $table->index('type');
             $table->index('created_at');
+            $table->index(['transactionable_type', 'transactionable_id']);
         });
     }
 

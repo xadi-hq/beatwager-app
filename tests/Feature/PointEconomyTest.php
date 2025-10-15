@@ -37,7 +37,7 @@ describe('Point System', function () {
             'title' => 'Test Wager',
             'type' => 'binary',
             'stake_amount' => 100,
-            'deadline' => now()->addHours(24),
+            'betting_closes_at' => now()->addHours(24),
             'status' => 'open',
             'total_points_wagered' => 0,
             'participants_count' => 0,
@@ -64,7 +64,7 @@ describe('Point System', function () {
             'title' => 'Test Wager',
             'type' => 'binary',
             'stake_amount' => 100,
-            'deadline' => now()->addHours(24),
+            'betting_closes_at' => now()->addHours(24),
             'status' => 'open',
             'total_points_wagered' => 0,
             'participants_count' => 0,
@@ -92,7 +92,7 @@ describe('Point System', function () {
             'title' => 'Test Wager',
             'type' => 'binary',
             'stake_amount' => 100,
-            'deadline' => now()->addHours(24),
+            'betting_closes_at' => now()->addHours(24),
             'status' => 'open',
             'total_points_wagered' => 0,
             'participants_count' => 0,
@@ -127,7 +127,7 @@ describe('Transaction History', function () {
             'title' => 'Test Wager',
             'type' => 'binary',
             'stake_amount' => 100,
-            'deadline' => now()->addHours(24),
+            'betting_closes_at' => now()->addHours(24),
             'status' => 'open',
             'total_points_wagered' => 0,
             'participants_count' => 0,
@@ -140,9 +140,14 @@ describe('Transaction History', function () {
         expect($transactions)->toHaveCount(1);
 
         $transaction = $transactions->first();
-        expect($transaction->type)->toBe('wager_placed');
+        expect($transaction->type)->toBe(\App\Enums\TransactionType::WagerPlaced);
         expect($transaction->amount)->toBe(-100);
-        expect($transaction->wager_id)->toBe($wager->id);
+
+        // Verify polymorphic relationship - transaction links to WagerEntry
+        expect($transaction->transactionable_type)->toBe(\App\Models\WagerEntry::class);
+        expect($transaction->transactionable)->not->toBeNull();
+        expect($transaction->wagerEntry())->not->toBeNull();
+        expect($transaction->getWager()->id)->toBe($wager->id);
     });
 
     it('creates transaction records when settling wager', function () {
@@ -161,7 +166,7 @@ describe('Transaction History', function () {
             'title' => 'Test Wager',
             'type' => 'binary',
             'stake_amount' => 100,
-            'deadline' => now()->addHours(24),
+            'betting_closes_at' => now()->addHours(24),
             'status' => 'open',
             'total_points_wagered' => 0,
             'participants_count' => 0,

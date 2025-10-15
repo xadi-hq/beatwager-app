@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Toast from '@/Components/Toast.vue';
+import FormError from '@/Components/FormError.vue';
 
 const props = defineProps<{
     user: {
@@ -29,16 +30,29 @@ const form = useForm({
     title: '',
     description: '',
     resolution_criteria: '',
-    type: 'binary' as 'binary' | 'multiple_choice',
+    type: 'binary' as 'binary' | 'multiple_choice' | 'numeric' | 'date' | 'short_answer' | 'top_n_ranking',
     group_id: props.defaultGroup?.id || '',
     stake_amount: 100,
-    deadline: '',
+    betting_closes_at: '',
+    expected_settlement_at: '',
     options: ['', ''],
+    max_length: 100,
+    n: 3,
+    numeric_min: null as number | null,
+    numeric_max: null as number | null,
+    numeric_winner_type: 'closest' as 'closest' | 'exact',
+    date_min: null as string | null,
+    date_max: null as string | null,
+    date_winner_type: 'closest' as 'closest' | 'exact',
 });
 
 const wagerTypes = [
     { value: 'binary', label: 'Yes/No Question' },
     { value: 'multiple_choice', label: 'Multiple Choice (e.g., 1/x/2 for soccer)' },
+    { value: 'numeric', label: 'Numeric Guess (e.g., "How many goals?")' },
+    { value: 'date', label: 'Date Prediction (e.g., "When will X happen?")' },
+    { value: 'short_answer', label: 'Short Answer (e.g., "Who will be topscorer?")' },
+    { value: 'top_n_ranking', label: 'Top N Ranking (e.g., "Top 3 Dutch parties")' },
 ];
 
 // Balance feasibility warning
@@ -114,7 +128,7 @@ const submit = () => {
                             </span>
                         </p>
                         <p v-if="defaultGroup" class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                            Wager will be created in the group where you used /newwager
+                            Wager will be created in the mentioned group above
                         </p>
                     </div>
 
@@ -140,7 +154,7 @@ const submit = () => {
                         <p v-else class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                             Group not listed? Make sure BeatWager bot is part of that group first.
                         </p>
-                        <div v-if="form.errors.group_id" class="text-red-600 text-sm mt-1">{{ form.errors.group_id }}</div>
+                        <FormError :error="form.errors.group_id" />
                     </div>
 
                     <!-- Wager Type -->
@@ -170,7 +184,7 @@ const submit = () => {
                             placeholder="e.g., Ajax vs PSV - Who wins?"
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         />
-                        <div v-if="form.errors.title" class="text-red-600 text-sm mt-1">{{ form.errors.title }}</div>
+                        <FormError :error="form.errors.title" />
                     </div>
 
                     <!-- Options for Multiple Choice -->
@@ -204,43 +218,255 @@ const submit = () => {
                         </button>
                     </div>
 
-                    <!-- Stake Amount and Deadline (combined on desktop) -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Stake Amount -->
-                        <div>
+                    <!-- Short Answer: Max Length -->
+                    <div v-if="form.type === 'short_answer'">
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                            Maximum Answer Length (characters)
+                        </label>
+                        <input
+                            v-model.number="form.max_length"
+                            type="number"
+                            required
+                            min="10"
+                            max="500"
+                            class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                        />
+                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            Users will answer with free text (e.g., "Who will be the topscorer?")
+                        </p>
+                        <FormError :error="form.errors.max_length" />
+                    </div>
+
+                    <!-- Top N Ranking: Options and N -->
+                    <div v-if="form.type === 'top_n_ranking'" class="space-y-4">
+                        <!-- Options -->
+                        <div class="space-y-2">
                             <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                Stake (points) *
+                                Ranking Options *
                             </label>
-                            <input
-                                v-model.number="form.stake_amount"
-                                type="number"
-                                required
-                                min="1"
-                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
-                            />
-                            <div v-if="form.errors.stake_amount" class="text-red-600 text-sm mt-1">{{ form.errors.stake_amount }}</div>
-                            
-                            <!-- Balance feasibility warning -->
-                            <div v-if="membersUnderStake" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded text-sm">
-                                <p class="text-amber-700 dark:text-amber-300">
-                                    ⚠️ {{ membersUnderStake.display }} {{ membersUnderStake.count === 1 ? 'has a' : 'have' }} balance{{ membersUnderStake.count > 1 ? 's' : '' }} lower than this stake
-                                </p>
+                            <div v-for="(option, index) in form.options" :key="index" class="flex gap-2">
+                                <input
+                                    v-model="form.options[index]"
+                                    type="text"
+                                    required
+                                    :placeholder="`Option ${index + 1}`"
+                                    class="flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                />
+                                <button
+                                    v-if="form.options.length > form.n"
+                                    type="button"
+                                    @click="removeOption(index)"
+                                    class="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                >
+                                    Remove
+                                </button>
                             </div>
+                            <button
+                                type="button"
+                                @click="addOption"
+                                class="px-4 py-2 bg-neutral-200 dark:bg-neutral-600 text-neutral-900 dark:text-white rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-500"
+                            >
+                                + Add Option
+                            </button>
                         </div>
 
-                        <!-- Deadline -->
+                        <!-- N value -->
                         <div>
                             <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                Deadline *
+                                How many to rank (N) *
                             </label>
                             <input
-                                v-model="form.deadline"
+                                v-model.number="form.n"
+                                type="number"
+                                required
+                                min="2"
+                                :max="form.options.length"
+                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                            />
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                Users will rank their top {{ form.n }} picks (e.g., "Top 3 Dutch political parties")
+                            </p>
+                            <FormError :error="form.errors.n" />
+                        </div>
+                    </div>
+
+                    <!-- Numeric Type: Min/Max and Winner Type -->
+                    <div v-if="form.type === 'numeric'" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                    Minimum Value (optional)
+                                </label>
+                                <input
+                                    v-model.number="form.numeric_min"
+                                    type="number"
+                                    placeholder="e.g., 0"
+                                    class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                />
+                                <FormError :error="form.errors.numeric_min" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                    Maximum Value (optional)
+                                </label>
+                                <input
+                                    v-model.number="form.numeric_max"
+                                    type="number"
+                                    placeholder="e.g., 100"
+                                    class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                />
+                                <FormError :error="form.errors.numeric_max" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Winner Selection
+                            </label>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        v-model="form.numeric_winner_type"
+                                        type="radio"
+                                        value="closest"
+                                        class="text-blue-600"
+                                    />
+                                    <span class="text-sm text-neutral-700 dark:text-neutral-300">
+                                        Closest guess wins (most forgiving)
+                                    </span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        v-model="form.numeric_winner_type"
+                                        type="radio"
+                                        value="exact"
+                                        class="text-blue-600"
+                                    />
+                                    <span class="text-sm text-neutral-700 dark:text-neutral-300">
+                                        Exact match only (must be perfect)
+                                    </span>
+                                </label>
+                            </div>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+                                Users will guess a number (e.g., "How many goals will be scored?")
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Date Type: Min/Max and Winner Type -->
+                    <div v-if="form.type === 'date'" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                    Earliest Date (optional)
+                                </label>
+                                <input
+                                    v-model="form.date_min"
+                                    type="date"
+                                    class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                />
+                                <FormError :error="form.errors.date_min" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                    Latest Date (optional)
+                                </label>
+                                <input
+                                    v-model="form.date_max"
+                                    type="date"
+                                    class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                />
+                                <FormError :error="form.errors.date_max" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Winner Selection
+                            </label>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        v-model="form.date_winner_type"
+                                        type="radio"
+                                        value="closest"
+                                        class="text-blue-600"
+                                    />
+                                    <span class="text-sm text-neutral-700 dark:text-neutral-300">
+                                        Closest date wins (most forgiving)
+                                    </span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        v-model="form.date_winner_type"
+                                        type="radio"
+                                        value="exact"
+                                        class="text-blue-600"
+                                    />
+                                    <span class="text-sm text-neutral-700 dark:text-neutral-300">
+                                        Exact date only (must be perfect)
+                                    </span>
+                                </label>
+                            </div>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+                                Users will predict a date (e.g., "When will X happen?")
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Stake Amount -->
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                            Stake (points) *
+                        </label>
+                        <input
+                            v-model.number="form.stake_amount"
+                            type="number"
+                            required
+                            min="1"
+                            class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                        />
+                        <FormError :error="form.errors.stake_amount" />
+                    </div>
+
+                    <!-- Betting Closes At and Expected Settlement (combined on desktop) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Betting Closes At -->
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Betting Closes *
+                            </label>
+                            <input
+                                v-model="form.betting_closes_at"
                                 type="datetime-local"
                                 required
                                 class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                             />
-                            <div v-if="form.errors.deadline" class="text-red-600 text-sm mt-1">{{ form.errors.deadline }}</div>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                When users can no longer place bets
+                            </p>
+                            <FormError :error="form.errors.betting_closes_at" />
                         </div>
+
+                        <!-- Expected Settlement Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Expected Result Date (optional)
+                            </label>
+                            <input
+                                v-model="form.expected_settlement_at"
+                                type="datetime-local"
+                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                            />
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                When the outcome will be known (optional)
+                            </p>
+                            <FormError :error="form.errors.expected_settlement_at" />
+                        </div>
+                    </div>
+                    <!-- Balance feasibility warning -->
+                    <div v-if="membersUnderStake" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded text-sm">
+                        <p class="text-amber-700 dark:text-amber-300">
+                            ⚠️ {{ membersUnderStake.display }} {{ membersUnderStake.count === 1 ? 'has a' : 'have' }} balance{{ membersUnderStake.count > 1 ? 's' : '' }} lower than this stake
+                        </p>
                     </div>
 
                     <!-- Submit Button -->

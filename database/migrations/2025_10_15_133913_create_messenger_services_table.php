@@ -29,6 +29,7 @@ return new class extends Migration
 
             // Additional platform-specific data (JSON for flexibility)
             $table->json('metadata')->nullable();
+            $table->boolean('is_primary')->default(false);
 
             $table->timestamps();
 
@@ -37,6 +38,9 @@ return new class extends Migration
 
             // Ensure platform user IDs are unique per platform
             $table->unique(['platform', 'platform_user_id']);
+
+            // Index for faster lookups
+            $table->index(['user_id', 'is_primary']);
         });
     }
 

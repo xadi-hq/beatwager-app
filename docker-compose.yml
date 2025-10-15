@@ -62,7 +62,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_EXTERNAL_PORT:-5433}:5432"
     networks:
       - beatwager-network
     healthcheck:
@@ -79,8 +79,6 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - redis-data:/data
-    ports:
-      - "${REDIS_PORT:-6380}:6379"
     networks:
       - beatwager-network
     healthcheck:
@@ -167,6 +165,12 @@ services:
         condition: service_started
     networks:
       - beatwager-network
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "artisan schedule:work"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   postgres-data:
