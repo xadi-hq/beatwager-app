@@ -1,0 +1,4 @@
+#!/bin/bash
+# Helper script to run Composer commands inside the Docker container
+
+docker-compose exec app composer "$@"

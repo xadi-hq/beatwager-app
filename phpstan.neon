@@ -1,0 +1,27 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    paths:
+        - app/
+        - config/
+        - routes/
+
+    # Level 6 provides good balance of strictness
+    level: 6
+
+    # Custom temp directory for better Docker performance
+    tmpDir: storage/phpstan
+
+    # Exclude patterns
+    excludePaths:
+        - bootstrap/cache/*
+        - storage/*
+        - vendor/*
+
+    # Treat PHP version
+    phpVersion: 80400 # PHP 8.4
+
+    # Report unmatched ignored errors to keep baseline clean
+    reportUnmatchedIgnoredErrors: true

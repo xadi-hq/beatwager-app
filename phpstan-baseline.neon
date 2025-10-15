@@ -1,0 +1,901 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getTelegramService\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Console/Commands/SendSettlementReminders.php
+
+		-
+			message: '#^Method App\\Contracts\\MessengerInterface\:\:buildButtons\(\) has parameter \$buttons with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Contracts/MessengerInterface.php
+
+		-
+			message: '#^Method App\\DTOs\\Message\:\:__construct\(\) has parameter \$variables with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/DTOs/Message.php
+
+		-
+			message: '#^Method App\\Exceptions\\InvalidAnswerException\:\:forMultipleChoice\(\) has parameter \$validOptions with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Exceptions/InvalidAnswerException.php
+
+		-
+			message: '#^Method App\\Exceptions\\InvalidWagerStateException\:\:__construct\(\) has parameter \$validStatuses with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Exceptions/InvalidWagerStateException.php
+
+		-
+			message: '#^Method App\\Exceptions\\InvalidWagerStateException\:\:getValidStatuses\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Exceptions/InvalidWagerStateException.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$points\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
+			message: '#^Cannot call method getChat\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
+			message: '#^Parameter \#2 \$text of method TelegramBot\\Api\\BotApi\:\:answerCallbackQuery\(\) expects string\|null, array\<string, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
+			message: '#^Parameter \#2 \$text of method TelegramBot\\Api\\BotApi\:\:answerCallbackQuery\(\) expects string\|null, array\<string, string\|false\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
+			message: '#^Parameter \#2 \$text of method TelegramBot\\Api\\BotApi\:\:answerCallbackQuery\(\) expects string\|null, array\<string, string\|true\> given\.$#'
+			identifier: argument.type
+			count: 7
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
+			message: '#^Parameter \$userId of static method App\\Models\\OneTimeToken\:\:generate\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\DashboardController\:\:updateProfile\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Transaction\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Wager\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Transaction\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Wager\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ShortUrlController\:\:redirect\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ShortUrlController.php
+
+		-
+			message: '#^Array has 2 duplicate keys with value ''settled_at'' \(''settled_at'', ''settled_at''\)\.$#'
+			identifier: array.duplicateKey
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 5
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:postSettlementToTelegram\(\) has parameter \$wager with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:postWagerToTelegram\(\) has parameter \$group with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:postWagerToTelegram\(\) has parameter \$wager with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:settle\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:settleFromShow\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:settleFromShow\(\) has parameter \$wagerId with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:settlementSuccess\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:settlementSuccess\(\) has parameter \$wagerId with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:show\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:show\(\) has parameter \$wagerId with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:showSettlementForm\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:success\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:success\(\) has parameter \$wagerId with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 3
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:sortBy\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Parameter \#1 \$wager of method App\\Services\\WagerService\:\:settleWager\(\) expects App\\Models\\Wager, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Parameter \#4 \$settlerId of method App\\Services\\WagerService\:\:settleWager\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 3
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:values\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Middleware\\AuthenticateFromSignedUrl\:\:findUserByIdentifier\(\) should return App\\Models\\User\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 2
+			path: app/Http/Middleware/AuthenticateFromSignedUrl.php
+
+		-
+			message: '#^Method App\\Models\\AuditLog\:\:actor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/AuditLog.php
+
+		-
+			message: '#^Method App\\Models\\AuditLog\:\:auditable\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/AuditLog.php
+
+		-
+			message: '#^Method App\\Models\\AuditLog\:\:scopeAction\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/AuditLog.php
+
+		-
+			message: '#^Method App\\Models\\AuditLog\:\:scopeAction\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/AuditLog.php
+
+		-
+			message: '#^Method App\\Models\\AuditLog\:\:scopeByActor\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/AuditLog.php
+
+		-
+			message: '#^Method App\\Models\\AuditLog\:\:scopeByActor\(\) has parameter \$actorId with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/AuditLog.php
+
+		-
+			message: '#^Method App\\Models\\AuditLog\:\:scopeByActor\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/AuditLog.php
+
+		-
+			message: '#^Method App\\Models\\AuditLog\:\:scopeRecent\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/AuditLog.php
+
+		-
+			message: '#^Method App\\Models\\AuditLog\:\:scopeRecent\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/AuditLog.php
+
+		-
+			message: '#^Class App\\Models\\Group uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Method App\\Models\\Group\:\:getChatId\(\) should return string but returns int\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Method App\\Models\\Group\:\:transactions\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Method App\\Models\\Group\:\:users\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel, TPivotModel, TAccessor \(2\-4 required\)$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Method App\\Models\\Group\:\:wagerTemplates\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Method App\\Models\\Group\:\:wagers\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Method App\\Models\\MessengerService\:\:scopeDiscord\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/MessengerService.php
+
+		-
+			message: '#^Method App\\Models\\MessengerService\:\:scopeDiscord\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/MessengerService.php
+
+		-
+			message: '#^Method App\\Models\\MessengerService\:\:scopeSlack\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/MessengerService.php
+
+		-
+			message: '#^Method App\\Models\\MessengerService\:\:scopeSlack\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/MessengerService.php
+
+		-
+			message: '#^Method App\\Models\\MessengerService\:\:scopeTelegram\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/MessengerService.php
+
+		-
+			message: '#^Method App\\Models\\MessengerService\:\:scopeTelegram\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/MessengerService.php
+
+		-
+			message: '#^Method App\\Models\\MessengerService\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/MessengerService.php
+
+		-
+			message: '#^Class App\\Models\\OneTimeToken uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/OneTimeToken.php
+
+		-
+			message: '#^Method App\\Models\\OneTimeToken\:\:generate\(\) has parameter \$context with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/OneTimeToken.php
+
+		-
+			message: '#^Method App\\Models\\OneTimeToken\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/OneTimeToken.php
+
+		-
+			message: '#^Method App\\Models\\ShortUrl\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ShortUrl.php
+
+		-
+			message: '#^Method App\\Models\\ShortUrl\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ShortUrl.php
+
+		-
+			message: '#^Class App\\Models\\Transaction uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Transaction.php
+
+		-
+			message: '#^Method App\\Models\\Transaction\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Transaction.php
+
+		-
+			message: '#^Method App\\Models\\Transaction\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Transaction.php
+
+		-
+			message: '#^Method App\\Models\\Transaction\:\:wager\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Transaction.php
+
+		-
+			message: '#^Method App\\Models\\Transaction\:\:wagerEntry\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Transaction.php
+
+		-
+			message: '#^Class App\\Models\\User uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:getMessengerService\(\) should return App\\Models\\MessengerService\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:groups\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel, TPivotModel, TAccessor \(2\-4 required\)$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:messengerServices\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:transactions\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:wagerEntries\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:wagers\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\UserGroup\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/UserGroup.php
+
+		-
+			message: '#^Method App\\Models\\UserGroup\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/UserGroup.php
+
+		-
+			message: '#^Class App\\Models\\Wager uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Match arm comparison between ''date'' and ''date'' is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:entries\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:getDisplayOptions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:oneTimeTokens\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:settler\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:transactions\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Class App\\Models\\WagerEntry uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/WagerEntry.php
+
+		-
+			message: '#^Method App\\Models\\WagerEntry\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/WagerEntry.php
+
+		-
+			message: '#^Method App\\Models\\WagerEntry\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/WagerEntry.php
+
+		-
+			message: '#^Method App\\Models\\WagerEntry\:\:wager\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/WagerEntry.php
+
+		-
+			message: '#^Method App\\Models\\WagerSettlementToken\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/WagerSettlementToken.php
+
+		-
+			message: '#^Method App\\Models\\WagerSettlementToken\:\:wager\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/WagerSettlementToken.php
+
+		-
+			message: '#^Class App\\Models\\WagerTemplate uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/WagerTemplate.php
+
+		-
+			message: '#^Method App\\Models\\WagerTemplate\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/WagerTemplate.php
+
+		-
+			message: '#^Method App\\Models\\WagerTemplate\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/WagerTemplate.php
+
+		-
+			message: '#^Method App\\Services\\AuditService\:\:log\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/AuditService.php
+
+		-
+			message: '#^Method App\\Services\\AuditService\:\:logFromRequest\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/AuditService.php
+
+		-
+			message: '#^Method App\\Services\\AuditService\:\:logSystem\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/AuditService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Method App\\Services\\MessageService\:\:buildWagerButtons\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Method App\\Services\\MessageService\:\:settlementResult\(\) has parameter \$winners with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Parameter \#1 \$value of function collect expects Illuminate\\Contracts\\Support\\Arrayable\<\(int\|string\), mixed\>\|iterable\<\(int\|string\), mixed\>\|null, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: mixed$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Services/Messengers/TelegramMessenger.php
+
+		-
+			message: '#^Method App\\Services\\Messengers\\TelegramMessenger\:\:buildButtons\(\) has parameter \$buttons with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/Messengers/TelegramMessenger.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: app/Services/Messengers/TelegramMessenger.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/PointService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$points\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/PointService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>points" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/PointService.php
+
+		-
+			message: '#^Method App\\Services\\TokenService\:\:getActiveTokensForWager\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/TokenService.php
+
+		-
+			message: '#^Parameter \$userId of static method App\\Models\\OneTimeToken\:\:generate\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/TokenService.php
+
+		-
+			message: '#^Method App\\Services\\UserMessengerService\:\:findByPlatform\(\) should return App\\Models\\User\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/UserMessengerService.php
+
+		-
+			message: '#^Method App\\Services\\UserMessengerService\:\:findOrCreate\(\) has parameter \$userData with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/UserMessengerService.php
+
+		-
+			message: '#^Method App\\Services\\UserMessengerService\:\:findOrCreate\(\) should return App\\Models\\User but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/UserMessengerService.php
+
+		-
+			message: '#^Method App\\Services\\UserMessengerService\:\:generateUserName\(\) has parameter \$userData with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/UserMessengerService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 6
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: mixed$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:createWager\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:settleCategoricalWager\(\) has parameter \$entries with generic class Illuminate\\Database\\Eloquent\\Collection but does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:settleDateWager\(\) has parameter \$entries with generic class Illuminate\\Database\\Eloquent\\Collection but does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:settleNumericWager\(\) has parameter \$entries with generic class Illuminate\\Database\\Eloquent\\Collection but does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#1 \$entry of method App\\Services\\WagerService\:\:awardWinner\(\) expects App\\Models\\WagerEntry, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#1 \$entry of method App\\Services\\WagerService\:\:recordLoss\(\) expects App\\Models\\WagerEntry, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#1 \$entry of method App\\Services\\WagerService\:\:refundEntry\(\) expects App\\Models\\WagerEntry, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 4
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Services\\PointService\:\:awardPoints\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Services\\PointService\:\:recordLoss\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Services\\PointService\:\:refundPoints\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#2 \$group of method App\\Services\\PointService\:\:awardPoints\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#2 \$group of method App\\Services\\PointService\:\:deductPoints\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#2 \$group of method App\\Services\\PointService\:\:recordLoss\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#2 \$group of method App\\Services\\PointService\:\:refundPoints\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of function in_array expects array, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#2 \$validOptions of static method App\\Exceptions\\InvalidAnswerException\:\:forMultipleChoice\(\) expects array, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#4 \$wager of method App\\Services\\PointService\:\:recordLoss\(\) expects App\\Models\\Wager, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#4 \$wager of method App\\Services\\PointService\:\:refundPoints\(\) expects App\\Models\\Wager, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#5 \$wager of method App\\Services\\PointService\:\:awardPoints\(\) expects App\\Models\\Wager\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/WagerService.php

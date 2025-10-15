@@ -1,0 +1,4 @@
+#!/bin/bash
+# Helper script to run NPM commands inside the Docker container
+
+docker-compose exec app npm "$@"

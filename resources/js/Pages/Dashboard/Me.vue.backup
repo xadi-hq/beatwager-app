@@ -1,0 +1,348 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { Head, useForm, router } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+
+const props = defineProps<{
+    user: any;
+    stats: any;
+    groups: any[];
+    activeWagers: any[];
+    settledWagers: any[];
+    recentTransactions: any[];
+    focus: string;
+    token: string;
+}>();
+
+// Active tab management
+const activeTab = ref(props.focus === 'transactions' ? 'transactions' : 'overview');
+
+// Profile edit form
+const profileForm = useForm({
+    taunt_line: props.user.taunt_line || '',
+    birthday: props.user.birthday || '',
+    token: props.token,
+});
+
+const isEditingProfile = ref(false);
+
+function submitProfile() {
+    profileForm.post('/me/profile', {
+        preserveScroll: true,
+        onSuccess: () => {
+            isEditingProfile.value = false;
+        }
+    });
+}
+
+// Time formatting helpers
+function formatTimeRemaining(deadlineStr: string): string {
+    const deadline = new Date(deadlineStr);
+    const diff = deadline.getTime() - Date.now();
+
+    if (diff < 0) return 'Deadline passed';
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+}
+
+function formatRelativeTime(dateStr: string): string {
+    const date = new Date(dateStr);
+    const diff = Date.now() - date.getTime();
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (mins > 0) return `${mins}m ago`;
+    return 'Just now';
+}
+
+function formatDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+</script>
+
+<template>
+    <AppLayout>
+        <Head title="My Dashboard" />
+
+        <div class="max-w-6xl mx-auto py-8 px-4">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">
+                    Welcome, {{ user.name }}!
+                </h1>
+                <p class="text-gray-600 mt-1">@{{ user.telegram_username }}</p>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="text-sm text-gray-600 mb-1">Total Balance</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ stats.total_balance }}</div>
+                    <div class="text-xs text-gray-500 mt-1">points</div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="text-sm text-gray-600 mb-1">Active Wagers</div>
+                    <div class="text-2xl font-bold text-blue-600">{{ stats.active_wagers }}</div>
+                    <div class="text-xs text-gray-500 mt-1">in progress</div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="text-sm text-gray-600 mb-1">Win Rate</div>
+                    <div class="text-2xl font-bold text-green-600">{{ stats.win_rate }}%</div>
+                    <div class="text-xs text-gray-500 mt-1">{{ stats.won_wagers }}/{{ stats.total_wagers }} won</div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="text-sm text-gray-600 mb-1">Groups</div>
+                    <div class="text-2xl font-bold text-purple-600">{{ groups.length }}</div>
+                    <div class="text-xs text-gray-500 mt-1">participating</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="border-b border-gray-200">
+                    <nav class="flex -mb-px">
+                        <button
+                            @click="activeTab = 'overview'"
+                            :class="[
+                                'px-6 py-3 text-sm font-medium border-b-2',
+                                activeTab === 'overview'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                            ]"
+                        >
+                            Overview
+                        </button>
+                        <button
+                            @click="activeTab = 'wagers'"
+                            :class="[
+                                'px-6 py-3 text-sm font-medium border-b-2',
+                                activeTab === 'wagers'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                            ]"
+                        >
+                            My Wagers
+                        </button>
+                        <button
+                            @click="activeTab = 'transactions'"
+                            :class="[
+                                'px-6 py-3 text-sm font-medium border-b-2',
+                                activeTab === 'transactions'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                            ]"
+                        >
+                            Transactions
+                        </button>
+                        <button
+                            @click="activeTab = 'profile'"
+                            :class="[
+                                'px-6 py-3 text-sm font-medium border-b-2',
+                                activeTab === 'profile'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                            ]"
+                        >
+                            Profile
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <!-- Overview Tab -->
+                    <div v-if="activeTab === 'overview'">
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-3">Your Groups</h3>
+                            <div class="space-y-2">
+                                <div v-for="group in groups" :key="group.id" class="flex justify-between items-center bg-gray-50 rounded p-3">
+                                    <div>
+                                        <div class="font-medium">{{ group.name }}</div>
+                                        <div class="text-sm text-gray-500">{{ group.role }}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-gray-900">{{ group.balance }}</div>
+                                        <div class="text-xs text-gray-500">points</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Active Wagers ({{ activeWagers.length }})</h3>
+                            <div v-if="activeWagers.length === 0" class="text-gray-500 text-center py-8">
+                                No active wagers yet
+                            </div>
+                            <div v-else class="space-y-3">
+                                <div v-for="wager in activeWagers.slice(0, 5)" :key="wager.id" class="bg-gray-50 rounded p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <div class="font-medium">{{ wager.title }}</div>
+                                            <div class="text-sm text-gray-600">{{ wager.group.name }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-medium text-blue-600">{{ formatTimeRemaining(wager.deadline) }}</div>
+                                            <div class="text-xs text-gray-500">{{ wager.participants_count }} participants</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm text-gray-700">
+                                        <span v-if="wager.is_creator" class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs">Creator</span>
+                                        <span v-else class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">Your answer: {{ wager.user_answer }}</span>
+                                        <span class="ml-2 text-gray-600">{{ wager.user_points_wagered }} pts wagered</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wagers Tab -->
+                    <div v-if="activeTab === 'wagers'">
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold mb-3">Active Wagers ({{ activeWagers.length }})</h3>
+                            <div v-if="activeWagers.length === 0" class="text-gray-500 text-center py-8">
+                                No active wagers
+                            </div>
+                            <div v-else class="space-y-3">
+                                <div v-for="wager in activeWagers" :key="wager.id" class="bg-gray-50 rounded p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <div class="font-medium">{{ wager.title }}</div>
+                                            <div class="text-sm text-gray-600">{{ wager.group.name }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-medium text-blue-600">{{ formatTimeRemaining(wager.deadline) }}</div>
+                                            <div class="text-xs text-gray-500">{{ wager.participants_count }} participants</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm text-gray-700">
+                                            <span v-if="wager.is_creator" class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs">Creator</span>
+                                            <span v-else class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">Your answer: {{ wager.user_answer }}</span>
+                                            <span class="ml-2 text-gray-600">{{ wager.user_points_wagered }} pts wagered</span>
+                                        </div>
+                                        <a :href="`/wager/${wager.id}`" class="text-blue-600 hover:text-blue-800 text-sm">View →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Recent Settled Wagers</h3>
+                            <div v-if="settledWagers.length === 0" class="text-gray-500 text-center py-8">
+                                No settled wagers yet
+                            </div>
+                            <div v-else class="space-y-3">
+                                <div v-for="wager in settledWagers" :key="wager.id" class="bg-gray-50 rounded p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <div class="font-medium">{{ wager.title }}</div>
+                                            <div class="text-sm text-gray-600">{{ wager.group.name }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-xs text-gray-500">{{ formatRelativeTime(wager.settled_at) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm">
+                                            <span v-if="wager.is_winner" class="text-green-600 font-medium">Won {{ wager.payout_amount }} pts</span>
+                                            <span v-else class="text-red-600">Lost {{ wager.user_points_wagered }} pts</span>
+                                            <span class="ml-2 text-gray-600">Outcome: {{ wager.outcome_value }}</span>
+                                        </div>
+                                        <a :href="`/wager/${wager.id}`" class="text-blue-600 hover:text-blue-800 text-sm">View →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Tab -->
+                    <div v-if="activeTab === 'transactions'">
+                        <h3 class="text-lg font-semibold mb-3">Recent Transactions</h3>
+                        <div v-if="recentTransactions.length === 0" class="text-gray-500 text-center py-8">
+                            No transactions yet
+                        </div>
+                        <div v-else class="space-y-2">
+                            <div v-for="tx in recentTransactions" :key="tx.id" class="flex justify-between items-center bg-gray-50 rounded p-3">
+                                <div class="flex-1">
+                                    <div class="font-medium text-sm">{{ tx.description || tx.type }}</div>
+                                    <div class="text-xs text-gray-600">
+                                        <span v-if="tx.group">{{ tx.group.name }}</span>
+                                        <span v-if="tx.wager"> · {{ tx.wager.title }}</span>
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-1">{{ formatDate(tx.created_at) }}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div :class="['font-bold', tx.amount >= 0 ? 'text-green-600' : 'text-red-600']">
+                                        {{ tx.amount >= 0 ? '+' : '' }}{{ tx.amount }}
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ tx.balance_before }} → {{ tx.balance_after }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Tab -->
+                    <div v-if="activeTab === 'profile'">
+                        <h3 class="text-lg font-semibold mb-4">Profile Settings</h3>
+
+                        <form @submit.prevent="submitProfile" class="space-y-6 max-w-lg">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Taunt Line
+                                </label>
+                                <input
+                                    v-model="profileForm.taunt_line"
+                                    type="text"
+                                    maxlength="255"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Your victory message to others..."
+                                />
+                                <p class="text-xs text-gray-500 mt-1">
+                                    This message will be displayed when you win a wager
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Birthday
+                                </label>
+                                <input
+                                    v-model="profileForm.birthday"
+                                    type="date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                                <p class="text-xs text-gray-500 mt-1">
+                                    The bot will send birthday wishes in your groups
+                                </p>
+                            </div>
+
+                            <div class="flex gap-3">
+                                <button
+                                    type="submit"
+                                    :disabled="profileForm.processing"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    {{ profileForm.processing ? 'Saving...' : 'Save Profile' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </AppLayout>
+</template>
