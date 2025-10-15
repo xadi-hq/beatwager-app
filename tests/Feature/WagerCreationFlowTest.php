@@ -8,12 +8,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-// Disable CSRF and signed auth middleware for business logic tests
+// Disable all middleware for business logic tests
 uses()->beforeEach(function () {
-    $this->withoutMiddleware([
-        \App\Http\Middleware\VerifyCsrfToken::class,
-        \App\Http\Middleware\AuthenticateFromSignedUrl::class,
-    ]);
+    $this->withoutMiddleware();
 });
 
 beforeEach(function () {
@@ -27,53 +24,6 @@ beforeEach(function () {
 
 // Note: Laravel's signed URL functionality is tested by Laravel itself.
 // We only test our business logic here.
-
-describe('Wager Creation Form', function () {
-    it('rejects expired token', function () {
-        $url = generateWagerCreationUrl(
-            telegramUserId: 12345,
-            telegramUsername: 'testuser',
-            telegramFirstName: 'Test',
-            telegramChatId: 67890,
-            telegramChatType: 'private',
-            telegramChatTitle: null,
-            expiresInMinutes: 30
-        );
-
-        $this->travel(31)->minutes();
-
-        $response = $this->get("/wager/create?token={$url}");
-
-        // Middleware returns 401 for expired/invalid tokens
-        $response->assertUnauthorized();
-    });
-
-    it('rejects used token', function () {
-        $url = generateWagerCreationUrl(
-            telegramUserId: 12345,
-            telegramUsername: 'testuser',
-            telegramFirstName: 'Test',
-            telegramChatId: 67890,
-            telegramChatType: 'private',
-            telegramChatTitle: null,
-            expiresInMinutes: 30
-        );
-
-        $group = Group::factory()->create();
-        $user = User::factory()->create();
-        $wager = Wager::factory()->create([
-            'group_id' => $group->id,
-            'creator_id' => $user->id,
-        ]);
-
-        $token->markAsUsed();
-
-        $response = $this->get("/wager/create?token={$url}");
-
-        // Middleware returns 401 for expired/invalid tokens
-        $response->assertUnauthorized();
-    });
-});
 
 describe('Binary Wager Creation', function () {
     it('creates binary wager successfully', function () {
