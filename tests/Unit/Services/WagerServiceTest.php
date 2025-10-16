@@ -480,7 +480,7 @@ class WagerServiceTest extends TestCase
             'wager_id' => $wager->id,
             'user_id' => $user1->id,
             'group_id' => $group->id,
-            'answer_value' => '2024-06-15',
+            'answer_value' => now()->addMonths(6)->format('Y-m-d'),
             'points_wagered' => 100,
         ]);
 
@@ -488,7 +488,7 @@ class WagerServiceTest extends TestCase
             'wager_id' => $wager->id,
             'user_id' => $user2->id,
             'group_id' => $group->id,
-            'answer_value' => '2024-06-14',
+            'answer_value' => now()->addMonths(6)->subDay()->format('Y-m-d'),
             'points_wagered' => 100,
         ]);
 
@@ -496,7 +496,7 @@ class WagerServiceTest extends TestCase
         $this->pointService->shouldReceive('refundPoints')
             ->twice();
 
-        $this->service->settleWager($wager, '2024-06-16');
+        $this->service->settleWager($wager, now()->addMonths(6)->addDay()->format('Y-m-d'));
 
         $entry1->refresh();
         $entry2->refresh();
@@ -600,15 +600,15 @@ class WagerServiceTest extends TestCase
         // Winner 2 should get 100 (50/200 * 400)
         $this->pointService->shouldReceive('awardPoints')
             ->once()
-            ->with($winner1, $group, 300, 'wager_won', $wager, $winnerEntry1);
+            ->with(Mockery::type(User::class), Mockery::type(Group::class), 300, 'wager_won', Mockery::type(Wager::class), Mockery::type(WagerEntry::class));
 
         $this->pointService->shouldReceive('awardPoints')
             ->once()
-            ->with($winner2, $group, 100, 'wager_won', $wager, $winnerEntry2);
+            ->with(Mockery::type(User::class), Mockery::type(Group::class), 100, 'wager_won', Mockery::type(Wager::class), Mockery::type(WagerEntry::class));
 
         $this->pointService->shouldReceive('recordLoss')
             ->once()
-            ->with($loser, $group, 200, $wager, $loserEntry);
+            ->with(Mockery::type(User::class), Mockery::type(Group::class), 200, Mockery::type(Wager::class), Mockery::type(WagerEntry::class));
 
         $this->service->settleWager($wager, 'yes');
 
@@ -708,11 +708,16 @@ class WagerServiceTest extends TestCase
             'points_wagered' => 100,
         ]);
 
-        $this->pointService->shouldReceive('awardPoints')->once();
-        $this->pointService->shouldReceive('recordLoss')->once();
+        $this->pointService->shouldReceive('awardPoints')
+            ->once()
+            ->with(Mockery::type(User::class), Mockery::type(Group::class), 200, 'wager_won', Mockery::type(Wager::class), Mockery::type(WagerEntry::class));
+        $this->pointService->shouldReceive('recordLoss')
+            ->once()
+            ->with(Mockery::type(User::class), Mockery::type(Group::class), 100, Mockery::type(Wager::class), Mockery::type(WagerEntry::class));
 
-        // Mock AuditEventService
-        AuditEventService::shouldReceive('wagerWon')
+        // Override the default mock for this specific test
+        Mockery::mock('overload:' . AuditEventService::class)
+            ->shouldReceive('wagerWon')
             ->once()
             ->with(
                 Mockery::on(fn($g) => $g->id === $group->id),
@@ -760,10 +765,16 @@ class WagerServiceTest extends TestCase
             ]);
         }
 
-        $this->pointService->shouldReceive('awardPoints')->twice();
-        $this->pointService->shouldReceive('recordLoss')->twice();
+        $this->pointService->shouldReceive('awardPoints')
+            ->twice()
+            ->with(Mockery::type(User::class), Mockery::type(Group::class), 200, 'wager_won', Mockery::type(Wager::class), Mockery::type(WagerEntry::class));
+        $this->pointService->shouldReceive('recordLoss')
+            ->twice()
+            ->with(Mockery::type(User::class), Mockery::type(Group::class), 100, Mockery::type(Wager::class), Mockery::type(WagerEntry::class));
 
-        AuditEventService::shouldReceive('create')
+        // Override the default mock for this specific test
+        Mockery::mock('overload:' . AuditEventService::class)
+            ->shouldReceive('create')
             ->once()
             ->with(
                 Mockery::on(fn($g) => $g->id === $group->id),

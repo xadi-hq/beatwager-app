@@ -12,9 +12,9 @@ return [
         ],
 
         'joined' => [
-            'intent' => 'Announce a user joining a wager to create FOMO and engagement',
-            'required_fields' => ['user_name', 'wager_title', 'answer', 'points_wagered', 'currency'],
-            'fallback_template' => "{user_name} joined \"{wager_title}\" betting {answer} for {points_wagered} {currency}!",
+            'intent' => 'Announce a user joining a wager to create FOMO and engagement (DO NOT reveal their answer - blind wagers!)',
+            'required_fields' => ['user_name', 'wager_title', 'points_wagered', 'currency'],
+            'fallback_template' => "{user_name} joined \"{wager_title}\" with {points_wagered} {currency}!",
             'tone_hints' => ['exciting', 'engaging', 'FOMO'],
             'max_words' => 25,  // Room for personality and triggers
         ],

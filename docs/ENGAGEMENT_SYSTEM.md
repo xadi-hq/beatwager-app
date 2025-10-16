@@ -123,17 +123,17 @@ public function wagerJoined(
 
     $ctx = new MessageContext(
         key: 'wager.joined',
-        intent: 'Announce a user joining a wager to create FOMO and engagement',
-        requiredFields: ['user_name', 'wager_title', 'answer', 'points_wagered', 'currency'],
+        intent: 'Announce a user joining a wager to create FOMO and engagement (DO NOT reveal their answer - blind wagers!)',
+        requiredFields: ['user_name', 'wager_title', 'points_wagered', 'currency'],
         data: [
             'user_name' => $user->name,
             'wager_title' => $wager->title,
-            'answer' => $entry->answer_value,
             'points_wagered' => $entry->points_wagered,
             'currency' => $currency,
             'triggers' => $engagementTriggers, // Contextual triggers
             'total_pot' => $wager->total_points_wagered,
             'total_participants' => $wager->participants_count,
+            // NOTE: answer_value intentionally excluded - blind wagers!
         ],
         group: $wager->group
     );

@@ -86,11 +86,10 @@ class MessageService
             data: [
                 'user_name' => $user->name,
                 'wager_title' => $wager->title,
-                'answer' => $entry->answer_value,
                 'points_wagered' => $entry->points_wagered,
                 'currency' => $currency,
 
-                // Engagement context
+                // Engagement context (DO NOT include answer - blind wagers!)
                 'triggers' => $engagementTriggers,
                 'total_pot' => $wager->total_points_wagered,
                 'total_participants' => $wager->participants_count,
