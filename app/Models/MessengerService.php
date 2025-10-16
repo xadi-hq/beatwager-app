@@ -18,6 +18,7 @@ class MessengerService extends Model
         'last_name',
         'photo_url',
         'metadata',
+        'is_primary',
     ];
 
     protected function casts(): array

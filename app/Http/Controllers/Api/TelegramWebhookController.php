@@ -134,6 +134,7 @@ class TelegramWebhookController extends Controller
             '/start' => $this->handleStartCommand($message),
             '/help' => $this->handleHelpCommand($message),
             '/newwager' => $this->handleNewWagerCommand($message),
+            '/newevent' => $this->handleNewEventCommand($message),
             '/join' => $this->handleJoinCommand($message),
             '/mywagers', '/mybets' => $this->handleMyWagersCommand($message),
             '/balance', '/mybalance' => $this->handleBalanceCommand($message),
@@ -151,15 +152,16 @@ class TelegramWebhookController extends Controller
         $firstName = $message->getFrom()->getFirstName();
 
         $welcomeMessage = "👋 Welcome to BeatWager, {$firstName}!\n\n";
-        $welcomeMessage .= "I help you create and manage friendly wagers with your group.\n\n";
+        $welcomeMessage .= "I help you create and manage friendly wagers and events with your group.\n\n";
         $welcomeMessage .= "Available commands:\n";
         $welcomeMessage .= "/newwager - Create a new wager\n";
+        $welcomeMessage .= "/newevent - Create a group event\n";
         $welcomeMessage .= "/join - Join an existing wager\n";
         $welcomeMessage .= "/mywagers - View your active wagers\n";
         $welcomeMessage .= "/balance - Check your points balance\n";
         $welcomeMessage .= "/leaderboard - View group leaderboard\n";
         $welcomeMessage .= "/help - Show this help message\n\n";
-        $welcomeMessage .= "Let's get started! Use /newwager to create your first wager.";
+        $welcomeMessage .= "Let's get started! Use /newwager or /newevent to begin.";
 
         $this->bot->sendMessage($chatId, $welcomeMessage);
     }
@@ -179,6 +181,7 @@ class TelegramWebhookController extends Controller
         $helpMessage = "📖 *BeatWager Help*\n\n";
         $helpMessage .= "*Available Commands:*\n\n";
         $helpMessage .= "• `/newwager` - Create a new wager in a group\n";
+        $helpMessage .= "• `/newevent` - Create a group event with attendance tracking\n";
         $helpMessage .= "• `/mybets` - View your active wagers\n";
         $helpMessage .= "• `/balance` - Check your points balance\n";
         $helpMessage .= "• `/leaderboard` - View group rankings\n";
@@ -188,6 +191,9 @@ class TelegramWebhookController extends Controller
         $helpMessage .= "2️⃣ Friends join with their predictions\n";
         $helpMessage .= "3️⃣ When the event happens, settle the wager\n";
         $helpMessage .= "4️⃣ Winners split the pot proportionally!\n\n";
+        $helpMessage .= "*Events:*\n";
+        $helpMessage .= "📅 Use `/newevent` to organize meetups with attendance bonuses\n";
+        $helpMessage .= "✅ RSVP to events and earn points for showing up!\n\n";
 
         // Create short URL to help page
         $shortCode = \App\Models\ShortUrl::generateUniqueCode(6);
@@ -290,6 +296,86 @@ class TelegramWebhookController extends Controller
             ]);
 
             $fallbackMessage = "🎲 *Create your wager for this group!*\n\n";
+            $fallbackMessage .= "Click the link to open the creation form:\n";
+            $fallbackMessage .= $shortUrlFull . "\n\n";
+            $fallbackMessage .= "⏱️ Link expires in 30 minutes\n\n";
+            $fallbackMessage .= "💡 Tip: Start a private chat with me first using /start so I can send you links privately!";
+
+            $this->bot->sendMessage($chatId, $fallbackMessage, 'Markdown');
+        }
+    }
+
+    /**
+     * Handle /newevent command
+     */
+    private function handleNewEventCommand(\TelegramBot\Api\Types\Message $message): void
+    {
+        $chatId = $message->getChat()->getId();
+        $from = $message->getFrom();
+        $chat = $message->getChat();
+        $chatType = $chat->getType();
+
+        // Only allow in group chats
+        if (!in_array($chatType, ['group', 'supergroup'])) {
+            $this->bot->sendMessage(
+                $chatId,
+                "❌ Please use /newevent in a group chat where you want to create the event.\n\n" .
+                "I need to know which group the event is for!"
+            );
+            return;
+        }
+
+        // Generate signed URL with all context needed for event creation
+        $fullUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'events.create',
+            now()->addMinutes(30),
+            [
+                'u' => encrypt('telegram:' . $from->getId()),
+                'username' => $from->getUsername(),
+                'first_name' => $from->getFirstName(),
+                'last_name' => $from->getLastName(),
+                'chat_id' => $chat->getId(),
+                'chat_type' => $chatType,
+                'chat_title' => $chat->getTitle(),
+            ]
+        );
+
+        // Create short URL for cleaner message
+        $shortCode = \App\Models\ShortUrl::generateUniqueCode(6);
+        $shortUrl = \App\Models\ShortUrl::create([
+            'code' => $shortCode,
+            'target_url' => $fullUrl,
+            'expires_at' => now()->addMinutes(30),
+        ]);
+        $shortUrlFull = url('/l/' . $shortCode);
+
+        // Send link to user's private chat
+        try {
+            $username = $from->getUsername() ? '@' . $from->getUsername() : $from->getFirstName();
+
+            $dmMessage = "📅 *Create a new event for {$chat->getTitle()}*\n\n";
+            $dmMessage .= "Click the link to open the creation form:\n";
+            $dmMessage .= $shortUrlFull . "\n\n";
+            $dmMessage .= "⏱️ Link expires in 30 minutes";
+
+            $this->bot->sendMessage(
+                $from->getId(),
+                $dmMessage,
+                'Markdown'
+            );
+
+            // Confirm in group chat
+            $groupMessage = "✅ {$username}, I've sent you the event creation link in our private chat!";
+            $this->bot->sendMessage($chatId, $groupMessage);
+
+        } catch (\Exception $e) {
+            // If we can't send DM (user hasn't started bot), send link in group as fallback
+            Log::warning('Could not send DM to user, falling back to group message', [
+                'user_id' => $from->getId(),
+                'error' => $e->getMessage(),
+            ]);
+
+            $fallbackMessage = "📅 *Create your event for this group!*\n\n";
             $fallbackMessage .= "Click the link to open the creation form:\n";
             $fallbackMessage .= $shortUrlFull . "\n\n";
             $fallbackMessage .= "⏱️ Link expires in 30 minutes\n\n";
@@ -594,14 +680,21 @@ class TelegramWebhookController extends Controller
         ]);
 
         try {
-            // Parse callback data format: "wager:{wager_id}:{answer}" or "view:{wager_id}"
+            // Parse callback data format: "wager:{wager_id}:{answer}", "view:{wager_id}", or "event_rsvp:{event_id}:{response}"
             $parts = explode(':', $data);
-            
+
             if (count($parts) < 2) {
                 throw new \Exception('Invalid callback data format');
             }
 
             $action = $parts[0];
+
+            // Handle event RSVP buttons
+            if ($action === 'event_rsvp') {
+                $this->handleEventRsvpCallback($callbackQuery, $parts);
+                return;
+            }
+
             $wagerId = $parts[1];
 
             // Handle "View Progress" button
@@ -760,6 +853,113 @@ class TelegramWebhookController extends Controller
                 ['text' => '❌ Error: ' . $e->getMessage(), 'show_alert' => true]
             );
         }
+    }
+
+    /**
+     * Handle event RSVP callback from inline buttons
+     */
+    private function handleEventRsvpCallback(\TelegramBot\Api\Types\CallbackQuery $callbackQuery, array $parts): void
+    {
+        // Callback data format: "event_rsvp:{event_id}:{response}"
+        if (count($parts) !== 3) {
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '❌ Invalid RSVP format', 'show_alert' => true]
+            );
+            return;
+        }
+
+        $eventId = $parts[1];
+        $response = $parts[2]; // going, maybe, not_going
+
+        // Validate response
+        if (!in_array($response, ['going', 'maybe', 'not_going'])) {
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '❌ Invalid RSVP response', 'show_alert' => true]
+            );
+            return;
+        }
+
+        // Find the event
+        $event = \App\Models\GroupEvent::find($eventId);
+        if (!$event) {
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '❌ Event not found', 'show_alert' => true]
+            );
+            return;
+        }
+
+        // Check if event is still upcoming
+        if ($event->status !== 'upcoming') {
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '❌ This event is no longer active', 'show_alert' => true]
+            );
+            return;
+        }
+
+        // Check if RSVP deadline has passed (if set)
+        if ($event->rsvp_deadline && $event->rsvp_deadline < now()) {
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '❌ RSVP deadline has passed', 'show_alert' => true]
+            );
+            return;
+        }
+
+        // Get or create user from Telegram
+        $userId = $callbackQuery->getFrom()->getId();
+        $user = UserMessengerService::findOrCreate(
+            platform: 'telegram',
+            platformUserId: (string) $userId,
+            userData: [
+                'username' => $callbackQuery->getFrom()->getUsername(),
+                'first_name' => $callbackQuery->getFrom()->getFirstName(),
+                'last_name' => $callbackQuery->getFrom()->getLastName(),
+            ]
+        );
+
+        // Get the group
+        $group = $event->group;
+
+        // Ensure user is in the group
+        if (!$group->users()->where('user_id', $user->id)->exists()) {
+            $group->users()->attach($user->id, [
+                'id' => \Illuminate\Support\Str::uuid(),
+                'points' => $group->starting_balance ?? 1000,
+                'role' => 'participant',
+            ]);
+        }
+
+        // Record RSVP using EventService
+        $eventService = app(\App\Services\EventService::class);
+        $eventService->recordRsvp($event, $user, $response);
+
+        // Map response to emoji and text
+        $responseMap = [
+            'going' => ['emoji' => '✅', 'text' => 'Going'],
+            'maybe' => ['emoji' => '🤔', 'text' => 'Maybe'],
+            'not_going' => ['emoji' => '❌', 'text' => "Can't Make It"],
+        ];
+
+        $responseInfo = $responseMap[$response];
+
+        // Send success message
+        $this->bot->answerCallbackQuery(
+            $callbackQuery->getId(),
+            ['text' => "{$responseInfo['emoji']} RSVP updated: {$responseInfo['text']}", 'show_alert' => false]
+        );
+
+        // Send confirmation to chat
+        $chatId = $callbackQuery->getMessage()->getChat()->getId();
+        $username = $user->getTelegramService()?->platform_username ?? $user->name;
+
+        $this->bot->sendMessage(
+            $chatId,
+            "{$responseInfo['emoji']} @{$username} RSVP'd \"{$responseInfo['text']}\" for: {$event->name}"
+        );
     }
 
     /**

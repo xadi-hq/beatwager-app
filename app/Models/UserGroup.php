@@ -12,7 +12,7 @@ class UserGroup extends Pivot
 {
     use HasUuids;
 
-    protected $table = 'user_group';
+    protected $table = 'group_user';
 
     public $incrementing = false;
 

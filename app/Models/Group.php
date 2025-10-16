@@ -26,6 +26,13 @@ class Group extends Model
         'point_decay_rate',
         'point_decay_grace_days',
         'is_active',
+        'points_currency_name',
+        'notification_preferences',
+        'llm_api_key',
+        'llm_provider',
+        'bot_tone',
+        'group_type',
+        'settings',
     ];
 
     protected function casts(): array
@@ -37,12 +44,15 @@ class Group extends Model
             'point_decay_rate' => 'integer',
             'point_decay_grace_days' => 'integer',
             'is_active' => 'boolean',
+            'notification_preferences' => 'array',
+            'llm_api_key' => 'encrypted',
+            'settings' => 'array',
         ];
     }
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_group')
+        return $this->belongsToMany(User::class)
             ->using(UserGroup::class)
             ->withPivot([
                 'points',
@@ -65,12 +75,19 @@ class Group extends Model
         return $this->hasMany(WagerTemplate::class);
     }
 
+    public function events(): HasMany
+    {
+        return $this->hasMany(GroupEvent::class);
+    }
+
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
     }
     /**
      * Send a message to this group via its platform messenger
+     * 
+     * Note: LLM enhancement already handled in MessageService via ContentGenerator
      */
     public function sendMessage(\App\DTOs\Message $message): void
     {

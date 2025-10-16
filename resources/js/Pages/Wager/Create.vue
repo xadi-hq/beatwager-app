@@ -220,12 +220,6 @@ const submit = () => {
                             />
                             <div v-if="form.errors.stake_amount" class="text-red-600 text-sm mt-1">{{ form.errors.stake_amount }}</div>
                             
-                            <!-- Balance feasibility warning -->
-                            <div v-if="membersUnderStake" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded text-sm">
-                                <p class="text-amber-700 dark:text-amber-300">
-                                    ⚠️ {{ membersUnderStake.display }} {{ membersUnderStake.count === 1 ? 'has a' : 'have' }} balance{{ membersUnderStake.count > 1 ? 's' : '' }} lower than this stake
-                                </p>
-                            </div>
                         </div>
 
                         <!-- Deadline -->
@@ -241,6 +235,12 @@ const submit = () => {
                             />
                             <div v-if="form.errors.deadline" class="text-red-600 text-sm mt-1">{{ form.errors.deadline }}</div>
                         </div>
+                    </div>
+                    <!-- Balance feasibility warning -->
+                    <div v-if="membersUnderStake" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded text-sm">
+                        <p class="text-amber-700 dark:text-amber-300">
+                            ⚠️ {{ membersUnderStake.display }} {{ membersUnderStake.count === 1 ? 'has a' : 'have' }} balance{{ membersUnderStake.count > 1 ? 's' : '' }} lower than this stake
+                        </p>
                     </div>
 
                     <!-- Submit Button -->

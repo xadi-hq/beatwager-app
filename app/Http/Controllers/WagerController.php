@@ -25,13 +25,11 @@ class WagerController extends Controller
     public function create(Request $request): Response
     {
         // Signature already validated by middleware
-        // User already authenticated by middleware (if exists)
-
-        // Get or create user from URL parameters
-        $user = $this->getOrCreateUser($request);
+        // User already authenticated by middleware
+        $user = Auth::user();
 
         // Get or create group from URL parameters (if from a group chat)
-        $group = $this->getOrCreateGroup($request);
+        $group = $this->getOrCreateGroup($request, $user);
 
         // Get user's groups for dropdown - only show actual groups (negative chat IDs for Telegram)
         $userGroups = $user->groups()
@@ -107,40 +105,23 @@ class WagerController extends Controller
     }
 
     /**
-     * Get or create user from platform data (platform-agnostic)
-     */
-    private function getOrCreateUser(Request $request): User
-    {
-        // Get platform and user_id from 'u' parameter (already decrypted by middleware)
-        $encryptedUserId = $request->query('u');
-        $userId = decrypt($encryptedUserId);
-        [$platform, $platformUserId] = explode(':', $userId, 2);
-
-        return UserMessengerService::findOrCreate(
-            platform: $platform,
-            platformUserId: $platformUserId,
-            userData: [
-                'username' => $request->query('username'),
-                'first_name' => $request->query('first_name'),
-                'last_name' => $request->query('last_name'),
-            ]
-        );
-    }
-
-    /**
      * Get or create group from platform chat data (platform-agnostic)
      */
-    private function getOrCreateGroup(Request $request): Group
+    private function getOrCreateGroup(Request $request, User $user): ?Group
     {
-        // Get platform from 'u' parameter
-        $encryptedUserId = $request->query('u');
-        $userId = decrypt($encryptedUserId);
-        [$platform, $platformUserId] = explode(':', $userId, 2);
-
         $chatId = $request->query('chat_id');
         if (!$chatId) {
             return null; // No group context (private chat)
         }
+
+        // Get platform from user's primary messenger service
+        $messengerService = $user->messengerServices()->where('is_primary', true)->first();
+        if (!$messengerService) {
+            // Fallback to any messenger service
+            $messengerService = $user->messengerServices()->first();
+        }
+
+        $platform = $messengerService->platform ?? 'telegram';
 
         $group = Group::firstOrCreate(
             [
@@ -155,7 +136,6 @@ class WagerController extends Controller
         );
 
         // Ensure user is in the group
-        $user = $this->getOrCreateUser($request);
         if (!$group->users()->where('user_id', $user->id)->exists()) {
             $group->users()->attach($user->id, [
                 'id' => \Illuminate\Support\Str::uuid(),
@@ -217,7 +197,7 @@ class WagerController extends Controller
         }
 
         $wager = $token->wager;
-        $wager->load(['creator:id,name', 'group:id,name,platform_chat_title', 'entries.user:id,name']);
+        $wager->load(['creator:id,name', 'group:id,name,platform_chat_title,points_currency_name', 'entries.user:id,name']);
 
         // Eager load user balances for all entry users to avoid N+1
         $userIds = $wager->entries->pluck('user_id')->unique();
@@ -237,6 +217,7 @@ class WagerController extends Controller
                 'stake_amount' => $wager->stake_amount,
                 'total_points_wagered' => $wager->total_points_wagered,
                 'participants_count' => $wager->participants_count,
+                'currency' => $wager->group->points_currency_name ?? 'points',
                 'creator' => [
                     'id' => $wager->creator->id,
                     'name' => $wager->creator->name,
@@ -371,7 +352,7 @@ class WagerController extends Controller
         $user = Auth::user();
 
         // Find wager
-        $wager = \App\Models\Wager::with(['creator:id,name', 'group:id,name,platform_chat_title', 'entries.user:id,name', 'settler:id,name'])->findOrFail($wagerId);
+        $wager = \App\Models\Wager::with(['creator:id,name', 'group:id,name,platform_chat_title,points_currency_name', 'entries.user:id,name', 'settler:id,name'])->findOrFail($wagerId);
 
         $isPastDeadline = $wager->deadline < now();
         $canSettle = $isPastDeadline && $wager->status === 'open';
@@ -400,6 +381,7 @@ class WagerController extends Controller
                 'outcome_value' => $wager->outcome_value,
                 'settlement_note' => $wager->settlement_note,
                 'settled_at' => $wager->settled_at?->toIso8601String(),
+                'currency' => $wager->group->points_currency_name ?? 'points',
                 'settler' => $wager->settler ? [
                     'id' => $wager->settler->id,
                     'name' => $wager->settler->name,

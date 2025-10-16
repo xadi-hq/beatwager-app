@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\GroupController;
+use App\Http\Controllers\GroupSettingsController;
 use App\Http\Controllers\ShortUrlController;
 use App\Http\Controllers\WagerController;
 use Illuminate\Support\Facades\Route;
@@ -39,4 +42,16 @@ Route::middleware(['signed.auth'])->group(function () {
     // Wager landing page (view progress)
     Route::get('/wager/{wager}', [WagerController::class, 'show'])->name('wager.show');
     Route::post('/wager/{wager}/settle', [WagerController::class, 'settleFromShow'])->name('wager.settle.fromshow');
+
+    // Event routes
+    Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
+    Route::post('/events/store', [EventController::class, 'store'])->name('events.store');
+    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+    Route::get('/events/{event}/attendance', [EventController::class, 'attendance'])->name('events.attendance');
+    Route::post('/events/{event}/attendance', [EventController::class, 'recordAttendance'])->name('events.recordAttendance');
+    Route::post('/events/{event}/rsvp', [EventController::class, 'rsvp'])->name('events.rsvp');
+
+    // Group routes
+    Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
+    Route::post('/groups/{group}/settings', [GroupSettingsController::class, 'update'])->name('groups.settings.update');
 });

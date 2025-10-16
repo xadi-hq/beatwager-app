@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import Toast from '@/Components/Toast.vue';
 
 const props = defineProps<{
     user: any;
@@ -13,6 +12,9 @@ const props = defineProps<{
     awaitingSettlement: any[];
     settledWagers: any[];
     recentTransactions: any[];
+    upcomingEvents: any[];
+    pastProcessedEvents: any[];
+    pastUnprocessedEvents: any[];
     focus: string;
 }>();
 
@@ -20,40 +22,11 @@ const props = defineProps<{
 const getDefaultTab = () => {
     if (props.focus === 'transactions') return 'transactions';
     if (props.focus === 'groups') return 'groups';
+    if (props.focus === 'events') return 'events';
     return 'wagers';
 };
 
 const activeTab = ref(getDefaultTab());
-
-// Profile edit form (session-based auth, no token needed)
-const profileForm = useForm({
-    taunt_line: props.user.taunt_line || '',
-    birthday: props.user.birthday || '',
-});
-
-// Toast notification state
-const showToast = ref(false);
-const toastType = ref<'success' | 'error'>('success');
-const toastMessage = ref('');
-
-function submitProfile() {
-    // Clear previous toasts
-    showToast.value = false;
-
-    profileForm.post('/me/profile', {
-        preserveScroll: true,
-        onSuccess: () => {
-            toastType.value = 'success';
-            toastMessage.value = 'Profile updated successfully!';
-            showToast.value = true;
-        },
-        onError: (errors) => {
-            toastType.value = 'error';
-            toastMessage.value = 'Failed to update profile. Please try again.';
-            showToast.value = true;
-        },
-    });
-}
 
 // Time formatting helpers
 function formatTimeRemaining(deadlineStr: string): string {
@@ -138,7 +111,21 @@ function formatDate(dateStr: string): string {
 
             <!-- Tabs -->
             <div class="bg-white dark:bg-neutral-800 rounded-lg shadow">
-                <div class="border-b border-neutral-200 dark:border-neutral-700">
+                <!-- Mobile: Dropdown -->
+                <div class="md:hidden border-b border-neutral-200 dark:border-neutral-700 p-4">
+                    <select
+                        v-model="activeTab"
+                        class="w-full px-4 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="wagers">My Wagers</option>
+                        <option value="events">Events</option>
+                        <option value="transactions">Transactions</option>
+                        <option value="groups">Groups</option>
+                    </select>
+                </div>
+
+                <!-- Desktop: Horizontal tabs -->
+                <div class="hidden md:block border-b border-neutral-200 dark:border-neutral-700">
                     <nav class="flex -mb-px">
                         <button
                             @click="activeTab = 'wagers'"
@@ -150,6 +137,17 @@ function formatDate(dateStr: string): string {
                             ]"
                         >
                             My Wagers
+                        </button>
+                        <button
+                            @click="activeTab = 'events'"
+                            :class="[
+                                'px-6 py-3 text-sm font-medium border-b-2',
+                                activeTab === 'events'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300'
+                            ]"
+                        >
+                            Events
                         </button>
                         <button
                             @click="activeTab = 'transactions'"
@@ -173,17 +171,6 @@ function formatDate(dateStr: string): string {
                         >
                             Groups
                         </button>
-                        <button
-                            @click="activeTab = 'profile'"
-                            :class="[
-                                'px-6 py-3 text-sm font-medium border-b-2',
-                                activeTab === 'profile'
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300'
-                            ]"
-                        >
-                            Profile
-                        </button>
                     </nav>
                 </div>
 
@@ -197,10 +184,10 @@ function formatDate(dateStr: string): string {
                                 No open wagers
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="wager in openWagers" :key="wager.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4">
+                                <div v-for="wager in openWagers" :key="wager.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
-                                            <div class="font-medium text-neutral-900 dark:text-neutral-100">{{ wager.title }}</div>
+                                            <a :href="wager.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ wager.title }}</a>
                                             <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ wager.group.name }}</div>
                                         </div>
                                         <div class="text-right">
@@ -230,7 +217,7 @@ function formatDate(dateStr: string): string {
                                 <div v-for="wager in awaitingSettlement" :key="wager.id" class="bg-amber-50 dark:bg-amber-900/20 rounded p-4 border border-amber-200 dark:border-amber-800">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
-                                            <div class="font-medium text-neutral-900 dark:text-neutral-100">{{ wager.title }}</div>
+                                            <a :href="wager.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ wager.title }}</a>
                                             <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ wager.group.name }}</div>
                                         </div>
                                         <div class="text-right">
@@ -257,10 +244,10 @@ function formatDate(dateStr: string): string {
                                 No settled wagers yet
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="wager in settledWagers" :key="wager.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4">
+                                <div v-for="wager in settledWagers" :key="wager.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
-                                            <div class="font-medium text-neutral-900 dark:text-neutral-100">{{ wager.title }}</div>
+                                            <a :href="wager.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ wager.title }}</a>
                                             <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ wager.group.name }}</div>
                                         </div>
                                         <div class="text-right">
@@ -280,6 +267,96 @@ function formatDate(dateStr: string): string {
                         </div>
                     </div>
 
+                    <!-- Events Tab -->
+                    <div v-if="activeTab === 'events'">
+                        <!-- Upcoming Events -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Upcoming ({{ upcomingEvents.length }})</h3>
+                            <div v-if="upcomingEvents.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                                No upcoming events
+                            </div>
+                            <div v-else class="space-y-3">
+                                <div v-for="event in upcomingEvents" :key="event.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <a :href="event.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ event.name }}</a>
+                                            <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ event.group.name }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ formatDate(event.event_date) }}</div>
+                                            <div v-if="event.location" class="text-xs text-neutral-500 dark:text-neutral-400">📍 {{ event.location }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm text-neutral-700 dark:text-neutral-300">
+                                            <span v-if="event.rsvp_enabled" class="text-neutral-600 dark:text-neutral-400">
+                                                {{ event.rsvps.going }} going · {{ event.rsvps.maybe }} maybe
+                                            </span>
+                                            <span class="ml-2 text-green-600 dark:text-green-400">{{ event.attendance_bonus }} pts</span>
+                                        </div>
+                                        <a :href="event.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Past Unprocessed Events -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Past (Unprocessed) ({{ pastUnprocessedEvents.length }})</h3>
+                            <div v-if="pastUnprocessedEvents.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                                No unprocessed events
+                            </div>
+                            <div v-else class="space-y-3">
+                                <div v-for="event in pastUnprocessedEvents" :key="event.id" class="bg-amber-50 dark:bg-amber-900/20 rounded p-4 border border-amber-200 dark:border-amber-800">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <a :href="event.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ event.name }}</a>
+                                            <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ event.group.name }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-medium text-amber-600 dark:text-amber-400">Needs attendance</div>
+                                            <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ formatDate(event.event_date) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm text-neutral-700 dark:text-neutral-300">
+                                            <span class="text-amber-600 dark:text-amber-400">⚠️ Record attendance to award bonuses</span>
+                                        </div>
+                                        <a :href="event.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Past Processed Events -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Past (Completed)</h3>
+                            <div v-if="pastProcessedEvents.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                                No completed events yet
+                            </div>
+                            <div v-else class="space-y-3">
+                                <div v-for="event in pastProcessedEvents" :key="event.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <a :href="event.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ event.name }}</a>
+                                            <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ event.group.name }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ formatDate(event.event_date) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm">
+                                            <span class="text-green-600 dark:text-green-400">✅ {{ event.attendance_count }} attended</span>
+                                            <span v-if="event.user_attended" class="ml-2 text-blue-600 dark:text-blue-400">(You attended: +{{ event.attendance_bonus }} pts)</span>
+                                        </div>
+                                        <a :href="event.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Transactions Tab -->
                     <div v-if="activeTab === 'transactions'">
                         <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Recent Transactions</h3>
@@ -287,9 +364,9 @@ function formatDate(dateStr: string): string {
                             No transactions yet
                         </div>
                         <div v-else class="space-y-2">
-                            <div v-for="tx in recentTransactions" :key="tx.id" class="flex justify-between items-center bg-neutral-50 dark:bg-neutral-700 rounded p-3">
+                            <div v-for="tx in recentTransactions" :key="tx.id" class="flex justify-between items-center bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-neutral-900 dark:text-neutral-100">{{ tx.description || tx.type }}</div>
+                                    <div class="font-medium text-neutral-900 dark:text-neutral-100">{{ tx.description || tx.type }}</div>
                                     <div class="text-xs text-neutral-600 dark:text-neutral-400">
                                         <span v-if="tx.group">{{ tx.group.name }}</span>
                                         <span v-if="tx.wager"> · {{ tx.wager.title }}</span>
@@ -298,7 +375,7 @@ function formatDate(dateStr: string): string {
                                 </div>
                                 <div class="text-right">
                                     <div :class="['font-bold', tx.amount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400']">
-                                        {{ tx.amount >= 0 ? '+' : '' }}{{ tx.amount }}
+                                        {{ tx.amount >= 0 ? '+' : '' }}{{ tx.amount }} {{ tx.currency || 'points' }}
                                     </div>
                                     <div class="text-xs text-neutral-500 dark:text-neutral-400">
                                         {{ tx.balance_before }} → {{ tx.balance_after }}
@@ -312,80 +389,25 @@ function formatDate(dateStr: string): string {
                     <div v-if="activeTab === 'groups'">
                         <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Your Groups</h3>
                         <div class="space-y-2">
-                            <div v-for="group in groups" :key="group.id" class="flex justify-between items-center bg-neutral-50 dark:bg-neutral-700 rounded p-4">
-                                <div>
-                                    <div class="font-medium text-neutral-900 dark:text-neutral-100">{{ group.name }}</div>
-                                    <div class="text-sm text-neutral-500 dark:text-neutral-400">{{ group.role }}</div>
+                            <div v-for="group in groups" :key="group.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                <div class="flex justify-between items-center mb-2">
+                                    <div>
+                                        <a :href="`/groups/${group.id}`" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ group.name }}</a>
+                                        <div class="text-sm text-neutral-500 dark:text-neutral-400">{{ group.role }}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-lg text-neutral-900 dark:text-neutral-100">{{ group.balance }}</div>
+                                        <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ group.currency || 'points' }}</div>
+                                    </div>
                                 </div>
-                                <div class="text-right">
-                                    <div class="font-bold text-lg text-neutral-900 dark:text-neutral-100">{{ group.balance }}</div>
-                                    <div class="text-xs text-neutral-500 dark:text-neutral-400">points</div>
+                                <div class="flex justify-end">
+                                    <a :href="`/groups/${group.id}`" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Profile Tab -->
-                    <div v-if="activeTab === 'profile'">
-                        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Profile Settings</h3>
-
-                        <form @submit.prevent="submitProfile" class="space-y-6 max-w-lg">
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                    Taunt Line
-                                </label>
-                                <input
-                                    v-model="profileForm.taunt_line"
-                                    type="text"
-                                    maxlength="255"
-                                    class="w-full px-3 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Your victory message to others..."
-                                />
-                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                    This message will be displayed when you win a wager
-                                </p>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                    Birthday
-                                </label>
-                                <input
-                                    v-model="profileForm.birthday"
-                                    type="date"
-                                    class="w-full px-3 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                    The bot will send birthday wishes in your groups
-                                </p>
-                            </div>
-
-                            <div class="flex gap-3">
-                                <button
-                                    type="submit"
-                                    :disabled="profileForm.processing"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
-                                >
-                                    <!-- Loading spinner -->
-                                    <svg v-if="profileForm.processing" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span>{{ profileForm.processing ? 'Saving...' : 'Save Profile' }}</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Toast Notification -->
-        <Toast
-            :show="showToast"
-            :type="toastType"
-            :message="toastMessage"
-            @close="showToast = false"
-        />
     </AppLayout>
 </template>

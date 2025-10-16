@@ -125,6 +125,12 @@ class WagerService
             $wager->increment('total_points_wagered', $points);
             $wager->increment('participants_count');
 
+            // Update last_wager_joined_at for decay tracking
+            DB::table('group_user')
+                ->where('user_id', $user->id)
+                ->where('group_id', $wager->group_id)
+                ->update(['last_wager_joined_at' => now()]);
+
             // Audit log
             AuditService::log(
                 action: 'wager.joined',

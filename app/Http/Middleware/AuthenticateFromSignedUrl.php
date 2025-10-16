@@ -40,11 +40,24 @@ class AuthenticateFromSignedUrl
         }
 
         // 2. Check for signed URL with encrypted user identifier
-        if ($request->has('u') && $request->hasValidSignature()) {
+        $hasU = $request->has('u');
+        $hasValidSig = $request->hasValidSignature();
+
+        \Log::info('Auth attempt', [
+            'has_u' => $hasU,
+            'has_valid_signature' => $hasValidSig,
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+            'path' => $request->path(),
+        ]);
+
+        if ($hasU && $hasValidSig) {
             try {
                 // Decrypt the user identifier (format: "platform:platform_user_id")
                 $encryptedUserId = $request->query('u');
                 $userId = decrypt($encryptedUserId);
+
+                \Log::info('Decrypted user ID', ['userId' => $userId]);
 
                 // Parse platform and platform_user_id
                 if (!is_string($userId) || !str_contains($userId, ':')) {
@@ -53,21 +66,41 @@ class AuthenticateFromSignedUrl
 
                 [$platform, $platformUserId] = explode(':', $userId, 2);
 
-                // Find user by platform and platform_user_id
-                $messengerService = MessengerService::findByPlatform($platform, $platformUserId);
+                \Log::info('Looking up user', [
+                    'platform' => $platform,
+                    'platformUserId' => $platformUserId,
+                ]);
 
-                if ($messengerService) {
-                    // Log the user in and create session (persistent session)
-                    Auth::login($messengerService->user, true);
+                // Find or create user by platform and platform_user_id
+                $username = $request->query('username');
+                $firstName = $request->query('first_name');
+                $lastName = $request->query('last_name');
 
-                    // Redirect to clean URL without signature parameters
-                    return $this->redirectToCleanUrl($request);
-                }
+                $user = \App\Services\UserMessengerService::findOrCreate(
+                    platform: $platform,
+                    platformUserId: $platformUserId,
+                    userData: [
+                        'username' => $username,
+                        'first_name' => $firstName,
+                        'last_name' => $lastName,
+                    ]
+                );
+
+                \Log::info('User found/created', ['user_id' => $user->id]);
+
+                // Log the user in and create session (persistent session)
+                Auth::login($user, true);
+
+                \Log::info('User authenticated', ['user_id' => $user->id]);
+
+                // Redirect to clean URL without signature parameters
+                return $this->redirectToCleanUrl($request);
             } catch (\Exception $e) {
                 // Decryption failed or user not found
                 \Log::error('Authentication failed from signed URL', [
                     'error' => $e->getMessage(),
-                    'url' => $request->fullUrl()
+                    'url' => $request->fullUrl(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
             }
         }

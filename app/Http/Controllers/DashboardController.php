@@ -8,6 +8,7 @@ use App\Models\OneTimeToken;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wager;
+use App\Services\EventService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -15,6 +16,9 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly EventService $eventService
+    ) {}
     /**
      * Display the user's dashboard
      *
@@ -35,6 +39,7 @@ class DashboardController extends Controller
             'name' => $g->name,
             'balance' => $g->pivot->points,
             'role' => $g->pivot->role,
+            'currency' => $g->points_currency_name ?? 'points',
         ]);
 
         // Get user's active wagers (created or joined) - split by deadline
@@ -138,7 +143,7 @@ class DashboardController extends Controller
         }
 
         $recentTransactions = $transactionsQuery
-            ->with(['group:id,name', 'wager:id,title'])
+            ->with(['group:id,name,points_currency_name', 'wager:id,title'])
             ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get()
@@ -149,6 +154,7 @@ class DashboardController extends Controller
                 'balance_before' => $tx->balance_before,
                 'balance_after' => $tx->balance_after,
                 'description' => $tx->description,
+                'currency' => $tx->group ? ($tx->group->points_currency_name ?? 'points') : 'points',
                 'group' => $tx->group ? ['id' => $tx->group->id, 'name' => $tx->group->name] : null,
                 'wager' => $tx->wager ? ['id' => $tx->wager->id, 'title' => $tx->wager->title] : null,
                 'created_at' => $tx->created_at->toIso8601String(),
@@ -175,6 +181,48 @@ class DashboardController extends Controller
         // Get Telegram username (platform-agnostic approach)
         $telegramService = $user->getTelegramService();
 
+        // Load events for all user's groups
+        $upcomingEvents = collect();
+        $pastProcessedEvents = collect();
+        $pastUnprocessedEvents = collect();
+
+        foreach ($user->groups as $group) {
+            $groupEvents = $this->eventService->getEventsForGroup($group);
+
+            // Transform events to match frontend expectations
+            $transformEvent = function($event) {
+                $rsvpCounts = $this->eventService->getRsvpCounts($event);
+                return [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    'event_date' => $event->event_date->toIso8601String(),
+                    'location' => $event->location,
+                    'attendance_bonus' => $event->attendance_bonus,
+                    'status' => $event->status,
+                    'group' => [
+                        'id' => $event->group->id,
+                        'name' => $event->group->name ?? $event->group->platform_chat_title,
+                    ],
+                    'rsvps' => [
+                        'going' => $rsvpCounts['going'],
+                        'maybe' => $rsvpCounts['maybe'],
+                        'not_going' => $rsvpCounts['not_going'],
+                    ],
+                    'url' => route('events.show', $event->id),
+                ];
+            };
+
+            $upcomingEvents = $upcomingEvents->merge($groupEvents['upcoming']->map($transformEvent));
+            $pastProcessedEvents = $pastProcessedEvents->merge($groupEvents['past_processed']->map($transformEvent));
+            $pastUnprocessedEvents = $pastUnprocessedEvents->merge($groupEvents['past_unprocessed']->map($transformEvent));
+        }
+
+        // Sort events by date
+        $upcomingEvents = $upcomingEvents->sortBy('event_date')->values();
+        $pastProcessedEvents = $pastProcessedEvents->sortByDesc('event_date')->values();
+        $pastUnprocessedEvents = $pastUnprocessedEvents->sortByDesc('event_date')->values();
+
         return Inertia::render('Dashboard/Me', [
             'user' => [
                 'id' => $user->id,
@@ -196,6 +244,9 @@ class DashboardController extends Controller
             'awaitingSettlement' => $awaitingSettlement,
             'settledWagers' => $settledWagers,
             'recentTransactions' => $recentTransactions,
+            'upcomingEvents' => $upcomingEvents,
+            'pastProcessedEvents' => $pastProcessedEvents,
+            'pastUnprocessedEvents' => $pastUnprocessedEvents,
             'focus' => $focus,
         ]);
     }

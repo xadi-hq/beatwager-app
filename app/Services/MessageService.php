@@ -7,37 +7,47 @@ namespace App\Services;
 use App\DTOs\Button;
 use App\DTOs\ButtonAction;
 use App\DTOs\Message;
+use App\DTOs\MessageContext;
 use App\DTOs\MessageType;
 use App\Models\Wager;
 use Illuminate\Support\Collection;
 
 /**
- * Platform-agnostic message builder
+ * Platform-agnostic message builder (LLM-first)
  * 
- * Generates Message DTOs from templates for any messenger platform.
- * Does NOT contain platform-specific formatting (HTML, Markdown, etc.)
+ * Generates Message DTOs using LLM or fallback templates.
  */
 class MessageService
 {
+    public function __construct(
+        private readonly ContentGenerator $contentGenerator
+    ) {}
     /**
      * Create wager announcement message
      */
     public function wagerAnnouncement(Wager $wager): Message
     {
-        $template = __('messages.wager.announced');
+        $meta = __('messages.wager.announced');
         
-        $variables = [
-            'title' => $wager->title,
-            'description' => $wager->description ?? 'No description provided',
-            'type' => $this->formatWagerType($wager->type),
-            'stake' => $wager->stake_amount,
-            'deadline' => $wager->deadline->format('M j, Y g:i A'),
-        ];
+        $ctx = new MessageContext(
+            key: 'wager.announced',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'title' => $wager->title,
+                'description' => $wager->description ?? 'No description provided',
+                'type' => $this->formatWagerType($wager->type),
+                'stake' => $wager->stake_amount,
+                'deadline' => $wager->deadline->format('M j, Y g:i A'),
+                'creator' => $wager->creator->name ?? 'Someone',
+            ],
+            group: $wager->group
+        );
 
-        // Build wager-specific buttons (Yes/No or multiple choice)
+        $content = $this->contentGenerator->generate($ctx, $wager->group);
+
+        // Build wager-specific buttons
         $buttons = $this->buildWagerButtons($wager);
-        
-        // Add View Progress button on separate row
         $buttons[] = new Button(
             label: __('messages.buttons.view_progress'),
             action: ButtonAction::Callback,
@@ -45,11 +55,12 @@ class MessageService
         );
 
         return new Message(
-            content: $template,
+            content: $content,
             type: MessageType::Announcement,
-            variables: $variables,
+            variables: [],  // Already interpolated
             buttons: $buttons,
-            context: $wager
+            context: $wager,
+            currencyName: $wager->group->points_currency_name ?? 'points'
         );
     }
 
@@ -58,35 +69,37 @@ class MessageService
      */
     public function settlementResult(Wager $wager, Collection $winners): Message
     {
-        $template = __('messages.wager.settled');
-        
-        $variables = [
-            'title' => $wager->title,
-            'outcome' => $wager->outcome_value,
-            'note' => $wager->settlement_note ? "\nNote: {$wager->settlement_note}" : '',
-        ];
+        $meta = __('messages.wager.settled');
+        $currency = $wager->group->points_currency_name ?? 'points';
 
-        // Build winners list
-        $winnersText = __('messages.winners.header');
-        if ($winners->count() > 0) {
-            foreach ($winners as $winner) {
-                $winnersText .= str_replace(
-                    ['{name}', '{points}'],
-                    [$winner->user->name, $winner->points_won],
-                    __('messages.winners.single')
-                );
-            }
-        } else {
-            $winnersText .= __('messages.winners.none');
-        }
+        // Build winners data
+        $winnersData = $winners->map(fn($w) => [
+            'name' => $w->user->name,
+            'points_won' => $w->points_won,
+        ])->toArray();
 
-        $variables['note'] .= "\n" . $winnersText;
+        $ctx = new MessageContext(
+            key: 'wager.settled',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'title' => $wager->title,
+                'outcome' => $wager->outcome_value,
+                'note' => $wager->settlement_note ?? '',
+                'winners' => $winnersData,
+                'currency' => $currency,
+            ],
+            group: $wager->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $wager->group);
 
         return new Message(
-            content: $template,
+            content: $content,
             type: MessageType::Result,
-            variables: $variables,
-            context: $wager
+            variables: [],
+            context: $wager,
+            currencyName: $currency
         );
     }
 
@@ -95,11 +108,19 @@ class MessageService
      */
     public function settlementReminder(Wager $wager, string $viewUrl): Message
     {
-        $template = __('messages.wager.reminder');
-        
-        $variables = [
-            'title' => $wager->title,
-        ];
+        $meta = __('messages.wager.reminder');
+
+        $ctx = new MessageContext(
+            key: 'wager.reminder',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'title' => $wager->title,
+            ],
+            group: $wager->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $wager->group);
 
         $buttons = [
             new Button(
@@ -110,9 +131,9 @@ class MessageService
         ];
 
         return new Message(
-            content: $template,
+            content: $content,
             type: MessageType::Reminder,
-            variables: $variables,
+            variables: [],
             buttons: $buttons,
             context: $wager
         );
@@ -198,5 +219,56 @@ class MessageService
             'date' => 'Date',
             default => ucfirst($type),
         };
+    }
+
+    /**
+     * Create point decay warning message (day 12)
+     */
+    public function decayWarning(string $groupName, string $currencyName, int $daysInactive, int $pointsToLose, int $currentBalance): Message
+    {
+        $template = "⚠️ **Point Decay Warning**\n\n" .
+                   "You haven't joined any wagers in the **{group}** group for {days} days.\n\n" .
+                   "🔥 Join a wager in the next 2 days or you'll lose {currency}!\n" .
+                   "💸 You'll lose {points} {currency} if you remain inactive.\n\n" .
+                   "Current balance: {balance} {currency}";
+
+        $variables = [
+            'group' => $groupName,
+            'days' => $daysInactive,
+            'points' => $pointsToLose,
+            'balance' => $currentBalance,
+        ];
+
+        return new Message(
+            content: $template,
+            type: MessageType::Warning,
+            variables: $variables,
+            currencyName: $currencyName
+        );
+    }
+
+    /**
+     * Create point decay applied message
+     */
+    public function decayApplied(string $groupName, string $currencyName, int $pointsLost, int $newBalance): Message
+    {
+        $template = "📉 **{currency} Decayed**\n\n" .
+                   "You lost **{points} {currency}** in the **{group}** group due to inactivity.\n\n" .
+                   "🎯 Join a wager now to stop further decay!\n" .
+                   "💰 New balance: {balance} {currency}\n\n" .
+                   "_{currency} decay when you don't participate for 14+ days_";
+
+        $variables = [
+            'group' => $groupName,
+            'points' => $pointsLost,
+            'balance' => $newBalance,
+        ];
+
+        return new Message(
+            content: $template,
+            type: MessageType::Warning,
+            variables: $variables,
+            currencyName: $currencyName
+        );
     }
 }
