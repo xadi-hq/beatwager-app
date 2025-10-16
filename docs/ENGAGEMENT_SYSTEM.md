@@ -174,16 +174,15 @@ private function buildTriggersGuidance(array $triggers): string
 ```
 Generate a message with personality for this context:
 
-Intent: Announce a user joining a wager to create FOMO and engagement
+Intent: Announce a user joining a wager to create FOMO and engagement (DO NOT reveal their answer - blind wagers!)
 Tone hints: exciting, engaging, FOMO
 
-Required fields: user_name, wager_title, answer, points_wagered, currency
+Required fields: user_name, wager_title, points_wagered, currency
 
 Data:
 {
   "user_name": "Xander",
   "wager_title": "Ajax - PSV",
-  "answer": "yes",
   "points_wagered": 50,
   "currency": "chips",
   "triggers": {...}
@@ -200,6 +199,7 @@ Rules:
 - Use 1-2 emojis
 - Match the tone hints
 - If engagement triggers are present, use them to add personality and create FOMO
+- CRITICAL: DO NOT reveal the user's answer (yes/no) - this is a blind wager!
 ```
 
 ## Example Outputs
@@ -208,37 +208,39 @@ Rules:
 **Triggers**: `is_leader: true`, `is_high_stakes: true`, `stake_percentage: 90`
 
 **LLM Output**:
-> 🔥 The LEADER just went ALL-IN! Xander wagered 450 chips on Ajax - PSV (yes). Who's brave enough to challenge? 👑
+> 🔥 The LEADER just went ALL-IN! Xander wagered 450 chips on "Ajax - PSV". Who's brave enough to challenge? 👑
 
 ### Scenario 2: Comeback After Decay
 **Triggers**: `is_comeback: true`, `days_inactive: 14`
 
 **LLM Output**:
-> 🎉 Look who's BACK! Xander returns after 14 days and bets 50 chips on Ajax - PSV (yes). Welcome back! 💪
+> 🎉 Look who's BACK! Xander returns after 14 days and drops 50 chips on "Ajax - PSV". Welcome back! 💪
 
 ### Scenario 3: Underdog Strikes
 **Triggers**: `is_underdog: true`, `leaderboard_rank: 8`
 
 **LLM Output**:
-> 🐕 The underdog strikes! Xander (#8 on leaderboard) wagered 30 chips on Ajax - PSV (yes). Can they climb back? 📈
+> 🐕 The underdog strikes! Xander (#8 on leaderboard) wagered 30 chips on "Ajax - PSV". Can they climb back? 📈
 
 ### Scenario 4: Contrarian Play
 **Triggers**: `is_contrarian: true`
 
 **LLM Output**:
-> 💎 Bold contrarian move! Xander bucks the trend with 50 chips on Ajax - PSV (yes). Going against the grain! 🎲
+> 💎 Bold contrarian move! Xander bucks the trend with 50 chips on "Ajax - PSV". Going against the grain! 🎲
 
 ### Scenario 5: Last-Minute Drama
 **Triggers**: `is_last_minute: true`, `hours_to_deadline: 3`
 
 **LLM Output**:
-> ⏰ Last-minute drama! With just 3 hours left, Xander throws down 50 chips on Ajax - PSV (yes). Clutch timing! 🎯
+> ⏰ Last-minute drama! With just 3 hours left, Xander throws down 50 chips on "Ajax - PSV". Clutch timing! 🎯
 
 ### Scenario 6: No Triggers (Fallback)
 **Triggers**: All false
 
 **LLM Output**:
 > ✅ Xander joined the wager "Ajax - PSV" with 50 chips. Total pot: 250 chips, 5 participants! 🎲
+
+**IMPORTANT**: Notice that the user's answer (yes/no) is **never revealed** in join announcements. This preserves the blind wager mechanic where participants don't know what others bet until settlement.
 
 ## Testing
 

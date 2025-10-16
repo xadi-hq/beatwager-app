@@ -42,13 +42,28 @@ class EventService
 
     /**
      * Record RSVP for an event
+     *
+     * @return array{rsvp: GroupEventRsvp, previous_response: string|null, was_changed: bool}
      */
-    public function recordRsvp(GroupEvent $event, User $user, string $response): GroupEventRsvp
+    public function recordRsvp(GroupEvent $event, User $user, string $response): array
     {
-        return GroupEventRsvp::updateOrCreate(
+        // Get existing RSVP to detect changes
+        $existingRsvp = GroupEventRsvp::where('event_id', $event->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        $previousResponse = $existingRsvp?->response;
+
+        $rsvp = GroupEventRsvp::updateOrCreate(
             ['event_id' => $event->id, 'user_id' => $user->id],
             ['response' => $response]
         );
+
+        return [
+            'rsvp' => $rsvp,
+            'previous_response' => $previousResponse,
+            'was_changed' => $previousResponse !== null && $previousResponse !== $response,
+        ];
     }
 
     /**

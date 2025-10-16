@@ -51,6 +51,55 @@ return [
             'tone_hints' => ['celebratory', 'congratulatory'],
             'max_words' => 50,  // Room for attendee list
         ],
+
+        'rsvp_going' => [
+            'intent' => 'Celebrate someone joining the event - party time!',
+            'required_fields' => ['user_name', 'event_name'],
+            'fallback_template' => "🎉 {user_name} is coming to {event_name}!",
+            'tone_hints' => ['excited', 'celebratory', 'party'],
+            'max_words' => 20,
+        ],
+
+        'rsvp_maybe' => [
+            'intent' => 'Playfully tease someone who is undecided',
+            'required_fields' => ['user_name', 'event_name'],
+            'fallback_template' => "🤔 {user_name} might come to {event_name}... or might not 🤷",
+            'tone_hints' => ['playful', 'teasing', 'lighthearted'],
+            'max_words' => 20,
+        ],
+
+        'rsvp_not_going' => [
+            'intent' => 'Express disappointment that someone cannot make it',
+            'required_fields' => ['user_name', 'event_name'],
+            'fallback_template' => "😢 {user_name} can't make it to {event_name}",
+            'tone_hints' => ['disappointed', 'dramatic', 'guilt-trip'],
+            'max_words' => 20,
+        ],
+
+        // RSVP Changes (when someone updates their response)
+        'rsvp_changed_to_going' => [
+            'intent' => 'Celebrate someone changing their mind to attend - redemption!',
+            'required_fields' => ['user_name', 'event_name', 'previous_response'],
+            'fallback_template' => "🎉 {user_name} changed their mind and is now coming to {event_name}!",
+            'tone_hints' => ['excited', 'redemption', 'celebratory'],
+            'max_words' => 25,
+        ],
+
+        'rsvp_changed_to_maybe' => [
+            'intent' => 'Tease someone who downgraded or became uncertain',
+            'required_fields' => ['user_name', 'event_name', 'previous_response'],
+            'fallback_template' => "🤔 {user_name} is now unsure about {event_name}",
+            'tone_hints' => ['playful', 'teasing', 'uncertain'],
+            'max_words' => 25,
+        ],
+
+        'rsvp_changed_to_not_going' => [
+            'intent' => 'Express extra disappointment that someone changed to not attending',
+            'required_fields' => ['user_name', 'event_name', 'previous_response'],
+            'fallback_template' => "😭 {user_name} changed their mind and can't make {event_name} anymore",
+            'tone_hints' => ['disappointed', 'dramatic', 'betrayal'],
+            'max_words' => 25,
+        ],
     ],
 
     'summary' => [

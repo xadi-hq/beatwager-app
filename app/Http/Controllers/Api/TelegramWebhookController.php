@@ -967,9 +967,19 @@ class TelegramWebhookController extends Controller
             ]);
         }
 
-        // Record RSVP using EventService
+        // Record RSVP using EventService (returns previous response for change detection)
         $eventService = app(\App\Services\EventService::class);
-        $eventService->recordRsvp($event, $user, $response);
+        $rsvpResult = $eventService->recordRsvp($event, $user, $response);
+        $previousResponse = $rsvpResult['previous_response'];
+
+        // Debug logging
+        \Log::info('RSVP Change Debug', [
+            'event' => $event->name,
+            'user' => $user->name,
+            'new_response' => $response,
+            'previous_response' => $previousResponse,
+            'was_changed' => $rsvpResult['was_changed'],
+        ]);
 
         // Map response to emoji and text
         $responseMap = [
@@ -986,14 +996,8 @@ class TelegramWebhookController extends Controller
             ['text' => "{$responseInfo['emoji']} RSVP updated: {$responseInfo['text']}", 'show_alert' => false]
         );
 
-        // Send confirmation to chat
-        $chatId = $callbackQuery->getMessage()->getChat()->getId();
-        $username = $user->getTelegramService()?->platform_username ?? $user->name;
-
-        $this->bot->sendMessage(
-            $chatId,
-            "{$responseInfo['emoji']} @{$username} RSVP'd \"{$responseInfo['text']}\" for: {$event->name}"
-        );
+        // Dispatch event for async LLM-powered announcement with personality (includes change detection)
+        \App\Events\EventRsvpUpdated::dispatch($event, $user, $response, $previousResponse);
     }
 
     /**

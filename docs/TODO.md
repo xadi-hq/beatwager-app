@@ -14,16 +14,18 @@
   - Created `EventCreated` event + `SendEventAnnouncement` listener
   - Created `AttendanceRecorded` event + `SendAttendanceAnnouncement` listener
   - Created `WagerJoined` event + `SendWagerJoinAnnouncement` listener
+  - Created `EventRsvpUpdated` event + `SendRsvpAnnouncement` listener
   - All listeners queued with 3 retries and 5s backoff
   - Replaced ALL hardcoded Telegram message methods with LLM-powered system
 
 - ✅ **Message Types & LLM Integration**
   - Added `event.announced` and `event.attendance_recorded` to messages.php
-  - Updated `wager.joined` for engagement announcements with FOMO tone
-  - Added `eventAnnouncement()`, `attendanceRecorded()`, and `wagerJoined()` methods to MessageService
+  - Updated `wager.joined` for engagement announcements with FOMO tone (NO answer reveal!)
+  - Added playful RSVP messages: `event.rsvp_going` (party!), `event.rsvp_maybe` (teasing), `event.rsvp_not_going` (guilt-trip)
+  - Added `eventAnnouncement()`, `attendanceRecorded()`, `wagerJoined()`, and `rsvpUpdated()` methods to MessageService
   - All messages now use group's `points_currency_name` (e.g., "chips" not "points")
   - All messages apply bot personality from `bot_tone` setting
-  - Dynamic word limits per message type (25-200 words)
+  - Dynamic word limits per message type (20-200 words)
   - Emoji guidance based on message length
 
 - ✅ **Engagement Trigger System**

@@ -373,6 +373,63 @@ class MessageService
     }
 
     /**
+     * Create RSVP update announcement message
+     */
+    public function rsvpUpdated(\App\Models\GroupEvent $event, \App\Models\User $user, string $response, ?string $previousResponse = null): Message
+    {
+        // Detect if this is a change and use appropriate message type
+        if ($previousResponse !== null && $previousResponse !== $response) {
+            // RSVP was changed - use special change message
+            $messageKey = match ($response) {
+                'going' => 'messages.event.rsvp_changed_to_going',
+                'maybe' => 'messages.event.rsvp_changed_to_maybe',
+                'not_going' => 'messages.event.rsvp_changed_to_not_going',
+            };
+        } else {
+            // New RSVP or no change - use regular message
+            $messageKey = match ($response) {
+                'going' => 'messages.event.rsvp_going',
+                'maybe' => 'messages.event.rsvp_maybe',
+                'not_going' => 'messages.event.rsvp_not_going',
+            };
+        }
+
+        $meta = __($messageKey);
+        $currency = $event->group->points_currency_name ?? 'points';
+
+        // Map previous response to friendly text
+        $previousResponseText = $previousResponse ? match ($previousResponse) {
+            'going' => 'going',
+            'maybe' => 'maybe',
+            'not_going' => 'not going',
+        } : null;
+
+        $ctx = new MessageContext(
+            key: $messageKey,
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $user->name,
+                'event_name' => $event->name,
+                'event_date' => $event->event_date->format('M j, Y'),
+                'currency' => $currency,
+                'previous_response' => $previousResponseText,
+            ],
+            group: $event->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $event->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            context: $event,
+            currencyName: $currency
+        );
+    }
+
+    /**
      * Create attendance recorded announcement message
      */
     public function attendanceRecorded(\App\Models\GroupEvent $event, Collection $attendees, \App\Models\User $reporter): Message
