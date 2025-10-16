@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Toast from '@/Components/Toast.vue';
+import FormError from '@/Components/FormError.vue';
 
 const props = defineProps<{
     user: {
@@ -114,7 +115,7 @@ const submit = () => {
                         <p v-else class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                             Group not listed? Make sure BeatWager bot is part of that group first.
                         </p>
-                        <div v-if="form.errors.group_id" class="text-red-600 text-sm mt-1">{{ form.errors.group_id }}</div>
+                        <FormError :error="form.errors.group_id" />
                     </div>
 
                     <!-- Event Name -->
@@ -129,7 +130,7 @@ const submit = () => {
                             placeholder="e.g., Group Meetup at Central Park"
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         />
-                        <div v-if="form.errors.name" class="text-red-600 text-sm mt-1">{{ form.errors.name }}</div>
+                        <FormError :error="form.errors.name" />
                     </div>
 
                     <!-- Description -->
@@ -143,7 +144,7 @@ const submit = () => {
                             placeholder="Optional details about the event..."
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         ></textarea>
-                        <div v-if="form.errors.description" class="text-red-600 text-sm mt-1">{{ form.errors.description }}</div>
+                        <FormError :error="form.errors.description" />
                     </div>
 
                     <!-- Event Date and Location -->
@@ -159,7 +160,7 @@ const submit = () => {
                                 required
                                 class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                             />
-                            <div v-if="form.errors.event_date" class="text-red-600 text-sm mt-1">{{ form.errors.event_date }}</div>
+                            <FormError :error="form.errors.event_date" />
                         </div>
 
                         <!-- Location -->
@@ -173,7 +174,7 @@ const submit = () => {
                                 placeholder="e.g., Central Park"
                                 class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                             />
-                            <div v-if="form.errors.location" class="text-red-600 text-sm mt-1">{{ form.errors.location }}</div>
+                            <FormError :error="form.errors.location" />
                         </div>
                     </div>
 
@@ -197,7 +198,7 @@ const submit = () => {
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                                 Points awarded to attendees (also resets decay timer)
                             </p>
-                            <div v-if="form.errors.attendance_bonus" class="text-red-600 text-sm mt-1">{{ form.errors.attendance_bonus }}</div>
+                            <FormError :error="form.errors.attendance_bonus" />
                         </div>
 
                         <!-- Auto-Prompt Hours -->
@@ -216,7 +217,7 @@ const submit = () => {
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                                 Bot will prompt for attendance recording after this delay
                             </p>
-                            <div v-if="form.errors.auto_prompt_hours_after" class="text-red-600 text-sm mt-1">{{ form.errors.auto_prompt_hours_after }}</div>
+                            <FormError :error="form.errors.auto_prompt_hours_after" />
                         </div>
                     </div>
 
@@ -248,7 +249,7 @@ const submit = () => {
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                                 Leave blank for no deadline
                             </p>
-                            <div v-if="form.errors.rsvp_deadline" class="text-red-600 text-sm mt-1">{{ form.errors.rsvp_deadline }}</div>
+                            <FormError :error="form.errors.rsvp_deadline" />
                         </div>
                     </div>
 

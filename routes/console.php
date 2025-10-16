@@ -24,3 +24,9 @@ Schedule::job(new SendEventAttendancePrompts())
     ->hourly()
     ->withoutOverlapping()
     ->onOneServer();
+
+// Aggregate LLM metrics from logs daily at midnight
+Schedule::command('llm:aggregate')
+    ->dailyAt('00:00')
+    ->withoutOverlapping()
+    ->onOneServer();

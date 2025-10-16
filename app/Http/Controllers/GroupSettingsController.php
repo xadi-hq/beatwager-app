@@ -24,14 +24,21 @@ class GroupSettingsController extends Controller
         $validated = $request->validate([
             'points_currency_name' => 'sometimes|string|max:50',
             'description' => 'sometimes|string|max:500|nullable',
+            'group_type' => 'sometimes|string|in:friends,colleagues,family',
             'notification_preferences' => 'sometimes|array',
             'notification_preferences.birthday_reminders' => 'boolean',
             'notification_preferences.event_reminders' => 'boolean',
             'notification_preferences.wager_reminders' => 'boolean',
             'notification_preferences.weekly_summaries' => 'boolean',
             'bot_tone' => 'sometimes|string|max:1000|nullable',
+            'llm_provider' => 'sometimes|string|in:openai,anthropic,requesty',
             'llm_api_key' => 'sometimes|string|max:500|nullable',
         ]);
+
+        // Preserve existing LLM API key if field is empty (user didn't provide new key)
+        if (isset($validated['llm_api_key']) && empty($validated['llm_api_key'])) {
+            unset($validated['llm_api_key']);
+        }
 
         $group->update($validated);
 

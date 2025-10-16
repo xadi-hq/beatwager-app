@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Group;
+use App\Models\LlmUsageDaily;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -52,6 +54,29 @@ class GroupController extends Controller
             'weekly_summaries' => false,
         ];
 
+        // Get LLM usage metrics for this month
+        $llmMetrics = null;
+        if (!empty($group->llm_api_key)) {
+            $startOfMonth = Carbon::now()->startOfMonth();
+            $endOfMonth = Carbon::now()->endOfMonth();
+
+            $monthlyMetrics = LlmUsageDaily::where('group_id', $group->id)
+                ->whereBetween('date', [$startOfMonth, $endOfMonth])
+                ->get();
+
+            if ($monthlyMetrics->isNotEmpty()) {
+                $llmMetrics = [
+                    'total_calls' => $monthlyMetrics->sum('total_calls'),
+                    'cached_calls' => $monthlyMetrics->sum('cached_calls'),
+                    'fallback_calls' => $monthlyMetrics->sum('fallback_calls'),
+                    'estimated_cost_usd' => $monthlyMetrics->sum('estimated_cost_usd'),
+                    'cache_hit_rate' => $monthlyMetrics->sum('total_calls') > 0
+                        ? round(($monthlyMetrics->sum('cached_calls') / $monthlyMetrics->sum('total_calls')) * 100, 1)
+                        : 0,
+                ];
+            }
+        }
+
         return Inertia::render('Groups/Show', [
             'group' => [
                 'id' => $group->id,
@@ -61,9 +86,12 @@ class GroupController extends Controller
                 'starting_balance' => $group->starting_balance,
                 'decay_enabled' => $group->point_decay_enabled,
                 'points_currency_name' => $group->points_currency_name ?? 'points',
+                'group_type' => $group->group_type,
                 'notification_preferences' => $notificationPreferences,
                 'bot_tone' => $group->bot_tone,
+                'llm_provider' => $group->llm_provider,
                 'has_llm_configured' => !empty($group->llm_api_key),
+                'llm_metrics' => $llmMetrics,
             ],
             'members' => $members,
             'stats' => $stats,

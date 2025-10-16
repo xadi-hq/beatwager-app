@@ -3,6 +3,8 @@ import { ref, computed, onUnmounted } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Toast from '@/Components/Toast.vue';
+import FormError from '@/Components/FormError.vue';
+import FormErrorBox from '@/Components/FormErrorBox.vue';
 
 const props = defineProps<{
     wager: any;
@@ -73,7 +75,7 @@ const getMedal = (index: number, entry: any) => {
 
 const settlementForm = useForm({
     wager_id: props.wager.id,
-    user_id: props.user.telegram_id,
+    user_id: props.user.id,
     outcome_value: '',
     settlement_note: '',
 });
@@ -97,7 +99,13 @@ const submitSettlement = () => {
         },
         onError: (errors) => {
             toastType.value = 'error';
-            toastMessage.value = 'Failed to settle wager. Please try again.';
+
+            // Show first validation error if available
+            const firstError = Object.values(errors)[0];
+            toastMessage.value = firstError
+                ? (Array.isArray(firstError) ? firstError[0] : firstError)
+                : 'Failed to settle wager. Please try again.';
+
             showToast.value = true;
         },
     });
@@ -126,13 +134,13 @@ const submitSettlement = () => {
                     </div>
 
                     <!-- Past deadline, awaiting settlement -->
-                    <div v-else-if="wager.status === 'open'" class="text-xl font-bold text-amber-600 dark:text-amber-400 mb-2">
-                        ⏰ Awaiting Settlement (deadline {{ deadlinePassed }})
+                    <div v-else-if="wager.status === 'open'" class="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-2">
+                        ⏰ Awaiting Settlement
                     </div>
 
-                    <!-- Settled wager: outcome + metadata on one line -->
+                    <!-- Settled wager: outcome -->
                     <div v-else>
-                        <div class="text-xl font-bold text-green-600 dark:text-green-400 mb-2">
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
                             ✅ Outcome: {{ wager.outcome_value }}
                         </div>
                         <div v-if="wager.settlement_note" class="mb-3 p-3 bg-neutral-50 dark:bg-neutral-700 rounded border-l-4 border-blue-500">
@@ -141,16 +149,16 @@ const submitSettlement = () => {
                         </div>
                     </div>
 
-                    <!-- Metadata line: Creator • Deadline • Settler (single line with separators) -->
+                    <!-- Metadata line: Creator • Settler • Deadline -->
                     <div class="text-sm text-neutral-500 dark:text-neutral-400">
                         <span>Created by <strong class="text-neutral-700 dark:text-neutral-300">{{ wager.creator.name }}</strong></span>
-                        <span v-if="wager.status === 'settled'" class="mx-2">•</span>
-                        <span v-if="wager.status === 'settled'">Deadline {{ deadlinePassed }}</span>
                         <span v-if="wager.settler" class="mx-2">•</span>
                         <span v-if="wager.settler">
                             Settled by <strong class="text-neutral-700 dark:text-neutral-300">{{ wager.settler.name }}</strong>
                             <span v-if="wager.settled_at"> on {{ new Date(wager.settled_at).toLocaleString() }}</span>
                         </span>
+                        <span v-if="isPastDeadline" class="mx-2">•</span>
+                        <span v-if="isPastDeadline">Deadline {{ deadlinePassed }}</span>
                     </div>
                 </div>
 
@@ -233,7 +241,7 @@ const submitSettlement = () => {
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
                             What was the outcome? *
                         </label>
-                        
+
                         <!-- Binary -->
                         <div v-if="wager.type === 'binary'" class="space-y-2">
                             <label class="flex items-center">
@@ -253,6 +261,8 @@ const submitSettlement = () => {
                                 <span class="text-neutral-900 dark:text-neutral-100">{{ option }}</span>
                             </label>
                         </div>
+
+                        <FormError :error="settlementForm.errors.outcome_value" />
                     </div>
 
                     <!-- Settlement Note -->
@@ -266,7 +276,11 @@ const submitSettlement = () => {
                             placeholder="Any additional notes..."
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
                         ></textarea>
+                        <FormError :error="settlementForm.errors.settlement_note" />
                     </div>
+
+                    <!-- General Error (for user_id or other field errors) -->
+                    <FormErrorBox :errors="settlementForm.errors" :exclude="['outcome_value', 'settlement_note']" />
 
                     <button
                         type="submit"
@@ -304,13 +318,13 @@ const submitSettlement = () => {
                             </div>
 
                             <!-- Past deadline, awaiting settlement -->
-                            <div v-else-if="wager.status === 'open'" class="text-xl font-bold text-amber-600 dark:text-amber-400 mb-2">
-                                ⏰ Awaiting Settlement (deadline {{ deadlinePassed }})
+                            <div v-else-if="wager.status === 'open'" class="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-2">
+                                ⏰ Awaiting Settlement
                             </div>
 
-                            <!-- Settled wager: outcome + metadata on one line -->
+                            <!-- Settled wager: outcome -->
                             <div v-else>
-                                <div class="text-xl font-bold text-green-600 dark:text-green-400 mb-2">
+                                <div class="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
                                     ✅ Outcome: {{ wager.outcome_value }}
                                 </div>
                                 <div v-if="wager.settlement_note" class="mb-3 p-3 bg-neutral-50 dark:bg-neutral-700 rounded border-l-4 border-blue-500">
@@ -319,16 +333,16 @@ const submitSettlement = () => {
                                 </div>
                             </div>
 
-                            <!-- Metadata line: Creator • Deadline • Settler -->
+                            <!-- Metadata line: Creator • Settler • Deadline -->
                             <div class="text-sm text-neutral-500 dark:text-neutral-400">
                                 <span>Created by <strong class="text-neutral-700 dark:text-neutral-300">{{ wager.creator.name }}</strong></span>
-                                <span v-if="wager.status === 'settled'" class="mx-2">•</span>
-                                <span v-if="wager.status === 'settled'">Deadline {{ deadlinePassed }}</span>
                                 <span v-if="wager.settler" class="mx-2">•</span>
                                 <span v-if="wager.settler">
                                     Settled by <strong class="text-neutral-700 dark:text-neutral-300">{{ wager.settler.name }}</strong>
                                     <span v-if="wager.settled_at"> on {{ new Date(wager.settled_at).toLocaleString() }}</span>
                                 </span>
+                                <span v-if="isPastDeadline" class="mx-2">•</span>
+                                <span v-if="isPastDeadline">Deadline {{ deadlinePassed }}</span>
                             </div>
                         </div>
 
@@ -387,6 +401,8 @@ const submitSettlement = () => {
                                         <span class="text-neutral-900 dark:text-neutral-100">{{ option }}</span>
                                     </label>
                                 </div>
+
+                                <FormError :error="settlementForm.errors.outcome_value" />
                             </div>
 
                             <!-- Settlement Note -->
@@ -400,7 +416,11 @@ const submitSettlement = () => {
                                     placeholder="Any additional notes..."
                                     class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
                                 ></textarea>
+                                <FormError :error="settlementForm.errors.settlement_note" />
                             </div>
+
+                            <!-- General Error (for user_id or other field errors) -->
+                            <FormErrorBox :errors="settlementForm.errors" :exclude="['outcome_value', 'settlement_note']" />
 
                             <button
                                 type="submit"

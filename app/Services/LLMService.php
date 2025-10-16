@@ -87,12 +87,13 @@ You are BeatWager bot, managing social wagers for a {$groupType} group.
 Your personality: {$botTone}
 
 Guidelines:
-- Be concise (2-3 sentences max)
-- Include relevant emojis
+- Be VERY concise (1-2 sentences max, 30 words or less)
+- Include 1-2 relevant emojis only
 - Maintain the specified tone consistently
-- Preserve all factual information (numbers, dates, names)
-- Create excitement and engagement
+- Preserve all factual information (numbers, dates, names, currency)
+- Create excitement without being verbose
 - Never mention being an AI or technical details
+- Get straight to the point
 
 PROMPT;
     }
@@ -102,9 +103,25 @@ PROMPT;
         $meta = __('messages.' . $ctx->key);
         $intent = $meta['intent'] ?? '';
         $toneHints = $meta['tone_hints'] ?? [];
+        $maxWords = $meta['max_words'] ?? 30;  // Default to 30 if not specified
 
         // Flatten data for prompt
         $dataStr = json_encode($ctx->data, JSON_PRETTY_PRINT);
+
+        // Adjust emoji and style guidance based on length
+        $emojiGuidance = $maxWords > 100 ? '2-3 emojis' : '1-2 emojis maximum';
+        $styleGuidance = $maxWords > 100
+            ? 'Be comprehensive and detailed'
+            : 'Be direct and punchy';
+
+        // Build engagement triggers hint if present
+        $triggersHint = '';
+        if (isset($ctx->data['triggers']) && is_array($ctx->data['triggers'])) {
+            $activeTriggersHint = $this->buildTriggersGuidance($ctx->data['triggers']);
+            if ($activeTriggersHint) {
+                $triggersHint = "\n\nEngagement Context (use for extra personality):\n{$activeTriggersHint}";
+            }
+        }
 
         return <<<PROMPT
 Generate a message with personality for this context:
@@ -115,13 +132,15 @@ Tone hints: {$this->formatList($toneHints)}
 Required fields to include: {$this->formatList($ctx->requiredFields)}
 
 Data:
-{$dataStr}
+{$dataStr}{$triggersHint}
 
 Rules:
 - Include ALL required fields in natural language
-- Keep under 250 words
-- Use appropriate emojis
+- Keep under {$maxWords} words total
+- Use {$emojiGuidance}
 - Match the tone hints
+- {$styleGuidance}
+- If engagement triggers are present, use them to add personality and create FOMO
 
 Generate the message:
 PROMPT;
@@ -135,7 +154,7 @@ PROMPT;
     ): string {
         return match ($provider) {
             'anthropic' => $this->callAnthropic($apiKey, $systemPrompt, $userPrompt),
-            'openai' => $this->callOpenAI($apiKey, $systemPrompt, $userPrompt),
+            'openai', 'requesty' => $this->callOpenAI($apiKey, $systemPrompt, $userPrompt, $provider),
             default => throw new \InvalidArgumentException("Unknown provider: {$provider}")
         };
     }
@@ -164,15 +183,27 @@ PROMPT;
         return $response->json()['content'][0]['text'];
     }
 
-    private function callOpenAI(string $apiKey, string $system, string $user): string
+    private function callOpenAI(string $apiKey, string $system, string $user, string $provider = 'openai'): string
     {
+        // Determine the API endpoint and model format based on provider
+        [$endpoint, $model] = match ($provider) {
+            'requesty' => [
+                'https://router.requesty.ai/v1/chat/completions',
+                'openai/gpt-4o-mini'  // Requesty expects provider/model format
+            ],
+            default => [
+                'https://api.openai.com/v1/chat/completions',
+                'gpt-4o-mini'
+            ],
+        };
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $apiKey,
             'Content-Type' => 'application/json',
         ])
             ->timeout(10)
-            ->post('https://api.openai.com/v1/chat/completions', [
-                'model' => 'gpt-3.5-turbo',
+            ->post($endpoint, [
+                'model' => $model,
                 'max_tokens' => 300,
                 'messages' => [
                     ['role' => 'system', 'content' => $system],
@@ -181,7 +212,7 @@ PROMPT;
             ]);
 
         if (!$response->successful()) {
-            throw new \RuntimeException('OpenAI API error: ' . $response->body());
+            throw new \RuntimeException("{$provider} API error: " . $response->body());
         }
 
         return $response->json()['choices'][0]['message']['content'];
@@ -219,5 +250,59 @@ PROMPT;
     private function formatList(array $items): string
     {
         return empty($items) ? 'none' : implode(', ', $items);
+    }
+
+    /**
+     * Build human-readable guidance from engagement triggers
+     */
+    private function buildTriggersGuidance(array $triggers): string
+    {
+        $hints = [];
+
+        // Position triggers
+        if ($triggers['is_first'] ?? false) {
+            $hints[] = "- First person to join this wager (trendsetter!)";
+        }
+        if ($triggers['is_leader'] ?? false) {
+            $hints[] = "- This user is #1 on the leaderboard (the leader makes their move!)";
+        }
+        if ($triggers['is_underdog'] ?? false) {
+            $hints[] = "- This user is in the bottom 25% (underdog fighting back!)";
+        }
+
+        // Stakes triggers
+        if ($triggers['is_high_stakes'] ?? false) {
+            $percentage = $triggers['stake_percentage'] ?? 50;
+            $hints[] = "- Wagering {$percentage}% of their balance (high stakes/all-in energy!)";
+        }
+
+        // Comeback triggers
+        if ($triggers['is_comeback'] ?? false) {
+            $days = $triggers['days_inactive'] ?? null;
+            if ($days) {
+                $hints[] = "- Back after {$days} days of inactivity (comeback story! welcome back!)";
+            } else {
+                $hints[] = "- Recently had points decay (comeback after tough times!)";
+            }
+        }
+
+        // Momentum triggers
+        if ($triggers['is_contrarian'] ?? false) {
+            $hints[] = "- Betting against the majority (bold contrarian move!)";
+        }
+        if ($triggers['is_bandwagon'] ?? false) {
+            $hints[] = "- Joining the majority side (piling on with the crowd!)";
+        }
+
+        // Timing triggers
+        if ($triggers['is_last_minute'] ?? false) {
+            $hours = $triggers['hours_to_deadline'] ?? null;
+            $hints[] = "- Joining with only {$hours} hours left (last-minute decision!)";
+        }
+        if ($triggers['is_early_bird'] ?? false) {
+            $hints[] = "- Joined within an hour of wager creation (quick on the draw!)";
+        }
+
+        return empty($hints) ? '' : implode("\n", $hints);
     }
 }

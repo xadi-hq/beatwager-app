@@ -8,6 +8,7 @@ const props = defineProps<{
         id: string;
         name: string;
         description?: string;
+        group_type?: string;
         points_currency_name: string;
         notification_preferences: {
             birthday_reminders: boolean;
@@ -16,7 +17,15 @@ const props = defineProps<{
             weekly_summaries: boolean;
         };
         bot_tone?: string;
+        llm_provider?: string;
         has_llm_configured: boolean;
+        llm_metrics?: {
+            total_calls: number;
+            cached_calls: number;
+            fallback_calls: number;
+            estimated_cost_usd: number;
+            cache_hit_rate: number;
+        };
     };
 }>();
 
@@ -39,7 +48,9 @@ const notificationForm = useForm({
 
 // Bot personality form
 const botForm = useForm({
+    group_type: props.group.group_type || 'friends',
     bot_tone: props.group.bot_tone || '',
+    llm_provider: props.group.llm_provider || 'openai',
     llm_api_key: '',
 });
 
@@ -89,7 +100,14 @@ function submitNotifications() {
 function submitBot() {
     showToast.value = false;
 
-    botForm.post(`/groups/${props.group.id}/settings`, {
+    botForm.transform((data) => {
+        // Only include API key if user provided a new one (not empty)
+        if (!data.llm_api_key || data.llm_api_key.trim() === '') {
+            const { llm_api_key, ...rest } = data;
+            return rest;
+        }
+        return data;
+    }).post(`/groups/${props.group.id}/settings`, {
         preserveScroll: true,
         onSuccess: () => {
             toastType.value = 'success';
@@ -121,6 +139,7 @@ function submitBot() {
                     <option value="general">General</option>
                     <option value="notifications">Notifications</option>
                     <option value="bot">Bot Personality</option>
+                    <option v-if="group.has_llm_configured" value="usage">LLM Usage</option>
                 </select>
             </div>
 
@@ -160,6 +179,18 @@ function submitBot() {
                     >
                         Bot Personality
                     </button>
+                    <button
+                        v-if="group.has_llm_configured"
+                        @click="activeTab = 'usage'"
+                        :class="[
+                            'px-4 py-3 text-sm font-medium border-b-2',
+                            activeTab === 'usage'
+                                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300'
+                        ]"
+                    >
+                        LLM Usage
+                    </button>
                 </nav>
             </div>
 
@@ -182,7 +213,7 @@ function submitBot() {
                                 required
                             />
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                                Customize how points are displayed in your group (e.g., "John won 100 kudos")
+                                Customize how points are displayed in your group (e.g., "John won 100 coins")
                             </p>
                         </div>
 
@@ -284,6 +315,40 @@ function submitBot() {
                     <form @submit.prevent="submitBot" class="space-y-6">
                         <div>
                             <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Group Type
+                            </label>
+                            <select
+                                v-model="botForm.group_type"
+                                class="w-full px-3 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="friends">Friends</option>
+                                <option value="colleagues">Colleagues</option>
+                                <option value="family">Family</option>
+                            </select>
+                            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                                Influences the bot's communication style and tone
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                LLM Provider
+                            </label>
+                            <select
+                                v-model="botForm.llm_provider"
+                                class="w-full px-3 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="openai">OpenAI (gpt-4o-mini)</option>
+                                <option value="anthropic">Anthropic (claude-3-haiku)</option>
+                                <option value="requesty">Requesty.ai (openai/gpt-4o-mini)</option>
+                            </select>
+                            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                                Select your LLM provider and model
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                                 LLM API Key (Optional)
                             </label>
                             <input
@@ -332,6 +397,71 @@ function submitBot() {
                             {{ botForm.processing ? 'Saving...' : 'Save Bot Settings' }}
                         </button>
                     </form>
+                </div>
+
+                <!-- LLM Usage Tab -->
+                <div v-if="activeTab === 'usage'">
+                    <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">LLM Usage & Costs</h3>
+
+                    <!-- Metrics Display -->
+                    <div v-if="group.llm_metrics" class="space-y-6">
+                        <!-- Overview Stats -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg border border-neutral-200 dark:border-neutral-600">
+                                <div class="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">Total Calls</div>
+                                <div class="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                                    {{ group.llm_metrics.total_calls }}
+                                </div>
+                                <div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">API requests this month</div>
+                            </div>
+
+                            <div class="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg border border-neutral-200 dark:border-neutral-600">
+                                <div class="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">Estimated Cost</div>
+                                <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                                    ${{ group.llm_metrics.estimated_cost_usd.toFixed(4) }}
+                                </div>
+                                <div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Total spend this month</div>
+                            </div>
+
+                            <div class="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg border border-neutral-200 dark:border-neutral-600">
+                                <div class="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">Cache Hit Rate</div>
+                                <div class="text-3xl font-bold text-green-600 dark:text-green-400">
+                                    {{ group.llm_metrics.cache_hit_rate }}%
+                                </div>
+                                <div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Cached responses (saves cost)</div>
+                            </div>
+
+                            <div class="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg border border-neutral-200 dark:border-neutral-600">
+                                <div class="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">Fallbacks</div>
+                                <div class="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                                    {{ group.llm_metrics.fallback_calls }}
+                                </div>
+                                <div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Used default templates</div>
+                            </div>
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <h4 class="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">💡 About These Metrics</h4>
+                            <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+                                <li>• Metrics are updated daily at midnight</li>
+                                <li>• Cache hits save API costs by reusing previous responses</li>
+                                <li>• Fallbacks occur when LLM is unavailable or errors</li>
+                                <li>• Cost estimates are based on token usage and provider rates</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- No Data State -->
+                    <div v-else class="p-8 text-center bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600">
+                        <div class="text-4xl mb-3">📊</div>
+                        <h4 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+                            No Usage Data Yet
+                        </h4>
+                        <p class="text-sm text-neutral-600 dark:text-neutral-400">
+                            Metrics will appear here after your bot starts generating AI-powered messages.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

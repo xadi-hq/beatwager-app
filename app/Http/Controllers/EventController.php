@@ -80,10 +80,10 @@ class EventController extends Controller
 
         // Create event
         $event = $this->eventService->createEvent($group, $user, $validated);
-        $event->load('creator');
+        $event->load('creator', 'group');
 
-        // Post to Telegram group
-        $this->postEventToTelegram($event, $group);
+        // Dispatch async event announcement
+        \App\Events\EventCreated::dispatch($event);
 
         return redirect()->route('dashboard.me')->with('success', 'Event created successfully!');
     }
@@ -200,8 +200,8 @@ class EventController extends Controller
                 $validated['attendee_ids']
             );
 
-            // Announce to Telegram
-            $this->announceAttendanceToTelegram($event, $user);
+            // Dispatch async attendance announcement
+            \App\Events\AttendanceRecorded::dispatch($event, $user);
 
             return redirect()->route('dashboard.me')->with('success', 'Attendance recorded successfully!');
         } catch (\Exception $e) {
@@ -270,107 +270,4 @@ class EventController extends Controller
         return $group;
     }
 
-    /**
-     * Post event announcement to Telegram
-     */
-    private function postEventToTelegram(GroupEvent $event, Group $group): void
-    {
-        if ($group->platform !== 'telegram') {
-            return;
-        }
-
-        try {
-            $bot = new \TelegramBot\Api\BotApi(config('telegram.bot_token'));
-
-            $message = "🎉 *New Event: {$event->name}*\n\n";
-
-            if ($event->description) {
-                $message .= $event->description . "\n\n";
-            }
-
-            $message .= "📅 *When:* " . $event->event_date->format('M d, Y g:i A') . "\n";
-
-            if ($event->location) {
-                $message .= "📍 *Where:* {$event->location}\n";
-            }
-
-            $message .= "💰 *Bonus:* +{$event->attendance_bonus} points for attending!\n";
-
-            if ($event->rsvp_deadline) {
-                $message .= "🎟️ *RSVP by:* " . $event->rsvp_deadline->format('M d') . "\n";
-            }
-
-            $message .= "\nCreated by @" . $event->creator->getTelegramService()?->platform_username;
-
-            // RSVP buttons
-            $keyboard = [
-                [
-                    ['text' => '✅ Going', 'callback_data' => "event_rsvp:{$event->id}:going"],
-                    ['text' => '🤔 Maybe', 'callback_data' => "event_rsvp:{$event->id}:maybe"],
-                    ['text' => '❌ Can\'t Make It', 'callback_data' => "event_rsvp:{$event->id}:not_going"],
-                ]
-            ];
-
-            $bot->sendMessage(
-                $group->platform_chat_id,
-                $message,
-                'Markdown',
-                false,
-                null,
-                json_encode(['inline_keyboard' => $keyboard])
-            );
-
-        } catch (\Exception $e) {
-            Log::error('Failed to post event to Telegram', [
-                'event_id' => $event->id,
-                'group_id' => $group->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * Announce attendance results to Telegram
-     */
-    private function announceAttendanceToTelegram(GroupEvent $event, User $reporter): void
-    {
-        $group = $event->group;
-
-        if ($group->platform !== 'telegram') {
-            return;
-        }
-
-        try {
-            $bot = new \TelegramBot\Api\BotApi(config('telegram.bot_token'));
-
-            $attendees = $event->attendance()
-                ->where('attended', true)
-                ->with('user')
-                ->get();
-
-            $message = "✅ *Attendance Recorded: {$event->name}*\n\n";
-            $message .= "👥 *Attended (" . $attendees->count() . "):*\n";
-
-            foreach ($attendees as $attendance) {
-                $username = $attendance->user->getTelegramService()?->platform_username;
-                $message .= "• @{$username}\n";
-            }
-
-            $message .= "\n💰 Each attendee received +{$event->attendance_bonus} points!\n\n";
-            $message .= "Recorded by @" . $reporter->getTelegramService()?->platform_username;
-
-            $bot->sendMessage(
-                $group->platform_chat_id,
-                $message,
-                'Markdown'
-            );
-
-        } catch (\Exception $e) {
-            Log::error('Failed to announce attendance to Telegram', [
-                'event_id' => $event->id,
-                'group_id' => $group->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
 }

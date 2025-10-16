@@ -13,6 +13,7 @@ use App\Models\Group;
 use App\Models\User;
 use App\Models\Wager;
 use App\Models\WagerEntry;
+use App\Services\AuditEventService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -203,7 +204,7 @@ class WagerService
             );
         }
 
-        if ($wager->date_min && $date < new \DateTime($wager->date_min)) {
+        if ($wager->date_min && $date < new \DateTime($wager->date_min->format('Y-m-d'))) {
             throw InvalidAnswerException::forDate(
                 $answer,
                 $wager->date_min?->format('Y-m-d'),
@@ -211,7 +212,7 @@ class WagerService
             );
         }
 
-        if ($wager->date_max && $date > new \DateTime($wager->date_max)) {
+        if ($wager->date_max && $date > new \DateTime($wager->date_max->format('Y-m-d'))) {
             throw InvalidAnswerException::forDate(
                 $answer,
                 $wager->date_min?->format('Y-m-d'),
@@ -289,6 +290,9 @@ class WagerService
                 ],
                 actor: $settler
             );
+
+            // Create audit events for LLM context
+            $this->createAuditEvents($wager);
 
             return $wager->fresh();
         });
@@ -477,5 +481,72 @@ class WagerService
 
             return $wager->fresh();
         });
+    }
+
+    /**
+     * Create audit events for LLM context after wager settlement
+     */
+    private function createAuditEvents(Wager $wager): void
+    {
+        // Refresh wager to get latest entries with results
+        $wager->load(['entries.user', 'group']);
+        
+        // For 1v1 wagers, create detailed winner/loser events
+        if ($wager->entries->count() === 2) {
+            $winner = $wager->entries->firstWhere('is_winner', true);
+            $loser = $wager->entries->firstWhere('is_winner', false);
+            
+            if ($winner && $loser) {
+                $pointsGained = $winner->points_won - $winner->points_wagered;
+                
+                AuditEventService::wagerWon(
+                    group: $wager->group,
+                    winner: $winner->user,
+                    loser: $loser->user,
+                    points: $pointsGained,
+                    wagerTitle: $wager->title,
+                    wagerId: $wager->id
+                );
+            }
+            return;
+        }
+        
+        // For multi-participant wagers, create a generic summary
+        $winners = $wager->entries->where('is_winner', true);
+        $losers = $wager->entries->where('is_winner', false);
+        
+        if ($winners->isNotEmpty()) {
+            $winnerNames = $winners->pluck('user.username')->join(', ');
+            $totalWon = $winners->sum(fn($e) => $e->points_won - $e->points_wagered);
+            
+            $summary = $winners->count() === 1
+                ? "{$winnerNames} won '{$wager->title}' and gained {$totalWon} points"
+                : "{$winnerNames} won '{$wager->title}' and split {$totalWon} points";
+            
+            AuditEventService::create(
+                group: $wager->group,
+                eventType: 'wager.multi_winner',
+                summary: $summary,
+                participants: $winners->map(fn($e) => [
+                    'user_id' => $e->user_id,
+                    'username' => $e->user->username,
+                    'role' => 'winner',
+                ])->toArray(),
+                impact: ['total_points_won' => $totalWon],
+                metadata: ['wager_id' => $wager->id]
+            );
+        } elseif ($losers->isNotEmpty()) {
+            // All refunded or no winners
+            $summary = "'{$wager->title}' ended with no winners - all {$wager->entries->count()} participants were refunded";
+            
+            AuditEventService::create(
+                group: $wager->group,
+                eventType: 'wager.no_winner',
+                summary: $summary,
+                participants: [],
+                impact: ['refund_count' => $wager->entries->count()],
+                metadata: ['wager_id' => $wager->id]
+            );
+        }
     }
 }

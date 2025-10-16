@@ -98,8 +98,8 @@ class WagerController extends Controller
         $wager = $this->wagerService->createWager($group, $user, $validated);
         $wager->load("creator");
 
-        // Post to Telegram group
-        $this->postWagerToTelegram($wager, $group);
+        // Dispatch event for async announcement (non-blocking)
+        \App\Events\WagerCreated::dispatch($wager);
 
         return redirect()->route('wager.success', ['wager' => $wager->id]);
     }
@@ -147,23 +147,6 @@ class WagerController extends Controller
         return $group;
     }
 
-    /**
-     * Post wager announcement to group (platform-agnostic)
-     */
-    private function postWagerToTelegram($wager, $group): void
-    {
-        // Platform-agnostic messaging - Group determines which messenger to use
-        $message = app(\App\Services\MessageService::class)->wagerAnnouncement($wager);
-        $group->sendMessage($message);
-        
-        /* OLD IMPLEMENTATION (60 lines of hardcoded Telegram HTML):
-        $bot = new \TelegramBot\Api\BotApi(config('telegram.bot_token'));
-        $deadline = $wager->deadline->setTimezone('Europe/Amsterdam')->format('d M Y H:i');
-        $message = "🎲 <b>New Wager Created!</b>\n\n";
-        $message .= "<b>Question:</b> {$wager->title}\n";
-        ... [56 more lines of hardcoded formatting and keyboard building]
-        */
-    }
 
     /**
      * Show success page
@@ -267,8 +250,8 @@ class WagerController extends Controller
         // Mark token as used
         $token->markAsUsed();
 
-        // Post result to Telegram
-        $this->postSettlementToTelegram($settledWager);
+        // Dispatch async settlement announcement
+        \App\Events\WagerSettled::dispatch($settledWager);
 
         return redirect()->route('wager.settle.success', ['wager' => $settledWager->id]);
     }
@@ -297,48 +280,6 @@ class WagerController extends Controller
                 ],
             ],
         ]);
-    }
-
-    /**
-     * Post settlement result to Telegram group
-     */
-    private function postSettlementToTelegram($wager): void
-    {
-        $bot = new \TelegramBot\Api\BotApi(config('telegram.bot_token'));
-
-        $message = "🏁 <b>Wager Settled!</b>\n\n";
-        $message .= "<b>Question:</b> {$wager->title}\n";
-        $message .= "<b>Outcome:</b> {$wager->outcome_value}\n";
-
-        if ($wager->settlement_note) {
-            $message .= "<b>Note:</b> {$wager->settlement_note}\n";
-        }
-
-        $message .= "\n<b>Winners:</b>\n";
-
-        // Get winning entries
-        $winners = $wager->entries()->where('is_winner', true)->with('user')->get();
-
-        if ($winners->count() > 0) {
-            foreach ($winners as $winner) {
-                $message .= "✅ {$winner->user->name} won {$winner->points_won} points\n";
-            }
-        } else {
-            $message .= "No winners for this wager.\n";
-        }
-
-        try {
-            $bot->sendMessage(
-                $wager->group->platform_chat_id,
-                $message,
-                'HTML'
-            );
-        } catch (\Exception $e) {
-            \Log::error('Failed to post settlement to Telegram', [
-                'wager_id' => $wager->id,
-                'error' => $e->getMessage()
-            ]);
-        }
     }
 
     /**
@@ -434,7 +375,8 @@ class WagerController extends Controller
             abort(403, 'Wager is not open for settlement');
         }
 
-        if ($wager->deadline >= now()) {
+        // Allow settlement after deadline has passed
+        if ($wager->deadline > now()) {
             abort(403, 'Cannot settle wager before deadline');
         }
 
@@ -449,8 +391,8 @@ class WagerController extends Controller
             $settler->id
         );
 
-        // Post result to Telegram
-        $this->postSettlementToTelegram($settledWager);
+        // Dispatch async settlement announcement
+        \App\Events\WagerSettled::dispatch($settledWager);
 
         return redirect()->route('wager.settle.success', ['wager' => $settledWager->id]);
     }

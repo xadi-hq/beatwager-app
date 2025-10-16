@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Toast from '@/Components/Toast.vue';
+import FormError from '@/Components/FormError.vue';
 
 const props = defineProps<{
     user: {
@@ -114,7 +115,7 @@ const submit = () => {
                             </span>
                         </p>
                         <p v-if="defaultGroup" class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                            Wager will be created in the group where you used /newwager
+                            Wager will be created in the mentioned group above
                         </p>
                     </div>
 
@@ -140,7 +141,7 @@ const submit = () => {
                         <p v-else class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                             Group not listed? Make sure BeatWager bot is part of that group first.
                         </p>
-                        <div v-if="form.errors.group_id" class="text-red-600 text-sm mt-1">{{ form.errors.group_id }}</div>
+                        <FormError :error="form.errors.group_id" />
                     </div>
 
                     <!-- Wager Type -->
@@ -170,7 +171,7 @@ const submit = () => {
                             placeholder="e.g., Ajax vs PSV - Who wins?"
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         />
-                        <div v-if="form.errors.title" class="text-red-600 text-sm mt-1">{{ form.errors.title }}</div>
+                        <FormError :error="form.errors.title" />
                     </div>
 
                     <!-- Options for Multiple Choice -->
@@ -218,7 +219,7 @@ const submit = () => {
                                 min="1"
                                 class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                             />
-                            <div v-if="form.errors.stake_amount" class="text-red-600 text-sm mt-1">{{ form.errors.stake_amount }}</div>
+                            <FormError :error="form.errors.stake_amount" />
                             
                         </div>
 
@@ -233,7 +234,7 @@ const submit = () => {
                                 required
                                 class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                             />
-                            <div v-if="form.errors.deadline" class="text-red-600 text-sm mt-1">{{ form.errors.deadline }}</div>
+                            <FormError :error="form.errors.deadline" />
                         </div>
                     </div>
                     <!-- Balance feasibility warning -->

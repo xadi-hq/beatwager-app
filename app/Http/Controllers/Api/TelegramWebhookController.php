@@ -463,23 +463,60 @@ class TelegramWebhookController extends Controller
         if ($count === 0) {
             $message .= "No active wagers yet.\nUse /newwager in a group to create one!\n\n";
         } else {
-            $message .= "⏰ *Closing Soon:*\n";
-            foreach ($activeWagers as $i => $wager) {
-                $deadline = $wager->deadline;
-                $diff = now()->diff($deadline);
+            // Filter out wagers with past deadlines (should have been settled)
+            $futureWagers = $activeWagers->filter(fn($w) => $w->deadline->isFuture());
 
-                if ($diff->days > 0) {
-                    $timeLeft = $diff->days . 'd ' . $diff->h . 'h';
-                } elseif ($diff->h > 0) {
-                    $timeLeft = $diff->h . 'h ' . $diff->i . 'm';
-                } else {
-                    $timeLeft = $diff->i . 'm';
+            // Separate wagers into closing soon (≤7 days) and others
+            $closingSoon = $futureWagers->filter(fn($w) => $w->deadline->diffInDays(now()) <= 7);
+            $later = $futureWagers->filter(fn($w) => $w->deadline->diffInDays(now()) > 7);
+
+            // Show closing soon wagers
+            if ($closingSoon->isNotEmpty()) {
+                $message .= "⏰ *Closing Soon:*\n";
+                foreach ($closingSoon as $i => $wager) {
+                    $deadline = $wager->deadline;
+                    $diff = now()->diff($deadline);
+
+                    if ($diff->days > 0) {
+                        $timeLeft = $diff->days . 'd ' . $diff->h . 'h';
+                    } elseif ($diff->h > 0) {
+                        $timeLeft = $diff->h . 'h ' . $diff->i . 'm';
+                    } else {
+                        $timeLeft = $diff->i . 'm';
+                    }
+
+                    $title = strlen($wager->title) > 40 ? substr($wager->title, 0, 37) . '...' : $wager->title;
+                    $message .= ($i + 1) . ". \"{$title}\" - {$timeLeft}\n";
                 }
-
-                $title = strlen($wager->title) > 40 ? substr($wager->title, 0, 37) . '...' : $wager->title;
-                $message .= ($i + 1) . ". \"{$title}\" - {$timeLeft}\n";
+                $message .= "\n";
             }
-            $message .= "\n";
+
+            // Show later wagers
+            if ($later->isNotEmpty()) {
+                $message .= "📅 *Coming Up:*\n";
+                foreach ($later as $i => $wager) {
+                    $deadline = $wager->deadline;
+                    $diff = now()->diff($deadline);
+
+                    if ($diff->days > 0) {
+                        $timeLeft = $diff->days . 'd ' . $diff->h . 'h';
+                    } elseif ($diff->h > 0) {
+                        $timeLeft = $diff->h . 'h ' . $diff->i . 'm';
+                    } else {
+                        $timeLeft = $diff->i . 'm';
+                    }
+
+                    $title = strlen($wager->title) > 40 ? substr($wager->title, 0, 37) . '...' : $wager->title;
+                    $message .= ($i + 1) . ". \"{$title}\" - {$timeLeft}\n";
+                }
+                $message .= "\n";
+            }
+
+            // If there are past wagers, show count for awareness
+            $pastCount = $activeWagers->count() - $futureWagers->count();
+            if ($pastCount > 0) {
+                $message .= "⚠️ {$pastCount} wager(s) past deadline - awaiting settlement\n\n";
+            }
         }
 
         $message .= "👉 View all: {$shortUrl}";
@@ -822,7 +859,7 @@ class TelegramWebhookController extends Controller
 
             // Place the wager using WagerService
             $wagerService = app(\App\Services\WagerService::class);
-            $wagerService->placeWager($wager, $user, $answer, $wager->stake_amount);
+            $entry = $wagerService->placeWager($wager, $user, $answer, $wager->stake_amount);
 
             // Send success message (without revealing answer)
             $this->bot->answerCallbackQuery(
@@ -830,11 +867,8 @@ class TelegramWebhookController extends Controller
                 ['text' => '✅ Wager placed successfully!', 'show_alert' => false]
             );
 
-            // Send confirmation message to the chat (without revealing answer)
-            $this->bot->sendMessage(
-                $chatId,
-                "✅ {$user->name} joined the wager: \"{$wager->title}\""
-            );
+            // Dispatch event for async LLM-powered announcement with engagement triggers
+            \App\Events\WagerJoined::dispatch($wager, $entry, $user);
 
         } catch (\App\Exceptions\InsufficientPointsException $e) {
             $this->bot->answerCallbackQuery(
