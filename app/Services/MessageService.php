@@ -41,7 +41,8 @@ class MessageService
                 'type' => $this->formatWagerType($wager->type),
                 'stake' => $wager->stake_amount,
                 'currency' => $currency,
-                'deadline' => $wager->deadline->format('M j, Y g:i A'),
+                'betting_closes_at' => $wager->betting_closes_at->format('M j, Y g:i A'),
+                'expected_settlement_at' => $wager->expected_settlement_at?->format('M j, Y g:i A'),
                 'creator' => $wager->creator->name ?? 'Someone',
             ],
             group: $wager->group

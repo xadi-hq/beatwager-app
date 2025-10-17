@@ -5,7 +5,7 @@ echo ""
 
 # Fix current file permissions
 echo "1️⃣ Fixing file ownership..."
-sudo chown -R xander:xander /home/xander/webapps/beatwager-app
+sudo chown -R ploi:ploi /home/xander/webapps/beatwager-app
 echo "   ✅ Files now owned by xander:xander"
 echo ""
 

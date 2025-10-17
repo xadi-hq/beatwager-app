@@ -203,7 +203,7 @@ class EngagementTriggerService
      */
     private function isLastMinute(Wager $wager): bool
     {
-        $hoursLeft = now()->diffInHours($wager->deadline, false);
+        $hoursLeft = now()->diffInHours($wager->betting_closes_at, false);
         return $hoursLeft > 0 && $hoursLeft <= 24;
     }
 
@@ -221,7 +221,7 @@ class EngagementTriggerService
      */
     private function getHoursToDeadline(Wager $wager): ?int
     {
-        $hoursLeft = now()->diffInHours($wager->deadline, false);
+        $hoursLeft = now()->diffInHours($wager->betting_closes_at, false);
         return $hoursLeft > 0 ? (int) ceil($hoursLeft) : null;
     }
 

@@ -29,7 +29,8 @@ class Wager extends Model
         'date_max',
         'date_winner_type',
         'stake_amount',
-        'deadline',
+        'betting_closes_at',
+        'expected_settlement_at',
         'locked_at',
         'settled_at',
         'status',
@@ -44,7 +45,8 @@ class Wager extends Model
     {
         return [
             'options' => 'array',
-            'deadline' => 'datetime',
+            'betting_closes_at' => 'datetime',
+            'expected_settlement_at' => 'datetime',
             'locked_at' => 'datetime',
             'settled_at' => 'datetime',
             'date_min' => 'date',
@@ -131,5 +133,45 @@ class Wager extends Model
             'date' => ['Select a date'],
             default => [],
         };
+    }
+
+    /**
+     * Check if betting is still open (before betting_closes_at)
+     */
+    public function isBettingOpen(): bool
+    {
+        return $this->status === 'open' && $this->betting_closes_at > now();
+    }
+
+    /**
+     * Check if betting deadline has passed
+     */
+    public function isPastBettingDeadline(): bool
+    {
+        return $this->betting_closes_at < now();
+    }
+
+    /**
+     * Check if wager has an expected settlement date
+     */
+    public function hasExpectedSettlement(): bool
+    {
+        return $this->expected_settlement_at !== null;
+    }
+
+    /**
+     * Get the date that should trigger settlement reminders
+     */
+    public function getSettlementTriggerDate(): \Carbon\Carbon
+    {
+        return $this->expected_settlement_at ?? $this->betting_closes_at;
+    }
+
+    /**
+     * Check if wager is past its settlement trigger date
+     */
+    public function isPastSettlementTrigger(): bool
+    {
+        return $this->getSettlementTriggerDate() < now();
     }
 }

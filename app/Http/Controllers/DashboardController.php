@@ -51,7 +51,7 @@ class DashboardController extends Controller
                       });
             })
             ->with(['group', 'entries.user'])
-            ->orderBy('deadline', 'asc')
+            ->orderBy('betting_closes_at', 'asc')
             ->get();
 
         $now = now();
@@ -68,7 +68,8 @@ class DashboardController extends Controller
                 'group' => ['id' => $wager->group->id, 'name' => $wager->group->name],
                 'type' => $wager->type,
                 'stake_amount' => $wager->stake_amount,
-                'deadline' => $wager->deadline->toIso8601String(),
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'expected_settlement_at' => $wager->expected_settlement_at?->toIso8601String(),
                 'status' => $wager->status,
                 'participants_count' => $wager->participants_count,
                 'total_points_wagered' => $wager->total_points_wagered,
@@ -77,7 +78,7 @@ class DashboardController extends Controller
                 'user_points_wagered' => $userEntry?->points_wagered,
             ];
 
-            if ($wager->deadline > $now) {
+            if ($wager->betting_closes_at > $now) {
                 $openWagers->push($wagerData);
             } else {
                 $awaitingSettlement->push($wagerData);
@@ -94,7 +95,8 @@ class DashboardController extends Controller
                 'group' => ['id' => $wager->group->id, 'name' => $wager->group->name],
                 'type' => $wager->type,
                 'stake_amount' => $wager->stake_amount,
-                'deadline' => $wager->deadline->toIso8601String(),
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'expected_settlement_at' => $wager->expected_settlement_at?->toIso8601String(),
                 'status' => $wager->status,
                 'participants_count' => $wager->participants_count,
                 'total_points_wagered' => $wager->total_points_wagered,

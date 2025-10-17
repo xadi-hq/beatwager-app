@@ -20,17 +20,28 @@ class SendSettlementReminders extends Command
     /**
      * The console command description.
      */
-    protected $description = 'Send settlement reminders for wagers past deadline that are still open';
+    protected $description = 'Send settlement reminders for wagers past their settlement trigger date that are still open';
 
     /**
      * Execute the console command.
      */
     public function handle(MessageService $messageService, TelegramMessenger $messenger): int
     {
-        // Find wagers that are past deadline and still open
+        // Find wagers that are past their settlement trigger date and still open
+        // Settlement trigger is expected_settlement_at if set, otherwise betting_closes_at
         $unsettledWagers = Wager::with('creator', 'group')
             ->where('status', 'open')
-            ->where('deadline', '<', now())
+            ->where(function($query) {
+                $query->where(function($q) {
+                    // Has expected_settlement_at and it's past
+                    $q->whereNotNull('expected_settlement_at')
+                      ->where('expected_settlement_at', '<', now());
+                })->orWhere(function($q) {
+                    // No expected_settlement_at, use betting_closes_at
+                    $q->whereNull('expected_settlement_at')
+                      ->where('betting_closes_at', '<', now());
+                });
+            })
             ->get();
 
         if ($unsettledWagers->isEmpty()) {

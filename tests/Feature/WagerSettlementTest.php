@@ -34,7 +34,7 @@ describe("Binary Wager Settlement", function () {
             "title" => "Will it rain?",
             "type" => "binary",
             "stake_amount" => 100,
-            "deadline" => now()->addHours(24),
+            "betting_closes_at" => now()->addHours(24),
             "status" => "open",
             "total_points_wagered" => 0,
             "participants_count" => 0,

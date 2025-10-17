@@ -65,7 +65,7 @@ class WagerServiceTest extends TestCase
             'description' => 'Weather prediction',
             'type' => 'binary',
             'stake_amount' => 100,
-            'deadline' => now()->addDay(),
+            'betting_closes_at' => now()->addDay(),
         ];
 
         $wager = $this->service->createWager($group, $creator, $data);
@@ -89,7 +89,7 @@ class WagerServiceTest extends TestCase
             'title' => 'Who will win?',
             'type' => 'multiple_choice',
             'stake_amount' => 50,
-            'deadline' => now()->addDay(),
+            'betting_closes_at' => now()->addDay(),
             'options' => ['Team A', 'Team B', 'Team C'],
         ];
 
@@ -109,7 +109,7 @@ class WagerServiceTest extends TestCase
             'title' => 'Final score?',
             'type' => 'numeric',
             'stake_amount' => 75,
-            'deadline' => now()->addDay(),
+            'betting_closes_at' => now()->addDay(),
             'numeric_min' => 0,
             'numeric_max' => 100,
             'numeric_winner_type' => 'closest',
@@ -133,7 +133,7 @@ class WagerServiceTest extends TestCase
             'title' => 'When will the project launch?',
             'type' => 'date',
             'stake_amount' => 50,
-            'deadline' => now()->addDay(),
+            'betting_closes_at' => now()->addDay(),
             'date_min' => '2024-01-01',
             'date_max' => '2024-12-31',
             'date_winner_type' => 'closest',

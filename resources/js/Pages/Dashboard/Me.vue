@@ -191,7 +191,7 @@ function formatDate(dateStr: string): string {
                                             <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ wager.group.name }}</div>
                                         </div>
                                         <div class="text-right">
-                                            <div class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ formatTimeRemaining(wager.deadline) }}</div>
+                                            <div class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ formatTimeRemaining(wager.betting_closes_at) }}</div>
                                             <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ wager.participants_count }} participants</div>
                                         </div>
                                     </div>

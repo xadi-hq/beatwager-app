@@ -14,7 +14,8 @@ const props = defineProps<{
 }>();
 
 const now = ref(Date.now());
-const deadline = new Date(props.wager.deadline);
+const bettingClosesAt = new Date(props.wager.betting_closes_at);
+const expectedSettlementAt = props.wager.expected_settlement_at ? new Date(props.wager.expected_settlement_at) : null;
 const settledAt = props.wager.settled_at ? new Date(props.wager.settled_at) : null;
 
 // Update countdown every second
@@ -26,14 +27,14 @@ onUnmounted(() => {
 });
 
 const timeRemaining = computed(() => {
-    const diff = deadline.getTime() - now.value;
-    if (diff < 0) return 'Deadline passed';
-    
+    const diff = bettingClosesAt.getTime() - now.value;
+    if (diff < 0) return 'Betting closed';
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const secs = Math.floor((diff % (1000 * 60)) / 1000);
-    
+
     if (days > 0) return `${days}d ${hours}h ${mins}m remaining`;
     if (hours > 0) return `${hours}h ${mins}m ${secs}s remaining`;
     return `${mins}m ${secs}s remaining`;
@@ -42,13 +43,26 @@ const timeRemaining = computed(() => {
 const deadlinePassed = computed(() => {
     if (!props.isPastDeadline) return '';
 
-    const diff = now.value - deadline.getTime();
+    const diff = now.value - bettingClosesAt.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
     if (days > 0) return `${days}d ${hours}h ago`;
     if (hours > 0) return `${hours}h ago`;
     return 'Recently';
+});
+
+const settlementDate = computed(() => {
+    if (!expectedSettlementAt) return 'Open-ended (no set date)';
+
+    const date = expectedSettlementAt;
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 });
 
 // Sort entries by ranking for settled wagers
@@ -158,7 +172,15 @@ const submitSettlement = () => {
                             <span v-if="wager.settled_at"> on {{ new Date(wager.settled_at).toLocaleString() }}</span>
                         </span>
                         <span v-if="isPastDeadline" class="mx-2">•</span>
-                        <span v-if="isPastDeadline">Deadline {{ deadlinePassed }}</span>
+                        <span v-if="isPastDeadline">Betting closed {{ deadlinePassed }}</span>
+                    </div>
+
+                    <!-- Expected Settlement Date -->
+                    <div v-if="expectedSettlementAt && wager.status !== 'settled'" class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+                        📅 Expected result: <strong class="text-neutral-700 dark:text-neutral-300">{{ settlementDate }}</strong>
+                    </div>
+                    <div v-else-if="!expectedSettlementAt && wager.status !== 'settled'" class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+                        📅 Result date: <span class="italic">Open-ended</span>
                     </div>
                 </div>
 
@@ -342,7 +364,15 @@ const submitSettlement = () => {
                                     <span v-if="wager.settled_at"> on {{ new Date(wager.settled_at).toLocaleString() }}</span>
                                 </span>
                                 <span v-if="isPastDeadline" class="mx-2">•</span>
-                                <span v-if="isPastDeadline">Deadline {{ deadlinePassed }}</span>
+                                <span v-if="isPastDeadline">Betting closed {{ deadlinePassed }}</span>
+                            </div>
+
+                            <!-- Expected Settlement Date -->
+                            <div v-if="expectedSettlementAt && wager.status !== 'settled'" class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+                                📅 Expected result: <strong class="text-neutral-700 dark:text-neutral-300">{{ settlementDate }}</strong>
+                            </div>
+                            <div v-else-if="!expectedSettlementAt && wager.status !== 'settled'" class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+                                📅 Result date: <span class="italic">Open-ended</span>
                             </div>
                         </div>
 

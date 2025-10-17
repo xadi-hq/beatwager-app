@@ -5,8 +5,8 @@ return [
     'wager' => [
         'announced' => [
             'intent' => 'Announce a newly created wager and drive participation',
-            'required_fields' => ['title', 'type', 'stake', 'deadline'],
-            'fallback_template' => "🎯 New Wager Created!\n\nQuestion: {title}\n\nDescription: {description}\nType: {type}\nStake: {stake} points\nDeadline: {deadline}\n\nClick a button below to place your wager!",
+            'required_fields' => ['title', 'type', 'stake', 'betting_closes_at'],
+            'fallback_template' => "🎯 New Wager Created!\n\nQuestion: {title}\n\nDescription: {description}\nType: {type}\nStake: {stake} points\nBetting Closes: {betting_closes_at}\nResult Expected: {expected_settlement_at}\n\nClick a button below to place your wager!",
             'tone_hints' => ['exciting', 'call_to_action'],
             'max_words' => 30,  // Short and punchy announcements
         ],
@@ -28,9 +28,9 @@ return [
         ],
 
         'reminder' => [
-            'intent' => 'Remind users to settle a wager past its deadline',
+            'intent' => 'Remind users to settle a wager past its settlement date',
             'required_fields' => ['title'],
-            'fallback_template' => "⏰ Settlement Reminder\n\nWager: {title}\n\nThis wager passed its deadline and is waiting to be settled.\n\nClick the button below to view details and settle:",
+            'fallback_template' => "⏰ Settlement Reminder\n\nWager: {title}\n\nThis wager is ready to be settled.\n\nClick the button below to view details and settle:",
             'tone_hints' => ['urgent'],
             'max_words' => 25,  // Brief but urgent
         ],
@@ -134,7 +134,7 @@ return [
         'wager_not_found' => "❌ Wager not found",
         'already_joined' => "❌ You've already joined this wager",
         'insufficient_points' => "❌ Insufficient points (need {required}, have {balance})",
-        'deadline_passed' => "❌ Deadline has passed",
+        'betting_closed' => "❌ Betting is closed",
     ],
 
     'buttons' => [

@@ -40,7 +40,8 @@ class WagerService
                 'resolution_criteria' => $data['resolution_criteria'] ?? null,
                 'type' => $data['type'],
                 'stake_amount' => $data['stake_amount'],
-                'deadline' => $data['deadline'],
+                'betting_closes_at' => $data['betting_closes_at'],
+                'expected_settlement_at' => $data['expected_settlement_at'] ?? null,
                 'status' => 'open',
             ];
 

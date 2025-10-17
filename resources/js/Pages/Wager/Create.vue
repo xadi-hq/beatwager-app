@@ -33,7 +33,8 @@ const form = useForm({
     type: 'binary' as 'binary' | 'multiple_choice',
     group_id: props.defaultGroup?.id || '',
     stake_amount: 100,
-    deadline: '',
+    betting_closes_at: '',
+    expected_settlement_at: '',
     options: ['', ''],
 });
 
@@ -205,36 +206,54 @@ const submit = () => {
                         </button>
                     </div>
 
-                    <!-- Stake Amount and Deadline (combined on desktop) -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Stake Amount -->
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                Stake (points) *
-                            </label>
-                            <input
-                                v-model.number="form.stake_amount"
-                                type="number"
-                                required
-                                min="1"
-                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
-                            />
-                            <FormError :error="form.errors.stake_amount" />
-                            
-                        </div>
+                    <!-- Stake Amount -->
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                            Stake (points) *
+                        </label>
+                        <input
+                            v-model.number="form.stake_amount"
+                            type="number"
+                            required
+                            min="1"
+                            class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                        />
+                        <FormError :error="form.errors.stake_amount" />
+                    </div>
 
-                        <!-- Deadline -->
+                    <!-- Betting Closes At and Expected Settlement (combined on desktop) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Betting Closes At -->
                         <div>
                             <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                Deadline *
+                                Betting Closes *
                             </label>
                             <input
-                                v-model="form.deadline"
+                                v-model="form.betting_closes_at"
                                 type="datetime-local"
                                 required
                                 class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                             />
-                            <FormError :error="form.errors.deadline" />
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                When users can no longer place bets
+                            </p>
+                            <FormError :error="form.errors.betting_closes_at" />
+                        </div>
+
+                        <!-- Expected Settlement Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Expected Result Date (optional)
+                            </label>
+                            <input
+                                v-model="form.expected_settlement_at"
+                                type="datetime-local"
+                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                            />
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                When the outcome will be known (leave empty if uncertain)
+                            </p>
+                            <FormError :error="form.errors.expected_settlement_at" />
                         </div>
                     </div>
                     <!-- Balance feasibility warning -->

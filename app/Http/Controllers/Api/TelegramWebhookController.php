@@ -433,7 +433,7 @@ class TelegramWebhookController extends Controller
                           $q->where('user_id', $user->id);
                       });
             })
-            ->orderBy('deadline', 'asc')
+            ->orderBy('betting_closes_at', 'asc')
             ->limit(5)
             ->get();
 
@@ -464,17 +464,17 @@ class TelegramWebhookController extends Controller
             $message .= "No active wagers yet.\nUse /newwager in a group to create one!\n\n";
         } else {
             // Filter out wagers with past deadlines (should have been settled)
-            $futureWagers = $activeWagers->filter(fn($w) => $w->deadline->isFuture());
+            $futureWagers = $activeWagers->filter(fn($w) => $w->betting_closes_at->isFuture());
 
             // Separate wagers into closing soon (≤7 days) and others
-            $closingSoon = $futureWagers->filter(fn($w) => $w->deadline->diffInDays(now()) <= 7);
-            $later = $futureWagers->filter(fn($w) => $w->deadline->diffInDays(now()) > 7);
+            $closingSoon = $futureWagers->filter(fn($w) => $w->betting_closes_at->diffInDays(now()) <= 7);
+            $later = $futureWagers->filter(fn($w) => $w->betting_closes_at->diffInDays(now()) > 7);
 
             // Show closing soon wagers
             if ($closingSoon->isNotEmpty()) {
                 $message .= "⏰ *Closing Soon:*\n";
                 foreach ($closingSoon as $i => $wager) {
-                    $deadline = $wager->deadline;
+                    $deadline = $wager->betting_closes_at;
                     $diff = now()->diff($deadline);
 
                     if ($diff->days > 0) {
@@ -495,7 +495,7 @@ class TelegramWebhookController extends Controller
             if ($later->isNotEmpty()) {
                 $message .= "📅 *Coming Up:*\n";
                 foreach ($later as $i => $wager) {
-                    $deadline = $wager->deadline;
+                    $deadline = $wager->betting_closes_at;
                     $diff = now()->diff($deadline);
 
                     if ($diff->days > 0) {
@@ -813,7 +813,7 @@ class TelegramWebhookController extends Controller
             }
 
             // Check if deadline has passed
-            if ($wager->deadline < now()) {
+            if ($wager->betting_closes_at < now()) {
                 $this->bot->answerCallbackQuery(
                     $callbackQuery->getId(),
                     ['text' => '❌ Deadline has passed', 'show_alert' => true]

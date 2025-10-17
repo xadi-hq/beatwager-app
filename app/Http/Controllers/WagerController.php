@@ -78,7 +78,8 @@ class WagerController extends Controller
             'type' => 'required|in:binary,multiple_choice,numeric,date',
             'group_id' => 'required|uuid|exists:groups,id',
             'stake_amount' => 'required|integer|min:1',
-            'deadline' => 'required|date|after:now',
+            'betting_closes_at' => 'required|date|after:now',
+            'expected_settlement_at' => 'nullable|date|after:betting_closes_at',
 
             // Type-specific fields
             'options' => 'required_if:type,multiple_choice|array|min:2',
@@ -161,7 +162,8 @@ class WagerController extends Controller
                 'title' => $wager->title,
                 'type' => $wager->type,
                 'stake_amount' => $wager->stake_amount,
-                'deadline' => $wager->deadline->toIso8601String(),
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'expected_settlement_at' => $wager->expected_settlement_at?->toIso8601String(),
             ],
         ]);
     }
@@ -196,7 +198,8 @@ class WagerController extends Controller
                 'title' => $wager->title,
                 'description' => $wager->description,
                 'type' => $wager->type,
-                'deadline' => $wager->deadline->toIso8601String(),
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'expected_settlement_at' => $wager->expected_settlement_at?->toIso8601String(),
                 'stake_amount' => $wager->stake_amount,
                 'total_points_wagered' => $wager->total_points_wagered,
                 'participants_count' => $wager->participants_count,
@@ -295,7 +298,7 @@ class WagerController extends Controller
         // Find wager
         $wager = \App\Models\Wager::with(['creator:id,name', 'group:id,name,platform_chat_title,points_currency_name', 'entries.user:id,name', 'settler:id,name'])->findOrFail($wagerId);
 
-        $isPastDeadline = $wager->deadline < now();
+        $isPastDeadline = $wager->isPastBettingDeadline();
         $canSettle = $isPastDeadline && $wager->status === 'open';
 
         // Get user's Telegram username for display
@@ -314,7 +317,8 @@ class WagerController extends Controller
                 'title' => $wager->title,
                 'description' => $wager->description,
                 'type' => $wager->type,
-                'deadline' => $wager->deadline->toIso8601String(),
+                'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'expected_settlement_at' => $wager->expected_settlement_at?->toIso8601String(),
                 'stake_amount' => $wager->stake_amount,
                 'total_points_wagered' => $wager->total_points_wagered,
                 'participants_count' => $wager->participants_count,
@@ -376,7 +380,7 @@ class WagerController extends Controller
         }
 
         // Allow settlement after deadline has passed
-        if ($wager->deadline > now()) {
+        if ($wager->isBettingOpen()) {
             abort(403, 'Cannot settle wager before deadline');
         }
 

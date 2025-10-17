@@ -18,6 +18,8 @@ class WagerFactory extends Factory
      */
     public function definition(): array
     {
+        $bettingCloses = now()->addDays(fake()->numberBetween(1, 30));
+
         return [
             'group_id' => Group::factory(),
             'creator_id' => User::factory(),
@@ -25,7 +27,8 @@ class WagerFactory extends Factory
             'description' => fake()->paragraph(),
             'type' => 'binary',
             'stake_amount' => fake()->numberBetween(10, 500),
-            'deadline' => now()->addDays(fake()->numberBetween(1, 30)),
+            'betting_closes_at' => $bettingCloses,
+            'expected_settlement_at' => $bettingCloses->copy()->addDays(fake()->numberBetween(1, 60)),
             'status' => 'open',
         ];
     }
@@ -62,6 +65,27 @@ class WagerFactory extends Factory
             'date_min' => now()->addDays(1)->toDateString(),
             'date_max' => now()->addDays(365)->toDateString(),
             'date_winner_type' => 'closest',
+        ]);
+    }
+
+    public function openEnded(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'expected_settlement_at' => null,
+        ]);
+    }
+
+    public function pastBettingDeadline(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'betting_closes_at' => now()->subDays(fake()->numberBetween(1, 10)),
+        ]);
+    }
+
+    public function closingSoon(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'betting_closes_at' => now()->addHours(fake()->numberBetween(1, 48)),
         ]);
     }
 }

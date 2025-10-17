@@ -43,7 +43,7 @@ describe('Binary Wager Creation', function () {
             'type' => 'binary',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
         ]);
 
         $response->assertRedirect();
@@ -74,7 +74,7 @@ describe('Multiple Choice Wager Creation', function () {
             'type' => 'multiple_choice',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
             'options' => ['1', 'x', '2'],
         ]);
 
@@ -103,7 +103,7 @@ describe('Numeric Wager Creation', function () {
             'type' => 'numeric',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
             'numeric_min' => 0,
             'numeric_max' => 50,
             'numeric_winner_type' => 'closest',
@@ -139,7 +139,7 @@ describe('Date Wager Creation', function () {
             'type' => 'date',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
             'date_min' => $minDate->toDateString(),
             'date_max' => $maxDate->toDateString(),
             'date_winner_type' => 'closest',
@@ -171,7 +171,7 @@ describe('Validation', function () {
             'type' => 'binary',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
         ]);
 
         $response->assertSessionHasErrors('title');
@@ -193,10 +193,10 @@ describe('Validation', function () {
             'type' => 'binary',
             'group_id' => $group->id,
             'stake_amount' => 100,
-            'deadline' => now()->subDay()->toIso8601String(),
+            'betting_closes_at' => now()->subDay()->toIso8601String(),
         ]);
 
-        $response->assertSessionHasErrors('deadline');
+        $response->assertSessionHasErrors('betting_closes_at');
     });
 
     it('requires positive stake amount', function () {
@@ -215,7 +215,7 @@ describe('Validation', function () {
             'type' => 'binary',
             'group_id' => $group->id,
             'stake_amount' => 0,
-            'deadline' => now()->addDays(1)->toIso8601String(),
+            'betting_closes_at' => now()->addDays(1)->toIso8601String(),
         ]);
 
         $response->assertSessionHasErrors('stake_amount');
