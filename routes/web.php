@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupSettingsController;
+use App\Http\Controllers\SeasonController;
 use App\Http\Controllers\ShortUrlController;
 use App\Http\Controllers\WagerController;
 use Illuminate\Support\Facades\Route;
@@ -54,4 +55,10 @@ Route::middleware(['signed.auth'])->group(function () {
     // Group routes
     Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
     Route::post('/groups/{group}/settings', [GroupSettingsController::class, 'update'])->name('groups.settings.update');
+
+    // Season management routes
+    Route::get('/groups/{group}/seasons', [SeasonController::class, 'index'])->name('seasons.index');
+    Route::get('/groups/{group}/seasons/{season}', [SeasonController::class, 'show'])->name('seasons.show');
+    Route::post('/groups/{group}/seasons', [SeasonController::class, 'store'])->name('seasons.store');
+    Route::post('/groups/{group}/seasons/end', [SeasonController::class, 'end'])->name('seasons.end');
 });

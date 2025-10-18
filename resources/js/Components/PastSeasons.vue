@@ -77,7 +77,7 @@ const loadSeasonDetails = async (seasonId: string) => {
     selectedSeasonId.value = seasonId;
 
     try {
-        const response = await axios.get(`/api/groups/${props.groupId}/seasons/${seasonId}`);
+        const response = await axios.get(`/groups/${props.groupId}/seasons/${seasonId}`);
         seasonDetails.value = response.data;
     } catch (error) {
         console.error('Failed to load season details:', error);

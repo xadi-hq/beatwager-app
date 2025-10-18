@@ -77,15 +77,15 @@ Handles all season lifecycle operations:
 
 ### Controllers
 
-#### `app/Http/Controllers/Api/SeasonController.php`
-RESTful API endpoints:
+#### `app/Http/Controllers/SeasonController.php`
+RESTful web endpoints with session authentication:
 
-- `GET /api/groups/{group}/seasons` - List all seasons
-- `GET /api/groups/{group}/seasons/{season}` - Get season details
-- `POST /api/groups/{group}/seasons` - Create new season
-- `POST /api/groups/{group}/seasons/end` - End current season
+- `GET /groups/{group}/seasons` - List all seasons
+- `GET /groups/{group}/seasons/{season}` - Get season details
+- `POST /groups/{group}/seasons` - Create new season
+- `POST /groups/{group}/seasons/end` - End current season
 
-All endpoints use `auth:sanctum` middleware and policy authorization.
+All endpoints use `signed.auth` middleware and manual membership verification.
 
 #### `app/Http/Controllers/GroupController.php` Updates
 - Loads current season data
@@ -165,14 +165,17 @@ Features:
 - Seasons drawer with SeasonManagement and PastSeasons components
 - Props include `current_season`, `season_ends_at`, `pastSeasons`
 
-## API Routes
+## Web Routes
+
+**Authentication:** Uses `signed.auth` middleware (one-time token → session)
 
 ```php
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/groups/{group}/seasons', [SeasonController::class, 'index']);
-    Route::get('/groups/{group}/seasons/{season}', [SeasonController::class, 'show']);
-    Route::post('/groups/{group}/seasons', [SeasonController::class, 'store']);
-    Route::post('/groups/{group}/seasons/end', [SeasonController::class, 'end']);
+// routes/web.php
+Route::middleware(['signed.auth'])->group(function () {
+    Route::get('/groups/{group}/seasons', [SeasonController::class, 'index'])->name('seasons.index');
+    Route::get('/groups/{group}/seasons/{season}', [SeasonController::class, 'show'])->name('seasons.show');
+    Route::post('/groups/{group}/seasons', [SeasonController::class, 'store'])->name('seasons.store');
+    Route::post('/groups/{group}/seasons/end', [SeasonController::class, 'end'])->name('seasons.end');
 });
 ```
 
@@ -234,10 +237,11 @@ Schedule::command('seasons:check')
 
 ### Season Creation
 ```
-User → Vue Component → API POST /api/groups/{id}/seasons
+User → Vue Component → POST /groups/{id}/seasons
+                     → SeasonController (web auth)
                      → SeasonService::createSeason()
                      → DB: Create season, update group, reset points
-                     → Response
+                     → JSON Response
                      → Reload page
 ```
 
@@ -255,7 +259,8 @@ Scheduled Job → CheckSeasonEndings command
 
 ### Viewing Season Details
 ```
-User → Click season → API GET /api/groups/{id}/seasons/{season_id}
+User → Click season → GET /groups/{id}/seasons/{season_id}
+                   → SeasonController (web auth)
                    → Load season with relationships
                    → Return JSON with leaderboard, stats, highlights
                    → Display in expandable UI

@@ -149,34 +149,34 @@ const sortedMembers = [...props.members].sort((a, b) => b.balance - a.balance);
                         </div>
                     </div>
 
-                    <!-- Back to Dashboard Button -->
-                    <div class="mb-4">
+                    <!-- Action Buttons -->
+                    <div class="space-y-3">
+                        <!-- Seasons & Settings - Side by Side -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Seasons Button -->
+                            <button
+                                @click="showSeasonsDrawer = true"
+                                class="border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-500 text-purple-700 dark:text-purple-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                            >
+                                🏆 Seasons
+                                <span v-if="group.current_season" class="block text-xs bg-purple-100 dark:bg-purple-900 px-2 py-0.5 rounded mt-1">
+                                    S{{ group.current_season.season_number }} Active
+                                </span>
+                            </button>
+
+                            <!-- Settings Button -->
+                            <button
+                                @click="showSettingsDrawer = true"
+                                class="border-2 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 text-neutral-700 dark:text-neutral-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                            >
+                                ⚙️ Settings
+                            </button>
+                        </div>
+
+                        <!-- Back to Dashboard - Full Width -->
                         <a href="/me?focus=groups" class="block w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors">
                             ← Back to Dashboard
                         </a>
-                    </div>
-
-                    <!-- Settings Button -->
-                    <div>
-                        <button
-                            @click="showSettingsDrawer = true"
-                            class="block w-full border-2 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 text-neutral-700 dark:text-neutral-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
-                        >
-                            ⚙️ Group Settings
-                        </button>
-                    </div>
-
-                    <!-- Seasons Button -->
-                    <div class="mt-4">
-                        <button
-                            @click="showSeasonsDrawer = true"
-                            class="block w-full border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-500 text-purple-700 dark:text-purple-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
-                        >
-                            🏆 Seasons
-                            <span v-if="group.current_season" class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">
-                                S{{ group.current_season.season_number }} Active
-                            </span>
-                        </button>
                     </div>
                 </div>
 
@@ -263,34 +263,34 @@ const sortedMembers = [...props.members].sort((a, b) => b.balance - a.balance);
                             </div>
                         </div>
 
-                        <!-- Back to Dashboard Button -->
-                        <div class="mb-4">
+                        <!-- Action Buttons -->
+                        <div class="space-y-3">
+                            <!-- Seasons & Settings - Side by Side -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <!-- Seasons Button -->
+                                <button
+                                    @click="showSeasonsDrawer = true"
+                                    class="border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-500 text-purple-700 dark:text-purple-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                                >
+                                    🏆 Seasons
+                                    <span v-if="group.current_season" class="block text-xs bg-purple-100 dark:bg-purple-900 px-2 py-0.5 rounded mt-1">
+                                        S{{ group.current_season.season_number }} Active
+                                    </span>
+                                </button>
+
+                                <!-- Settings Button -->
+                                <button
+                                    @click="showSettingsDrawer = true"
+                                    class="border-2 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 text-neutral-700 dark:text-neutral-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                                >
+                                    ⚙️ Settings
+                                </button>
+                            </div>
+
+                            <!-- Back to Dashboard - Full Width -->
                             <a href="/me?focus=groups" class="block w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors">
                                 ← Back to Dashboard
                             </a>
-                        </div>
-
-                        <!-- Settings Button -->
-                        <div>
-                            <button
-                                @click="showSettingsDrawer = true"
-                                class="block w-full border-2 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 text-neutral-700 dark:text-neutral-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
-                            >
-                                ⚙️ Group Settings
-                            </button>
-                        </div>
-
-                        <!-- Seasons Button -->
-                        <div class="mt-4">
-                            <button
-                                @click="showSeasonsDrawer = true"
-                                class="block w-full border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-500 text-purple-700 dark:text-purple-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
-                            >
-                                🏆 Seasons
-                                <span v-if="group.current_season" class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">
-                                    S{{ group.current_season.season_number }} Active
-                                </span>
-                            </button>
                         </div>
                     </div>
                 </div>

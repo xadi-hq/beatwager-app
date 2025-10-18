@@ -62,7 +62,7 @@ const startSeason = async () => {
             payload.season_ends_at = endDate.value;
         }
 
-        await axios.post(`/api/groups/${props.groupId}/seasons`, payload);
+        await axios.post(`/groups/${props.groupId}/seasons`, payload);
 
         // Reload the page to get fresh data
         router.reload();
@@ -86,7 +86,7 @@ const endSeason = async () => {
     isLoading.value = true;
 
     try {
-        await axios.post(`/api/groups/${props.groupId}/seasons/end`);
+        await axios.post(`/groups/${props.groupId}/seasons/end`);
 
         // Reload the page to get fresh data
         router.reload();
