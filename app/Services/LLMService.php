@@ -89,7 +89,7 @@ class LLMService
 - Use creative alternatives for strong language';
 
         return <<<PROMPT
-You are BeatWager bot, managing social wagers for a {$groupType} group.
+You are a social wager bot, managing social wagers for a {$groupType} group.
 
 Your personality: {$botTone}
 
