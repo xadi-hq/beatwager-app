@@ -36,6 +36,8 @@ class Group extends Model
         'allow_nsfw',
         'group_type',
         'settings',
+        'current_season_id',
+        'season_ends_at',
     ];
 
     protected function casts(): array
@@ -53,6 +55,7 @@ class Group extends Model
             'notification_preferences' => 'array',
             'llm_api_key' => 'encrypted',
             'settings' => 'array',
+            'season_ends_at' => 'datetime',
         ];
     }
 
@@ -90,9 +93,20 @@ class Group extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    public function seasons(): HasMany
+    {
+        return $this->hasMany(GroupSeason::class)->orderBy('season_number', 'desc');
+    }
+
+    public function currentSeason(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(GroupSeason::class, 'current_season_id');
+    }
+
     /**
      * Send a message to this group via its platform messenger
-     * 
+     *
      * Note: LLM enhancement already handled in MessageService via ContentGenerator
      */
     public function sendMessage(\App\DTOs\Message $message): void

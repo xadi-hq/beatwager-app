@@ -38,3 +38,9 @@ Schedule::command('activity:check')
     ->dailyAt('09:00')  // 9am - good time for engagement
     ->withoutOverlapping()
     ->onOneServer();
+
+// Check for seasons that should end (based on season_ends_at)
+Schedule::command('seasons:check')
+    ->dailyAt('00:01')  // Just after midnight
+    ->withoutOverlapping()
+    ->onOneServer();

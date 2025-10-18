@@ -505,4 +505,74 @@ class MessageService
             currencyName: $currency
         );
     }
+
+    /**
+     * Generate a dramatic season ending announcement with recap
+     *
+     * @param \App\Models\Group $group
+     * @param \App\Models\GroupSeason $season
+     * @return Message
+     */
+    public function seasonEnded(\App\Models\Group $group, \App\Models\GroupSeason $season): Message
+    {
+        $meta = __('messages.season.ended');
+        $currency = $group->points_currency_name ?? 'points';
+
+        // Get winner and top 3
+        $winner = $season->getWinner();
+        $top3 = $season->getTopPlayers(3);
+
+        // Format top 3 list
+        $top3Formatted = collect($top3)->map(function ($player, $index) use ($currency) {
+            $medals = ['🥇', '🥈', '🥉'];
+            return "{$medals[$index]} {$player['name']}: {$player['points']} {$currency}";
+        })->join("\n");
+
+        // Format highlights
+        $highlights = $season->highlights ?? [];
+        $highlightsFormatted = '';
+
+        if (!empty($highlights['biggest_win'])) {
+            $win = $highlights['biggest_win'];
+            $highlightsFormatted .= "💰 Biggest Win: {$win['user_name']} won {$win['amount']} {$currency} on \"{$win['wager_title']}\"\n";
+        }
+
+        if (!empty($highlights['most_active_creator'])) {
+            $active = $highlights['most_active_creator'];
+            $highlightsFormatted .= "🎯 Most Active: {$active['user_name']} created {$active['wagers_created']} wagers\n";
+        }
+
+        if (!empty($highlights['most_participated_wager'])) {
+            $popular = $highlights['most_participated_wager'];
+            $highlightsFormatted .= "🔥 Most Popular: \"{$popular['title']}\" with {$popular['participants']} participants";
+        }
+
+        $ctx = new MessageContext(
+            key: 'season.ended',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'season_number' => $season->season_number,
+                'winner_name' => $winner['name'] ?? 'Unknown',
+                'winner_points' => $winner['points'] ?? 0,
+                'duration_days' => $season->getDurationInDays(),
+                'total_wagers' => $season->stats['total_wagers'] ?? 0,
+                'total_participants' => $season->stats['total_participants'] ?? 0,
+                'top_3' => $top3Formatted,
+                'highlights' => $highlightsFormatted,
+                'currency' => $currency,
+            ],
+            group: $group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            context: $season,
+            currencyName: $currency
+        );
+    }
 }

@@ -77,6 +77,39 @@ class GroupController extends Controller
             }
         }
 
+        // Get season data
+        $currentSeason = null;
+        if ($group->current_season_id) {
+            $season = $group->currentSeason;
+            if ($season) {
+                $currentSeason = [
+                    'id' => $season->id,
+                    'season_number' => $season->season_number,
+                    'started_at' => $season->started_at->toIso8601String(),
+                    'is_active' => $season->is_active,
+                    'days_elapsed' => $season->started_at->diffInDays(now()),
+                ];
+            }
+        }
+
+        // Get past seasons (limited to last 10)
+        $pastSeasons = $group->seasons()
+            ->where('is_active', false)
+            ->whereNotNull('ended_at')
+            ->orderBy('season_number', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(fn($season) => [
+                'id' => $season->id,
+                'season_number' => $season->season_number,
+                'started_at' => $season->started_at->toIso8601String(),
+                'ended_at' => $season->ended_at?->toIso8601String(),
+                'duration_days' => $season->getDurationInDays(),
+                'winner' => $season->getWinner(),
+                'total_participants' => $season->stats['total_participants'] ?? 0,
+                'total_wagers' => $season->stats['total_wagers'] ?? 0,
+            ]);
+
         return Inertia::render('Groups/Show', [
             'group' => [
                 'id' => $group->id,
@@ -93,10 +126,13 @@ class GroupController extends Controller
                 'allow_nsfw' => $group->allow_nsfw ?? false,
                 'has_llm_configured' => !empty($group->llm_api_key),
                 'llm_metrics' => $llmMetrics,
+                'current_season' => $currentSeason,
+                'season_ends_at' => $group->season_ends_at?->toIso8601String(),
             ],
             'members' => $members,
             'stats' => $stats,
             'userBalance' => $userGroup->pivot->points,
+            'pastSeasons' => $pastSeasons,
         ]);
     }
 }

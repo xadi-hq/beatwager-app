@@ -4,6 +4,32 @@ import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Drawer from '@/Components/Drawer.vue';
 import GroupSettingsForm from '@/Components/GroupSettingsForm.vue';
+import SeasonManagement from '@/Components/SeasonManagement.vue';
+import PastSeasons from '@/Components/PastSeasons.vue';
+
+interface CurrentSeason {
+    id: string;
+    season_number: number;
+    started_at: string;
+    is_active: boolean;
+    days_elapsed: number;
+}
+
+interface PastSeason {
+    id: string;
+    season_number: number;
+    started_at: string;
+    ended_at: string;
+    duration_days: number;
+    winner: {
+        user_id: string;
+        name: string;
+        points: number;
+        rank: number;
+    } | null;
+    total_participants: number;
+    total_wagers: number;
+}
 
 const props = defineProps<{
     group: {
@@ -22,6 +48,8 @@ const props = defineProps<{
         };
         bot_tone?: string;
         has_llm_configured: boolean;
+        current_season: CurrentSeason | null;
+        season_ends_at: string | null;
     };
     members: Array<{
         id: string;
@@ -41,15 +69,23 @@ const props = defineProps<{
         upcoming_events: number;
     };
     userBalance: number;
+    pastSeasons: PastSeason[];
 }>();
 
 // Drawer state
 const showSettingsDrawer = ref(false);
+const showSeasonsDrawer = ref(false);
 
 // Handle settings update
 const handleSettingsUpdated = () => {
     // Reload the page to get fresh data
     router.reload({ only: ['group'] });
+};
+
+// Handle season update
+const handleSeasonUpdated = () => {
+    // Reload the page to get fresh data
+    router.reload();
 };
 
 // Format date for display
@@ -127,6 +163,19 @@ const sortedMembers = [...props.members].sort((a, b) => b.balance - a.balance);
                             class="block w-full border-2 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 text-neutral-700 dark:text-neutral-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
                         >
                             ⚙️ Group Settings
+                        </button>
+                    </div>
+
+                    <!-- Seasons Button -->
+                    <div class="mt-4">
+                        <button
+                            @click="showSeasonsDrawer = true"
+                            class="block w-full border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-500 text-purple-700 dark:text-purple-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                        >
+                            🏆 Seasons
+                            <span v-if="group.current_season" class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">
+                                S{{ group.current_season.season_number }} Active
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -230,6 +279,19 @@ const sortedMembers = [...props.members].sort((a, b) => b.balance - a.balance);
                                 ⚙️ Group Settings
                             </button>
                         </div>
+
+                        <!-- Seasons Button -->
+                        <div class="mt-4">
+                            <button
+                                @click="showSeasonsDrawer = true"
+                                class="block w-full border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-500 text-purple-700 dark:text-purple-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                            >
+                                🏆 Seasons
+                                <span v-if="group.current_season" class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">
+                                    S{{ group.current_season.season_number }} Active
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -287,6 +349,34 @@ const sortedMembers = [...props.members].sort((a, b) => b.balance - a.balance);
                 :group="group"
                 @updated="handleSettingsUpdated"
             />
+        </Drawer>
+
+        <!-- Seasons Drawer -->
+        <Drawer
+            :show="showSeasonsDrawer"
+            :title="`${group.name} Seasons`"
+            @close="showSeasonsDrawer = false"
+        >
+            <div class="space-y-6">
+                <!-- Season Management -->
+                <SeasonManagement
+                    :group-id="group.id"
+                    :current-season="group.current_season"
+                    :season-ends-at="group.season_ends_at"
+                    :currency="group.currency"
+                    @updated="handleSeasonUpdated"
+                />
+
+                <!-- Divider -->
+                <div class="border-t border-neutral-200 dark:border-neutral-600"></div>
+
+                <!-- Past Seasons -->
+                <PastSeasons
+                    :group-id="group.id"
+                    :seasons="pastSeasons"
+                    :currency="group.currency"
+                />
+            </div>
         </Drawer>
     </AppLayout>
 </template>

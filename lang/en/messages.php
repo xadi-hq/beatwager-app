@@ -147,6 +147,16 @@ return [
         ],
     ],
 
+    'season' => [
+        'ended' => [
+            'intent' => 'Announce season ending with dramatic recap and celebrate the winner',
+            'required_fields' => ['season_number', 'winner_name', 'winner_points', 'duration_days'],
+            'fallback_template' => "🏆 Season {season_number} Has Ended!\n\nDuration: {duration_days} days\nTotal Wagers: {total_wagers}\n\n👑 Champion: {winner_name} with {winner_points} {currency}!\n\nTop 3:\n{top_3}\n\n🎯 Highlights:\n{highlights}\n\nWhat a season! Ready for the next one?",
+            'tone_hints' => ['dramatic', 'celebratory', 'nostalgic'],
+            'max_words' => 200,  // Long recap with highlights
+        ],
+    ],
+
     'buttons' => [
         'yes' => '✅ Yes',
         'no' => '❌ No',
