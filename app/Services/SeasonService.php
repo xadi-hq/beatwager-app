@@ -45,12 +45,15 @@ class SeasonService
                 'season_ends_at' => $endsAt,
             ]);
 
-            // Reset all user points to starting balance
-            $group->users()->update([
-                'points' => $group->starting_balance,
-                'points_earned' => 0,
-                'points_spent' => 0,
-            ]);
+            // Reset all user points to starting balance in the pivot table
+            DB::table('group_user')
+                ->where('group_id', $group->id)
+                ->update([
+                    'points' => $group->starting_balance,
+                    'points_earned' => 0,
+                    'points_spent' => 0,
+                    'updated_at' => now(),
+                ]);
 
             Log::channel('operational')->info('season.created', [
                 'group_id' => $group->id,
@@ -125,7 +128,7 @@ class SeasonService
     private function calculateFinalLeaderboard(Group $group): array
     {
         $users = $group->users()
-            ->orderBy('points', 'desc')
+            ->orderBy('group_user.points', 'desc')
             ->get();
 
         $rank = 1;
