@@ -33,6 +33,7 @@ class GroupSettingsController extends Controller
             'bot_tone' => 'sometimes|string|max:1000|nullable',
             'llm_provider' => 'sometimes|string|in:openai,anthropic,requesty',
             'llm_api_key' => 'sometimes|string|max:500|nullable',
+            'allow_nsfw' => 'sometimes|boolean',
         ]);
 
         // Preserve existing LLM API key if field is empty (user didn't provide new key)

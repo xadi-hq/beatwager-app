@@ -137,6 +137,16 @@ return [
         'betting_closed' => "❌ Betting is closed",
     ],
 
+    'activity' => [
+        'revival' => [
+            'intent' => 'Re-engage an inactive group with humor and encourage activity',
+            'required_fields' => ['days_inactive'],
+            'fallback_template' => "😴 Haven't heard from you in {days_inactive} days!\n\nTime to wake up and place some wagers! Who's in?",
+            'tone_hints' => ['playful', 'encouraging', 'energetic'],
+            'max_words' => 40,  // Room for creative revival messaging
+        ],
+    ],
+
     'buttons' => [
         'yes' => '✅ Yes',
         'no' => '❌ No',

@@ -112,6 +112,9 @@ class TelegramWebhookController extends Controller
             'from' => $message->getFrom()->getId(),
         ]);
 
+        // Track group activity (if feature enabled)
+        $this->trackGroupActivity($chatId);
+
         // Handle commands
         if (str_starts_with($text, '/')) {
             $this->handleCommand($message);
@@ -1025,5 +1028,49 @@ class TelegramWebhookController extends Controller
             $update->getInlineQuery() !== null => 'inline_query',
             default => 'unknown',
         };
+    }
+
+    /**
+     * Track group activity for inactive group detection
+     *
+     * Uses Redis throttling to update DB only once per day per group.
+     * This prevents excessive DB writes while maintaining accuracy for 14-day threshold.
+     */
+    private function trackGroupActivity(int $chatId): void
+    {
+        // Feature flag check - exit early if disabled
+        if (!config('features.activity_tracking', false)) {
+            return;
+        }
+
+        // Find group by chat ID
+        $group = \App\Models\Group::where('platform_chat_id', (string)$chatId)
+            ->where('platform', 'telegram')
+            ->first();
+
+        if (!$group) {
+            return; // Not a tracked group
+        }
+
+        // Redis throttling: only update once per day per group
+        $today = now()->toDateString();
+        $cacheKey = "group_activity:{$group->id}:{$today}";
+
+        // Check if we've already updated today
+        if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+            return; // Already tracked today, skip DB write
+        }
+
+        // First message of the day for this group - update activity
+        $group->update(['last_activity_at' => now()]);
+
+        // Cache until end of day to prevent further updates today
+        \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->endOfDay());
+
+        Log::channel('operational')->info('activity_tracking.updated', [
+            'group_id' => $group->id,
+            'group_name' => $group->name ?? $group->platform_chat_title,
+            'date' => $today,
+        ]);
     }
 }

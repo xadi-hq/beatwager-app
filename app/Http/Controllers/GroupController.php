@@ -90,6 +90,7 @@ class GroupController extends Controller
                 'notification_preferences' => $notificationPreferences,
                 'bot_tone' => $group->bot_tone,
                 'llm_provider' => $group->llm_provider,
+                'allow_nsfw' => $group->allow_nsfw ?? false,
                 'has_llm_configured' => !empty($group->llm_api_key),
                 'llm_metrics' => $llmMetrics,
             ],

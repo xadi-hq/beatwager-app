@@ -470,4 +470,39 @@ class MessageService
             currencyName: $currency
         );
     }
+
+    /**
+     * Generate a revival message for an inactive group
+     *
+     * @param \App\Models\Group $group The inactive group
+     * @param int $daysInactive Number of days since last activity
+     * @return Message
+     */
+    public function revivalMessage(\App\Models\Group $group, int $daysInactive): Message
+    {
+        $meta = __('messages.activity.revival');
+        $currency = $group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'activity.revival',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'days_inactive' => $daysInactive,
+                'currency' => $currency,
+                'group_name' => $group->name ?? $group->platform_chat_title,
+            ],
+            group: $group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            context: $group,
+            currencyName: $currency
+        );
+    }
 }

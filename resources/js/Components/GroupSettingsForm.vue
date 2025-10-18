@@ -18,6 +18,7 @@ const props = defineProps<{
         };
         bot_tone?: string;
         llm_provider?: string;
+        allow_nsfw?: boolean;
         has_llm_configured: boolean;
         llm_metrics?: {
             total_calls: number;
@@ -52,6 +53,7 @@ const botForm = useForm({
     bot_tone: props.group.bot_tone || '',
     llm_provider: props.group.llm_provider || 'openai',
     llm_api_key: '',
+    allow_nsfw: props.group.allow_nsfw || false,
 });
 
 // Toast notification state
@@ -386,6 +388,25 @@ function submitBot() {
                                 • "Sarcastic and playful, like a competitive friend"<br>
                                 • "Professional and concise, like a sports commentator"<br>
                                 • "Encouraging and supportive, celebrates wins enthusiastically"
+                            </p>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600">
+                                <div>
+                                    <div class="font-medium text-neutral-900 dark:text-neutral-100">Allow NSFW Content</div>
+                                    <div class="text-sm text-neutral-600 dark:text-neutral-400">
+                                        Remove content restrictions for adult language and themes
+                                    </div>
+                                </div>
+                                <input
+                                    v-model="botForm.allow_nsfw"
+                                    type="checkbox"
+                                    class="w-5 h-5 text-blue-600 bg-white dark:bg-neutral-600 border-neutral-300 dark:border-neutral-500 rounded focus:ring-blue-500"
+                                />
+                            </label>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 px-4">
+                                When disabled (default), the bot keeps content PG-13. When enabled, the bot can use stronger language to match your tone.
                             </p>
                         </div>
 

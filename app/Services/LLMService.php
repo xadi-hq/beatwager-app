@@ -80,6 +80,13 @@ class LLMService
     {
         $groupType = $group->group_type ?? 'friends';
         $botTone = $group->bot_tone ?? 'friendly and encouraging';
+        $allowNsfw = $group->allow_nsfw ?? false;
+
+        $contentGuidelines = $allowNsfw
+            ? '- No content restrictions'
+            : '- Keep content appropriate for all ages (PG-13)
+- Avoid explicit language, profanity, or adult themes
+- Use creative alternatives for strong language';
 
         return <<<PROMPT
 You are BeatWager bot, managing social wagers for a {$groupType} group.
@@ -94,6 +101,9 @@ Guidelines:
 - Create excitement without being verbose
 - Never mention being an AI or technical details
 - Get straight to the point
+
+Content guidelines:
+{$contentGuidelines}
 
 PROMPT;
     }
@@ -236,14 +246,15 @@ PROMPT;
 
     private function getCacheKey(MessageContext $ctx, Group $group): string
     {
-        // Create cache key from context + tone
+        // Create cache key from context + tone + content settings
         $dataHash = md5(json_encode($ctx->data));
+        $settingsHash = md5(($group->bot_tone ?? '') . ($group->allow_nsfw ? '1' : '0'));
         return sprintf(
             'llm:%s:%s:%s:%s',
             $group->id,
             $ctx->key,
             $dataHash,
-            md5($group->bot_tone ?? '')
+            $settingsHash
         );
     }
 

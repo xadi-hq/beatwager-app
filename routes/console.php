@@ -30,3 +30,11 @@ Schedule::command('llm:aggregate')
     ->dailyAt('00:00')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Activity Tracking: Check for inactive groups and send revival messages
+// COMMENTED OUT - Uncomment when FEATURE_ACTIVITY_TRACKING=true is set
+// The command itself checks the feature flag, but this prevents unnecessary scheduling overhead
+Schedule::command('activity:check')
+    ->dailyAt('09:00')  // 9am - good time for engagement
+    ->withoutOverlapping()
+    ->onOneServer();
