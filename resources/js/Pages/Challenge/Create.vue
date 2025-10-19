@@ -27,27 +27,18 @@ const props = defineProps<{
 }>();
 
 const form = useForm({
-    title: '',
     description: '',
-    resolution_criteria: '',
-    type: 'binary' as 'binary' | 'multiple_choice',
+    amount: 100,
     group_id: props.defaultGroup?.id || '',
-    stake_amount: 100,
-    betting_closes_at: '',
-    expected_settlement_at: '',
-    options: ['', ''],
+    completion_deadline: '',
+    acceptance_deadline: '',
 });
 
-const wagerTypes = [
-    { value: 'binary', label: 'Yes/No Question' },
-    { value: 'multiple_choice', label: 'Multiple Choice (e.g., 1/x/2 for soccer)' },
-];
-
 // Balance feasibility warning
-const membersUnderStake = computed(() => {
+const membersUnderAmount = computed(() => {
     if (!props.groupMembers || props.groupMembers.length === 0) return null;
     
-    const under = props.groupMembers.filter(m => m.points < form.stake_amount);
+    const under = props.groupMembers.filter(m => m.points < form.amount);
     if (under.length === 0) return null;
     
     const names = under.slice(0, 2).map(m => m.name).join(', ');
@@ -59,34 +50,45 @@ const membersUnderStake = computed(() => {
     };
 });
 
-const addOption = () => {
-    form.options.push('');
-};
-
-const removeOption = (index: number) => {
-    form.options.splice(index, 1);
-};
-
 // Toast notification state
 const showToast = ref(false);
 const toastType = ref<'success' | 'error'>('success');
 const toastMessage = ref('');
 
+// Set default completion deadline to 3 days from now
+const setDefaultCompletionDeadline = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + 3);
+    // Format as datetime-local string
+    form.completion_deadline = date.toISOString().slice(0, 16);
+};
+
+// Set default acceptance deadline to 1 day from now
+const setDefaultAcceptanceDeadline = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    form.acceptance_deadline = date.toISOString().slice(0, 16);
+};
+
+const clearAcceptanceDeadline = () => {
+    form.acceptance_deadline = '';
+};
+
 const submit = () => {
     // Clear previous errors and toasts
     showToast.value = false;
 
-    form.post('/wager/store', {
+    form.post('/challenges/store', {
         onSuccess: () => {
             toastType.value = 'success';
-            toastMessage.value = 'Wager created successfully!';
+            toastMessage.value = 'Challenge created successfully!';
             showToast.value = true;
 
-            // Will redirect to dashboard via backend
+            // Will redirect to success page via backend
         },
         onError: (errors) => {
             toastType.value = 'error';
-            toastMessage.value = 'Failed to create wager. Please check the form and try again.';
+            toastMessage.value = 'Failed to create challenge. Please check the form and try again.';
             showToast.value = true;
         },
     });
@@ -95,12 +97,12 @@ const submit = () => {
 
 <template>
     <AppLayout>
-        <Head title="Create Wager" />
+        <Head title="Create Challenge" />
 
         <div class="max-w-2xl mx-auto py-12 px-4">
             <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
                 <h1 class="text-2xl font-bold text-neutral-900 dark:text-white mb-6">
-                    🎲 Create a New Wager
+                    💪 Create a New Challenge
                 </h1>
 
                 <form @submit.prevent="submit" class="space-y-6">
@@ -116,7 +118,7 @@ const submit = () => {
                             </span>
                         </p>
                         <p v-if="defaultGroup" class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                            Wager will be created in the mentioned group above
+                            Challenge will be created in the mentioned group above
                         </p>
                     </div>
 
@@ -137,7 +139,7 @@ const submit = () => {
                             </option>
                         </select>
                         <p v-if="groups.length === 0" class="text-sm text-amber-600 dark:text-amber-400 mt-2">
-                            ⚠️ No groups available. Make sure BeatWager bot is added to your group first, then try /newwager from that group.
+                            ⚠️ No groups available. Make sure BeatWager bot is added to your group first, then try /newchallenge from that group.
                         </p>
                         <p v-else class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                             Group not listed? Make sure BeatWager bot is part of that group first.
@@ -145,122 +147,124 @@ const submit = () => {
                         <FormError :error="form.errors.group_id" />
                     </div>
 
-                    <!-- Wager Type -->
+                    <!-- Description -->
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                            Wager Type
+                            Challenge Description *
                         </label>
-                        <select 
-                            v-model="form.type" 
-                            class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
-                        >
-                            <option v-for="type in wagerTypes" :key="type.value" :value="type.value">
-                                {{ type.label }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <!-- Title -->
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                            Question/Title *
-                        </label>
-                        <input
-                            v-model="form.title"
-                            type="text"
+                        <textarea
+                            v-model="form.description"
                             required
-                            placeholder="e.g., Ajax vs PSV - Who wins?"
+                            rows="3"
+                            placeholder="e.g., Who will clean the office kitchen by Friday? I'll pay 200 points for this to get done!"
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
-                        />
-                        <FormError :error="form.errors.title" />
+                        ></textarea>
+                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            Describe what needs to be done to earn the points
+                        </p>
+                        <FormError :error="form.errors.description" />
                     </div>
 
-                    <!-- Options for Multiple Choice -->
-                    <div v-if="form.type === 'multiple_choice'" class="space-y-2">
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                            Options
-                        </label>
-                        <div v-for="(option, index) in form.options" :key="index" class="flex gap-2">
-                            <input
-                                v-model="form.options[index]"
-                                type="text"
-                                required
-                                :placeholder="index === 0 ? '1' : index === 1 ? 'x' : index === 2 ? '2' : 'Option ' + (index + 1)"
-                                class="flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
-                            />
-                            <button
-                                v-if="form.options.length > 2"
-                                type="button"
-                                @click="removeOption(index)"
-                                class="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                            >
-                                Remove
-                            </button>
-                        </div>
-                        <button
-                            type="button"
-                            @click="addOption"
-                            class="px-4 py-2 bg-neutral-200 dark:bg-neutral-600 text-neutral-900 dark:text-white rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-500"
-                        >
-                            + Add Option
-                        </button>
-                    </div>
-
-                    <!-- Stake Amount -->
+                    <!-- Points Amount -->
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                            Stake (points) *
+                            Points Reward *
                         </label>
                         <input
-                            v-model.number="form.stake_amount"
+                            v-model.number="form.amount"
                             type="number"
                             required
                             min="1"
+                            max="10000"
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         />
-                        <FormError :error="form.errors.stake_amount" />
-                    </div>
-
-                    <!-- Betting Closes At and Expected Settlement (combined on desktop) -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Betting Closes At -->
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                Betting Closes *
-                            </label>
-                            <input
-                                v-model="form.betting_closes_at"
-                                type="datetime-local"
-                                required
-                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
-                            />
-                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                When users can no longer place bets
-                            </p>
-                            <FormError :error="form.errors.betting_closes_at" />
-                        </div>
-
-                        <!-- Expected Settlement Date -->
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                Expected Result Date (optional)
-                            </label>
-                            <input
-                                v-model="form.expected_settlement_at"
-                                type="datetime-local"
-                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
-                            />
-                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                When the outcome will be known (optional)
-                            </p>
-                            <FormError :error="form.errors.expected_settlement_at" />
-                        </div>
-                    </div>
-                    <!-- Balance feasibility warning -->
-                    <div v-if="membersUnderStake" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded text-sm">
-                        <p class="text-amber-700 dark:text-amber-300">
-                            ⚠️ {{ membersUnderStake.display }} {{ membersUnderStake.count === 1 ? 'has a' : 'have' }} balance{{ membersUnderStake.count > 1 ? 's' : '' }} lower than this stake
+                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            Points you'll pay to whoever completes this challenge
                         </p>
+                        <FormError :error="form.errors.amount" />
+                    </div>
+
+                    <!-- Deadlines -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Completion Deadline -->
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Must Complete By *
+                            </label>
+                            <div class="space-y-2">
+                                <input
+                                    v-model="form.completion_deadline"
+                                    type="datetime-local"
+                                    required
+                                    class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                />
+                                <button
+                                    type="button"
+                                    @click="setDefaultCompletionDeadline"
+                                    class="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                >
+                                    Set to 3 days from now
+                                </button>
+                            </div>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                When the challenge must be completed by
+                            </p>
+                            <FormError :error="form.errors.completion_deadline" />
+                        </div>
+
+                        <!-- Acceptance Deadline -->
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Accept By (optional)
+                            </label>
+                            <div class="space-y-2">
+                                <input
+                                    v-model="form.acceptance_deadline"
+                                    type="datetime-local"
+                                    class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                />
+                                <div class="flex gap-2">
+                                    <button
+                                        type="button"
+                                        @click="setDefaultAcceptanceDeadline"
+                                        class="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                    >
+                                        Set to 1 day from now
+                                    </button>
+                                    <button
+                                        v-if="form.acceptance_deadline"
+                                        type="button"
+                                        @click="clearAcceptanceDeadline"
+                                        class="text-xs text-red-600 dark:text-red-400 hover:underline"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                Optional deadline for someone to accept the challenge
+                            </p>
+                            <FormError :error="form.errors.acceptance_deadline" />
+                        </div>
+                    </div>
+
+                    <!-- Balance feasibility warning -->
+                    <div v-if="membersUnderAmount" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded text-sm">
+                        <p class="text-amber-700 dark:text-amber-300">
+                            💡 Note: {{ membersUnderAmount.display }} {{ membersUnderAmount.count === 1 ? 'has a' : 'have' }} balance{{ membersUnderAmount.count > 1 ? 's' : '' }} lower than your reward amount, but can still accept the challenge
+                        </p>
+                    </div>
+
+                    <!-- How it works info -->
+                    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <h3 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">How it works:</h3>
+                        <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                            <li>1️⃣ One person from your group can accept this challenge</li>
+                            <li>2️⃣ Your points will be held in reserve when accepted</li>
+                            <li>3️⃣ They complete the task and submit proof</li>
+                            <li>4️⃣ You approve or reject their submission</li>
+                            <li>5️⃣ If approved, they get your points!</li>
+                        </ul>
                     </div>
 
                     <!-- Submit Button -->
@@ -268,14 +272,14 @@ const submit = () => {
                         <button
                             type="submit"
                             :disabled="form.processing"
-                            class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center justify-center gap-2"
+                            class="flex-1 px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center justify-center gap-2"
                         >
                             <!-- Loading spinner -->
                             <svg v-if="form.processing" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            <span>{{ form.processing ? 'Creating...' : 'Create Wager' }}</span>
+                            <span>{{ form.processing ? 'Creating...' : 'Create Challenge' }}</span>
                         </button>
                     </div>
                 </form>

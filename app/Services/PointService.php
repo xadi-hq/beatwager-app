@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Exceptions\InsufficientPointsException;
+use App\Models\Challenge;
 use App\Models\Group;
 use App\Models\Transaction;
 use App\Models\User;
@@ -35,9 +36,10 @@ class PointService
         int $amount,
         string $type,
         ?Wager $wager = null,
-        ?WagerEntry $wagerEntry = null
+        ?WagerEntry $wagerEntry = null,
+        ?Challenge $challenge = null
     ): Transaction {
-        return DB::transaction(function () use ($user, $group, $amount, $type, $wager, $wagerEntry) {
+        return DB::transaction(function () use ($user, $group, $amount, $type, $wager, $wagerEntry, $challenge) {
             $balanceBefore = $this->getBalance($user, $group);
 
             if ($balanceBefore < $amount) {
@@ -66,6 +68,7 @@ class PointService
                 "balance_after" => $balanceAfter,
                 "wager_id" => $wager?->id,
                 "wager_entry_id" => $wagerEntry?->id,
+                "challenge_id" => $challenge?->id,
             ]);
         });
     }
@@ -79,9 +82,10 @@ class PointService
         int $amount,
         string $type,
         ?Wager $wager = null,
-        ?WagerEntry $wagerEntry = null
+        ?WagerEntry $wagerEntry = null,
+        ?Challenge $challenge = null
     ): Transaction {
-        return DB::transaction(function () use ($user, $group, $amount, $type, $wager, $wagerEntry) {
+        return DB::transaction(function () use ($user, $group, $amount, $type, $wager, $wagerEntry, $challenge) {
             $balanceBefore = $this->getBalance($user, $group);
             $balanceAfter = $balanceBefore + $amount;
 
@@ -105,6 +109,7 @@ class PointService
                 "balance_after" => $balanceAfter,
                 "wager_id" => $wager?->id,
                 "wager_entry_id" => $wagerEntry?->id,
+                "challenge_id" => $challenge?->id,
             ]);
         });
     }

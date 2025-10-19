@@ -15,6 +15,7 @@ const props = defineProps<{
     upcomingEvents: any[];
     pastProcessedEvents: any[];
     pastUnprocessedEvents: any[];
+    userChallenges: any[];
     focus: string;
 }>();
 
@@ -23,6 +24,7 @@ const getDefaultTab = () => {
     if (props.focus === 'transactions') return 'transactions';
     if (props.focus === 'groups') return 'groups';
     if (props.focus === 'events') return 'events';
+    if (props.focus === 'challenges') return 'challenges';
     return 'wagers';
 };
 
@@ -118,6 +120,7 @@ function formatDate(dateStr: string): string {
                         class="w-full px-4 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                         <option value="wagers">My Wagers</option>
+                        <option value="challenges">Challenges</option>
                         <option value="events">Events</option>
                         <option value="transactions">Transactions</option>
                         <option value="groups">Groups</option>
@@ -137,6 +140,17 @@ function formatDate(dateStr: string): string {
                             ]"
                         >
                             My Wagers
+                        </button>
+                        <button
+                            @click="activeTab = 'challenges'"
+                            :class="[
+                                'px-6 py-3 text-sm font-medium border-b-2',
+                                activeTab === 'challenges'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300'
+                            ]"
+                        >
+                            Challenges
                         </button>
                         <button
                             @click="activeTab = 'events'"
@@ -261,6 +275,97 @@ function formatDate(dateStr: string): string {
                                             <span class="ml-2 text-neutral-600 dark:text-neutral-400">Outcome: {{ wager.outcome_value }}</span>
                                         </div>
                                         <a :href="wager.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Challenges Tab -->
+                    <div v-if="activeTab === 'challenges'">
+                        <!-- Open Challenges -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Open ({{ userChallenges.filter(c => c.status === 'open').length }})</h3>
+                            <div v-if="userChallenges.filter(c => c.status === 'open').length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                                No open challenges
+                            </div>
+                            <div v-else class="space-y-3">
+                                <div v-for="challenge in userChallenges.filter(c => c.status === 'open')" :key="challenge.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <a :href="challenge.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ challenge.description }}</a>
+                                            <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ challenge.group.name }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-medium text-green-600 dark:text-green-400">{{ challenge.amount }} pts</div>
+                                            <div v-if="challenge.acceptance_deadline" class="text-xs text-neutral-500 dark:text-neutral-400">Accept by: {{ formatDate(challenge.acceptance_deadline) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm text-neutral-700 dark:text-neutral-300">
+                                            <span v-if="challenge.is_creator" class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded text-xs">Creator</span>
+                                            <span v-else class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded text-xs">Available to accept</span>
+                                        </div>
+                                        <a :href="challenge.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Accepted Challenges -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Accepted ({{ userChallenges.filter(c => c.status === 'accepted').length }})</h3>
+                            <div v-if="userChallenges.filter(c => c.status === 'accepted').length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                                No accepted challenges
+                            </div>
+                            <div v-else class="space-y-3">
+                                <div v-for="challenge in userChallenges.filter(c => c.status === 'accepted')" :key="challenge.id" class="bg-blue-50 dark:bg-blue-900/20 rounded p-4 border border-blue-200 dark:border-blue-800">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <a :href="challenge.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ challenge.description }}</a>
+                                            <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ challenge.group.name }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ formatTimeRemaining(challenge.completion_deadline) }}</div>
+                                            <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ challenge.amount }} pts reward</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm text-neutral-700 dark:text-neutral-300">
+                                            <span v-if="challenge.is_creator" class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded text-xs">Creator</span>
+                                            <span v-else class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded text-xs">Accepted by you</span>
+                                            <span v-if="challenge.acceptor" class="ml-2 text-neutral-600 dark:text-neutral-400">Acceptor: {{ challenge.acceptor.name }}</span>
+                                        </div>
+                                        <a :href="challenge.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Completed Challenges -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Completed</h3>
+                            <div v-if="userChallenges.filter(c => ['completed', 'failed'].includes(c.status)).length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                                No completed challenges yet
+                            </div>
+                            <div v-else class="space-y-3">
+                                <div v-for="challenge in userChallenges.filter(c => ['completed', 'failed'].includes(c.status))" :key="challenge.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <a :href="challenge.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ challenge.description }}</a>
+                                            <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ challenge.group.name }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ formatRelativeTime(challenge.completed_at || challenge.failed_at) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm">
+                                            <span v-if="challenge.status === 'completed'" class="text-green-600 dark:text-green-400 font-medium">✅ Completed (+{{ challenge.amount }} pts)</span>
+                                            <span v-else class="text-red-600 dark:text-red-400">❌ Failed</span>
+                                            <span v-if="challenge.acceptor" class="ml-2 text-neutral-600 dark:text-neutral-400">by {{ challenge.acceptor.name }}</span>
+                                        </div>
+                                        <a :href="challenge.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
                                     </div>
                                 </div>
                             </div>

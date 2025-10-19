@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupSettingsController;
+use App\Http\Controllers\ScheduledMessageController;
 use App\Http\Controllers\SeasonController;
 use App\Http\Controllers\ShortUrlController;
 use App\Http\Controllers\WagerController;
@@ -52,6 +54,17 @@ Route::middleware(['signed.auth'])->group(function () {
     Route::post('/events/{event}/attendance', [EventController::class, 'recordAttendance'])->name('events.recordAttendance');
     Route::post('/events/{event}/rsvp', [EventController::class, 'rsvp'])->name('events.rsvp');
 
+    // Challenge routes
+    Route::get('/challenges/create', [ChallengeController::class, 'create'])->name('challenges.create');
+    Route::post('/challenges/store', [ChallengeController::class, 'store'])->name('challenges.store');
+    Route::get('/challenges/success/{challenge}', [ChallengeController::class, 'success'])->name('challenge.success');
+    Route::get('/challenges/{challenge}', [ChallengeController::class, 'show'])->name('challenges.show');
+    Route::post('/challenges/{challenge}/accept', [ChallengeController::class, 'accept'])->name('challenges.accept');
+    Route::post('/challenges/{challenge}/submit', [ChallengeController::class, 'submit'])->name('challenges.submit');
+    Route::post('/challenges/{challenge}/approve', [ChallengeController::class, 'approve'])->name('challenges.approve');
+    Route::post('/challenges/{challenge}/reject', [ChallengeController::class, 'reject'])->name('challenges.reject');
+    Route::post('/challenges/{challenge}/cancel', [ChallengeController::class, 'cancel'])->name('challenges.cancel');
+
     // Group routes
     Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
     Route::post('/groups/{group}/settings', [GroupSettingsController::class, 'update'])->name('groups.settings.update');
@@ -61,4 +74,12 @@ Route::middleware(['signed.auth'])->group(function () {
     Route::get('/groups/{group}/seasons/{season}', [SeasonController::class, 'show'])->name('seasons.show');
     Route::post('/groups/{group}/seasons', [SeasonController::class, 'store'])->name('seasons.store');
     Route::post('/groups/{group}/seasons/end', [SeasonController::class, 'end'])->name('seasons.end');
+
+    // Scheduled messages routes
+    Route::get('/groups/{group}/messages', [ScheduledMessageController::class, 'index'])->name('messages.index');
+    Route::get('/groups/{group}/messages/{scheduledMessage}', [ScheduledMessageController::class, 'show'])->name('messages.show');
+    Route::post('/groups/{group}/messages', [ScheduledMessageController::class, 'store'])->name('messages.store');
+    Route::put('/groups/{group}/messages/{scheduledMessage}', [ScheduledMessageController::class, 'update'])->name('messages.update');
+    Route::post('/groups/{group}/messages/{scheduledMessage}/toggle', [ScheduledMessageController::class, 'toggleActive'])->name('messages.toggle');
+    Route::delete('/groups/{group}/messages/{scheduledMessage}', [ScheduledMessageController::class, 'destroy'])->name('messages.destroy');
 });

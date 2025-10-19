@@ -138,6 +138,7 @@ class TelegramWebhookController extends Controller
             '/help' => $this->handleHelpCommand($message),
             '/newwager' => $this->handleNewWagerCommand($message),
             '/newevent' => $this->handleNewEventCommand($message),
+            '/newchallenge' => $this->handleNewChallengeCommand($message),
             '/join' => $this->handleJoinCommand($message),
             '/mywagers', '/mybets' => $this->handleMyWagersCommand($message),
             '/balance', '/mybalance' => $this->handleBalanceCommand($message),
@@ -159,12 +160,13 @@ class TelegramWebhookController extends Controller
         $welcomeMessage .= "Available commands:\n";
         $welcomeMessage .= "/newwager - Create a new wager\n";
         $welcomeMessage .= "/newevent - Create a group event\n";
+        $welcomeMessage .= "/newchallenge - Create a 1-on-1 challenge\n";
         $welcomeMessage .= "/join - Join an existing wager\n";
         $welcomeMessage .= "/mywagers - View your active wagers\n";
         $welcomeMessage .= "/balance - Check your points balance\n";
         $welcomeMessage .= "/leaderboard - View group leaderboard\n";
         $welcomeMessage .= "/help - Show this help message\n\n";
-        $welcomeMessage .= "Let's get started! Use /newwager or /newevent to begin.";
+        $welcomeMessage .= "Let's get started! Use /newwager, /newevent, or /newchallenge to begin.";
 
         $this->bot->sendMessage($chatId, $welcomeMessage);
     }
@@ -185,6 +187,7 @@ class TelegramWebhookController extends Controller
         $helpMessage .= "*Available Commands:*\n\n";
         $helpMessage .= "• `/newwager` - Create a new wager in a group\n";
         $helpMessage .= "• `/newevent` - Create a group event with attendance tracking\n";
+        $helpMessage .= "• `/newchallenge` - Create a 1-on-1 challenge with points reward\n";
         $helpMessage .= "• `/mybets` - View your active wagers\n";
         $helpMessage .= "• `/balance` - Check your points balance\n";
         $helpMessage .= "• `/leaderboard` - View group rankings\n";
@@ -197,6 +200,9 @@ class TelegramWebhookController extends Controller
         $helpMessage .= "*Events:*\n";
         $helpMessage .= "📅 Use `/newevent` to organize meetups with attendance bonuses\n";
         $helpMessage .= "✅ RSVP to events and earn points for showing up!\n\n";
+        $helpMessage .= "*Challenges:*\n";
+        $helpMessage .= "💪 Use `/newchallenge` to offer points for completing a task\n";
+        $helpMessage .= "⚡ One person accepts and completes it to earn your points!\n\n";
 
         // Create short URL to help page
         $shortCode = \App\Models\ShortUrl::generateUniqueCode(6);
@@ -388,13 +394,87 @@ class TelegramWebhookController extends Controller
         }
     }
 
+    /**
+     * Handle /newchallenge command
+     */
+    private function handleNewChallengeCommand(\TelegramBot\Api\Types\Message $message): void
+    {
+        $chatId = $message->getChat()->getId();
+        $from = $message->getFrom();
+        $chat = $message->getChat();
+        $chatType = $chat->getType();
+        
+        // Only allow in group chats
+        if (!in_array($chatType, ['group', 'supergroup'])) {
+            $this->bot->sendMessage(
+                $chatId,
+                "❌ Please use /newchallenge in a group chat where you want to create the challenge.\n\n" .
+                "I need to know which group the challenge is for!"
+            );
+            return;
+        }
 
+        // Generate signed URL with all context needed for challenge creation
+        $fullUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'challenges.create',
+            now()->addMinutes(30),
+            [
+                'u' => encrypt('telegram:' . $from->getId()),
+                'username' => $from->getUsername(),
+                'first_name' => $from->getFirstName(),
+                'last_name' => $from->getLastName(),
+                'chat_id' => $chat->getId(),
+                'chat_type' => $chatType,
+                'chat_title' => $chat->getTitle(),
+            ]
+        );
 
+        // Create short URL for cleaner message
+        $shortCode = \App\Models\ShortUrl::generateUniqueCode(6);
+        $shortUrl = \App\Models\ShortUrl::create([
+            'code' => $shortCode,
+            'target_url' => $fullUrl,
+            'expires_at' => now()->addMinutes(30),
+        ]);
+        $shortUrlFull = url('/l/' . $shortCode);
 
+        // Send link to user's private chat
+        try {
+            $username = $from->getUsername() ? '@' . $from->getUsername() : $from->getFirstName();
 
+            $dmMessage = "💪 *Create a new challenge for {$chat->getTitle()}*\n\n";
+            $dmMessage .= "Click the link to open the creation form:\n";
+            $dmMessage .= $shortUrlFull . "\n\n";
+            $dmMessage .= "⏱️ Link expires in 30 minutes";
 
+            $this->bot->sendMessage(
+                $from->getId(),
+                $dmMessage,
+                'Markdown'
+            );
 
+            // Confirm in group chat
+            $groupMessage = "✅ {$username}, I've sent you the challenge creation link in our private chat!";
+            $this->bot->sendMessage($chatId, $groupMessage);
 
+        } catch (\Exception $e) {
+            // If we can't send DM (user hasn't started bot), send link in group as fallback
+            Log::warning('Could not send DM to user, falling back to group message', [
+                'user_id' => $from->getId(),
+                'error' => $e->getMessage(),
+            ]);
+
+            $fallbackMessage = "💪 *Create your challenge for this group!*\n\n";
+            $fallbackMessage .= "Click the link to open the creation form:\n";
+            $fallbackMessage .= $shortUrlFull . "\n\n";
+            $fallbackMessage .= "⏱️ Link expires in 30 minutes\n\n";
+            $fallbackMessage .= "💡 Tip: Start a private chat with me first using /start so I can send you links privately!";
+
+            $this->bot->sendMessage($chatId, $fallbackMessage, 'Markdown');
+        }
+    }
+
+    /**
 
     /**
      * Handle /join command
@@ -720,7 +800,7 @@ class TelegramWebhookController extends Controller
         ]);
 
         try {
-            // Parse callback data format: "wager:{wager_id}:{answer}", "view:{wager_id}", or "event_rsvp:{event_id}:{response}"
+            // Parse callback data format: "wager:{wager_id}:{answer}", "view:{wager_id}", "event_rsvp:{event_id}:{response}", or "challenge_{action}:{challenge_id}"
             $parts = explode(':', $data);
 
             if (count($parts) < 2) {
@@ -732,6 +812,17 @@ class TelegramWebhookController extends Controller
             // Handle event RSVP buttons
             if ($action === 'event_rsvp') {
                 $this->handleEventRsvpCallback($callbackQuery, $parts);
+                return;
+            }
+
+            // Handle challenge buttons
+            if ($action === 'challenge_accept') {
+                $this->handleChallengeAcceptCallback($callbackQuery, $parts);
+                return;
+            }
+            
+            if ($action === 'challenge_view') {
+                $this->handleChallengeViewCallback($callbackQuery, $parts);
                 return;
             }
 
@@ -1072,5 +1163,171 @@ class TelegramWebhookController extends Controller
             'group_name' => $group->name ?? $group->platform_chat_title,
             'date' => $today,
         ]);
+    }
+
+    /**
+     * Handle challenge accept callback from inline buttons
+     */
+    private function handleChallengeAcceptCallback(\TelegramBot\Api\Types\CallbackQuery $callbackQuery, array $parts): void
+    {
+        // Callback data format: "challenge_accept:{challenge_id}"
+        if (count($parts) !== 2) {
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '❌ Invalid challenge format', 'show_alert' => true]
+            );
+            return;
+        }
+
+        $challengeId = $parts[1];
+
+        // Find the challenge
+        $challenge = \App\Models\Challenge::find($challengeId);
+        if (!$challenge) {
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '❌ Challenge not found', 'show_alert' => true]
+            );
+            return;
+        }
+
+        // Check if challenge is still open
+        if (!$challenge->canBeAccepted()) {
+            $message = $challenge->isAcceptanceExpired() 
+                ? '❌ Challenge acceptance deadline has passed'
+                : '❌ This challenge is no longer available';
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => $message, 'show_alert' => true]
+            );
+            return;
+        }
+
+        // Get or create user from Telegram
+        $userId = $callbackQuery->getFrom()->getId();
+        $user = UserMessengerService::findOrCreate(
+            platform: 'telegram',
+            platformUserId: (string) $userId,
+            userData: [
+                'username' => $callbackQuery->getFrom()->getUsername(),
+                'first_name' => $callbackQuery->getFrom()->getFirstName(),
+                'last_name' => $callbackQuery->getFrom()->getLastName(),
+            ]
+        );
+
+        // Get the group
+        $group = $challenge->group;
+
+        // Ensure user is in the group
+        if (!$group->users()->where('user_id', $user->id)->exists()) {
+            $group->users()->attach($user->id, [
+                'id' => \Illuminate\Support\Str::uuid(),
+                'points' => $group->starting_balance ?? 1000,
+                'role' => 'participant',
+            ]);
+        }
+
+        try {
+            // Accept challenge using ChallengeService
+            $challengeService = app(\App\Services\ChallengeService::class);
+            $acceptedChallenge = $challengeService->acceptChallenge($challenge, $user);
+
+            // Send success message
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '💪 Challenge accepted! Good luck!', 'show_alert' => false]
+            );
+
+            // TODO: Dispatch event for challenge accepted announcement
+            // \App\Events\ChallengeAccepted::dispatch($acceptedChallenge, $user);
+
+        } catch (\Exception $e) {
+            Log::error('Error accepting challenge', [
+                'error' => $e->getMessage(),
+                'challenge_id' => $challengeId,
+                'user_id' => $userId,
+            ]);
+
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '❌ Error: ' . $e->getMessage(), 'show_alert' => true]
+            );
+        }
+    }
+
+    /**
+     * Handle challenge view callback from inline buttons
+     */
+    private function handleChallengeViewCallback(\TelegramBot\Api\Types\CallbackQuery $callbackQuery, array $parts): void
+    {
+        // Callback data format: "challenge_view:{challenge_id}"
+        if (count($parts) !== 2) {
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '❌ Invalid challenge format', 'show_alert' => true]
+            );
+            return;
+        }
+
+        $challengeId = $parts[1];
+
+        // Find the challenge
+        $challenge = \App\Models\Challenge::find($challengeId);
+        if (!$challenge) {
+            $this->bot->answerCallbackQuery(
+                $callbackQuery->getId(),
+                ['text' => '❌ Challenge not found', 'show_alert' => true]
+            );
+            return;
+        }
+
+        $userId = $callbackQuery->getFrom()->getId();
+
+        // Generate signed URL with encrypted user ID
+        $signedUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'challenges.show',
+            now()->addDays(30),
+            [
+                'challenge' => $challengeId,
+                'u' => encrypt('telegram:' . $userId)
+            ]
+        );
+
+        // Create short URL
+        $shortCode = \App\Models\ShortUrl::generateUniqueCode(6);
+        $shortUrl = \App\Models\ShortUrl::create([
+            'code' => $shortCode,
+            'target_url' => $signedUrl,
+            'expires_at' => now()->addDays(30),
+        ]);
+
+        // Build short URL
+        $shortUrlFull = url('/l/' . $shortCode);
+
+        // Answer callback query
+        $this->bot->answerCallbackQuery(
+            $callbackQuery->getId(),
+            ['text' => '🎯 Opening challenge details...']
+        );
+
+        // Send short URL as direct message to user
+        $dmMessage = "🎯 *View Challenge Details*\n\n";
+        $dmMessage .= "💪 Challenge: {$challenge->description}\n\n";
+        $dmMessage .= "Click to view details and status:\n";
+        $dmMessage .= $shortUrlFull;
+
+        try {
+            $this->bot->sendMessage(
+                $userId,
+                $dmMessage,
+                'Markdown'
+            );
+        } catch (\Exception $e) {
+            // If DM fails, could send to group chat as fallback
+            Log::warning('Failed to send challenge view DM', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

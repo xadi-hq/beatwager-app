@@ -1,10 +1,56 @@
 # BeatWager TODO
 
-**Last Updated:** October 16, 2025
-**Current Phase:** Phase 2 - LLM Integration & Engagement Features
-**Status:** Core features complete, Group customization complete, LLM service implemented, Integration & Engagement features next
+**Last Updated:** October 18, 2025
+**Current Phase:** Phase 2 - Engagement & Advanced Features
+**Status:** Core features complete, LLM integration complete, Seasons implemented, Scheduled messages next
 
 ---
+
+## ✅ RECENTLY COMPLETED (October 2025)
+
+### Seasons Feature Complete (October 18, 2025 - Today's Session)
+- ✅ **Database Schema**
+  - Created `group_seasons` table with history tracking (season_number, started_at, ended_at, is_active)
+  - Added `current_season_id` and `season_ends_at` to groups table
+  - JSON storage for final_leaderboard, stats, and highlights
+
+- ✅ **Backend Services**
+  - Created `SeasonService` for complete lifecycle management (create, end, calculate leaderboard)
+  - Created `SeasonController` with web authentication (no API tokens)
+  - Created `CheckSeasonEndings` scheduled command (daily at 00:01)
+  - Added `seasonEnded()` to MessageService for LLM-powered recaps
+
+- ✅ **LLM Integration**
+  - Added `season.ended` message type with dramatic recap intent
+  - Generates winner celebration, top 3 leaderboard, season highlights
+  - Highlights include: biggest win, most active creator, most participated wager
+  - Falls back to template if LLM unavailable
+
+- ✅ **Frontend UI**
+  - Created `SeasonManagement.vue` component (start/end seasons with optional dates)
+  - Created `PastSeasons.vue` component (browse last 10 seasons with expandable details)
+  - Integrated into Groups/Show page with dedicated drawer
+  - Button layout: [Seasons] [Settings] over [Back to Dashboard]
+  - Responsive design for mobile and desktop
+
+- ✅ **Bug Fixes**
+  - Fixed authentication error (moved from Sanctum API to web session auth)
+  - Fixed pivot table error (points stored in group_user, not users table)
+  - Fixed day display showing decimals (rounded to whole numbers, min Day 1)
+
+- ✅ **NSFW Checkbox** (October 18, 2025)
+  - Added `allow_nsfw` boolean to groups table
+  - Integrated into LLM system prompts for content filtering
+  - UI toggle in Bot Personality settings tab
+  - Cache invalidation when setting changes
+
+- ✅ **Activity Tracking Infrastructure** (October 18, 2025)
+  - Added `last_activity_at` and `inactivity_threshold_days` to groups table
+  - Created feature flag system (`config/features.php`)
+  - Created `CheckGroupActivity` command with dry-run mode
+  - Redis throttling for webhook tracking (98% DB write reduction)
+  - Added `activity.revival` message type for re-engagement
+  - Created `MessageService::revivalMessage()` with LLM personality
 
 ## ✅ RECENTLY COMPLETED (October 2025)
 
@@ -133,6 +179,66 @@
   - Consistent drawer pattern across app
 
 ---
+
+## ✅ HIGH PRIORITY COMPLETED: Scheduled Engagement Messages (October 19, 2025)
+
+### 1. Scheduled Messages System ✅ COMPLETE
+- ✅ **Database Schema**
+  - Created `scheduled_messages` table migration
+    - Fields: id, group_id, message_type (enum: holiday, birthday, custom), title, scheduled_date, message_template, llm_instructions, is_recurring, recurrence_type, is_active, last_sent_at
+    - Support for one-time and recurring messages (yearly, monthly, weekly, daily)
+    - Optional custom LLM instructions per message
+    - Added `scheduledMessages()` relationship to Group model
+
+- ✅ **Backend Services**
+  - Created `ScheduledMessage` model with smart recurrence logic
+    - `shouldSendToday()` method for intelligent date matching
+    - `matchesRecurrence()` for yearly/monthly/weekly/daily patterns
+    - `getNextOccurrence()` for UI display
+  - Created `ScheduledMessageService` for CRUD operations
+    - `getForGroup()` with filter support (upcoming_only, is_active)
+    - Full CRUD: create, update, delete, toggleActive
+    - `getMessagesToSendToday()` for scheduled job
+    - `markAsSent()` tracks last_sent_at timestamp
+  - Created `SendScheduledMessages` command (scheduled daily at 8:00 AM)
+    - Supports `--dry-run` flag for testing
+    - Supports `--force` flag for manual testing (bypasses schedule check)
+    - Operational logging for success/failures
+  - Created `ScheduledMessageController` with web auth pattern
+    - Full REST API: index, show, store, update, toggleActive, destroy
+    - Manual membership checks (consistent with other controllers)
+  - Added 3 scheduled message types to messages.php:
+    - `scheduled.custom` - General celebrations and reminders
+    - `scheduled.holiday` - Holiday celebrations
+    - `scheduled.birthday` - Birthday celebrations
+  - Integrated with MessageService for LLM-powered messages
+    - `scheduledMessage()` method generates personalized content
+    - Custom LLM instructions passed via data array
+    - Fallback templates for each message type
+
+- ✅ **Frontend UI** (Option 2: Separate Messages drawer - IMPLEMENTED)
+  - Created `ScheduledMessagesManager.vue` component (MVP version)
+    - List all scheduled messages with type emojis
+    - Add message form (type, title, date, recurring options)
+    - Toggle active/inactive status
+    - Delete messages with confirmation
+    - Next occurrence display for recurring messages
+    - Info box explaining how the feature works
+  - Integrated into Groups/Show page
+    - Three-button layout: [🏆 Seasons] [📅 Messages] [⚙️ Settings]
+    - Separate Messages drawer (content != settings)
+    - Responsive design for mobile and desktop
+  - Improved card layout:
+    - Title on one line with emoji
+    - Metadata condensed: "Apr 27 - One-time - Next: Apr 27"
+    - Full-width action buttons on separate row
+
+- ✅ **Message Types**
+  - Holiday messages with festive tone
+  - Birthday celebrations with personal touch
+  - Custom dates for group traditions and anniversaries
+  - All messages use LLM with group personality settings
+  - Custom instructions field for per-message customization
 
 ## HIGH PRIORITY: LLM Integration & Engagement
 
@@ -422,6 +528,24 @@
 - ⏳ LLM cache invalidation - Better cache key strategy for dynamic content
 
 ---
+
+## Feature Backlog (Future Phases)
+
+### Open Answer Wagers (Deferred - Documented for Roadmap)
+- ⏳ **Numeric Wagers** - Guess a number (e.g., "How many points will the Lakers score?")
+  - Closest guess wins
+  - Tie-breaking rules needed
+  - UI for numeric input validation
+
+- ⏳ **String Wagers** - Open-ended text answers (e.g., "Who will win the election?")
+  - Creator defines valid answers via web form
+  - Multi-select settlement (multiple correct answers possible)
+  - Case-insensitive matching
+  - UI for answer management
+
+### Timezone Support (REMOVED - Not Needed)
+- ❌ Group-level timezone settings
+- ❌ Reason: Platform handles this, not needed for MVP
 
 ## Feature Backlog (Future Phases)
 

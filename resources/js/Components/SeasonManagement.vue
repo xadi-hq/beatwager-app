@@ -115,7 +115,7 @@ const endSeason = async () => {
                 </div>
                 <div class="text-right">
                     <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                        Day {{ currentSeason.days_elapsed }}
+                        Day {{ Math.ceil(currentSeason.days_elapsed) || 1 }}
                     </div>
                     <div v-if="daysRemaining !== null" class="text-xs text-neutral-500 dark:text-neutral-400">
                         {{ daysRemaining > 0 ? `${daysRemaining} days left` : 'Ends today!' }}

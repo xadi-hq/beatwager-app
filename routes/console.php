@@ -44,3 +44,9 @@ Schedule::command('seasons:check')
     ->dailyAt('00:01')  // Just after midnight
     ->withoutOverlapping()
     ->onOneServer();
+
+// Send scheduled messages (holidays, birthdays, custom dates)
+Schedule::command('messages:send-scheduled')
+    ->dailyAt('08:00')  // 8am - good time for special occasion messages
+    ->withoutOverlapping()
+    ->onOneServer();

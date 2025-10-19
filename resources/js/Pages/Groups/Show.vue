@@ -6,6 +6,7 @@ import Drawer from '@/Components/Drawer.vue';
 import GroupSettingsForm from '@/Components/GroupSettingsForm.vue';
 import SeasonManagement from '@/Components/SeasonManagement.vue';
 import PastSeasons from '@/Components/PastSeasons.vue';
+import ScheduledMessagesManager from '@/Components/ScheduledMessagesManager.vue';
 
 interface CurrentSeason {
     id: string;
@@ -75,6 +76,7 @@ const props = defineProps<{
 // Drawer state
 const showSettingsDrawer = ref(false);
 const showSeasonsDrawer = ref(false);
+const showMessagesDrawer = ref(false);
 
 // Handle settings update
 const handleSettingsUpdated = () => {
@@ -86,6 +88,11 @@ const handleSettingsUpdated = () => {
 const handleSeasonUpdated = () => {
     // Reload the page to get fresh data
     router.reload();
+};
+
+// Handle messages update
+const handleMessagesUpdated = () => {
+    // No need to reload page for messages
 };
 
 // Format date for display
@@ -151,23 +158,31 @@ const sortedMembers = [...props.members].sort((a, b) => b.balance - a.balance);
 
                     <!-- Action Buttons -->
                     <div class="space-y-3">
-                        <!-- Seasons & Settings - Side by Side -->
-                        <div class="grid grid-cols-2 gap-3">
+                        <!-- Top Row: 3 Buttons -->
+                        <div class="grid grid-cols-3 gap-2">
                             <!-- Seasons Button -->
                             <button
                                 @click="showSeasonsDrawer = true"
-                                class="border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-500 text-purple-700 dark:text-purple-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                                class="border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-500 text-purple-700 dark:text-purple-300 font-semibold py-3 px-2 rounded-lg text-center transition-colors text-sm"
                             >
                                 🏆 Seasons
-                                <span v-if="group.current_season" class="block text-xs bg-purple-100 dark:bg-purple-900 px-2 py-0.5 rounded mt-1">
-                                    S{{ group.current_season.season_number }} Active
+                                <span v-if="group.current_season" class="block text-xs bg-purple-100 dark:bg-purple-900 px-1 py-0.5 rounded mt-1">
+                                    S{{ group.current_season.season_number }}
                                 </span>
+                            </button>
+
+                            <!-- Messages Button -->
+                            <button
+                                @click="showMessagesDrawer = true"
+                                class="border-2 border-green-300 dark:border-green-600 hover:border-green-400 dark:hover:border-green-500 text-green-700 dark:text-green-300 font-semibold py-3 px-2 rounded-lg text-center transition-colors text-sm"
+                            >
+                                📅 Messages
                             </button>
 
                             <!-- Settings Button -->
                             <button
                                 @click="showSettingsDrawer = true"
-                                class="border-2 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 text-neutral-700 dark:text-neutral-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                                class="border-2 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 text-neutral-700 dark:text-neutral-300 font-semibold py-3 px-2 rounded-lg text-center transition-colors text-sm"
                             >
                                 ⚙️ Settings
                             </button>
@@ -265,23 +280,31 @@ const sortedMembers = [...props.members].sort((a, b) => b.balance - a.balance);
 
                         <!-- Action Buttons -->
                         <div class="space-y-3">
-                            <!-- Seasons & Settings - Side by Side -->
-                            <div class="grid grid-cols-2 gap-3">
+                            <!-- Top Row: 3 Buttons -->
+                            <div class="grid grid-cols-3 gap-2">
                                 <!-- Seasons Button -->
                                 <button
                                     @click="showSeasonsDrawer = true"
-                                    class="border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-500 text-purple-700 dark:text-purple-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                                    class="border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-500 text-purple-700 dark:text-purple-300 font-semibold py-3 px-2 rounded-lg text-center transition-colors text-sm"
                                 >
                                     🏆 Seasons
-                                    <span v-if="group.current_season" class="block text-xs bg-purple-100 dark:bg-purple-900 px-2 py-0.5 rounded mt-1">
-                                        S{{ group.current_season.season_number }} Active
+                                    <span v-if="group.current_season" class="block text-xs bg-purple-100 dark:bg-purple-900 px-1 py-0.5 rounded mt-1">
+                                        S{{ group.current_season.season_number }}
                                     </span>
+                                </button>
+
+                                <!-- Messages Button -->
+                                <button
+                                    @click="showMessagesDrawer = true"
+                                    class="border-2 border-green-300 dark:border-green-600 hover:border-green-400 dark:hover:border-green-500 text-green-700 dark:text-green-300 font-semibold py-3 px-2 rounded-lg text-center transition-colors text-sm"
+                                >
+                                    📅 Messages
                                 </button>
 
                                 <!-- Settings Button -->
                                 <button
                                     @click="showSettingsDrawer = true"
-                                    class="border-2 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 text-neutral-700 dark:text-neutral-300 font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                                    class="border-2 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 text-neutral-700 dark:text-neutral-300 font-semibold py-3 px-2 rounded-lg text-center transition-colors text-sm"
                                 >
                                     ⚙️ Settings
                                 </button>
@@ -377,6 +400,18 @@ const sortedMembers = [...props.members].sort((a, b) => b.balance - a.balance);
                     :currency="group.currency"
                 />
             </div>
+        </Drawer>
+
+        <!-- Messages Drawer -->
+        <Drawer
+            :show="showMessagesDrawer"
+            :title="`${group.name} Scheduled Messages`"
+            @close="showMessagesDrawer = false"
+        >
+            <ScheduledMessagesManager
+                :group-id="group.id"
+                @updated="handleMessagesUpdated"
+            />
         </Drawer>
     </AppLayout>
 </template>

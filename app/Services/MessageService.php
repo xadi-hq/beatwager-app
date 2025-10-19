@@ -374,6 +374,56 @@ class MessageService
     }
 
     /**
+     * Create challenge announcement message
+     */
+    public function challengeAnnouncement(\App\Models\Challenge $challenge): Message
+    {
+        $meta = __('messages.challenge.announced');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'challenge.announced',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'title' => $challenge->description, // Using description as title
+                'description' => $challenge->description,
+                'reward' => $challenge->amount,
+                'currency' => $currency,
+                'deadline_at' => $challenge->completion_deadline->format('M j, Y g:i A'),
+                'acceptance_deadline' => $challenge->acceptance_deadline?->format('M j, Y g:i A'),
+                'creator' => $challenge->creator->name ?? 'Someone',
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        // Build challenge buttons
+        $buttons = [
+            new Button(
+                label: '🏃 Accept Challenge',
+                action: ButtonAction::Callback,
+                value: "challenge_accept:{$challenge->id}"
+            ),
+            new Button(
+                label: '👀 View Details',
+                action: ButtonAction::Callback,
+                value: "challenge_view:{$challenge->id}"
+            ),
+        ];
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [], // Already interpolated by LLM
+            buttons: $buttons,
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
      * Create RSVP update announcement message
      */
     public function rsvpUpdated(\App\Models\GroupEvent $event, \App\Models\User $user, string $response, ?string $previousResponse = null): Message
@@ -572,6 +622,62 @@ class MessageService
             type: MessageType::Announcement,
             variables: [],
             context: $season,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Generate a scheduled message (holiday, birthday, or custom)
+     *
+     * @param \App\Models\Group $group The group
+     * @param \App\Models\ScheduledMessage $scheduledMessage The scheduled message
+     * @return Message
+     */
+    public function scheduledMessage(\App\Models\Group $group, \App\Models\ScheduledMessage $scheduledMessage): Message
+    {
+        $messageKey = "scheduled.{$scheduledMessage->message_type}";
+        $meta = __("messages.{$messageKey}");
+        $currency = $group->points_currency_name ?? 'points';
+
+        // Build context data based on message type
+        $data = [
+            'title' => $scheduledMessage->title,
+            'scheduled_date' => $scheduledMessage->scheduled_date->toFormattedDateString(),
+            'currency' => $currency,
+        ];
+
+        // Add type-specific fields
+        if ($scheduledMessage->message_type === 'holiday') {
+            $data['holiday_name'] = $scheduledMessage->title;
+        } elseif ($scheduledMessage->message_type === 'birthday') {
+            $data['member_name'] = $scheduledMessage->title;
+        }
+
+        // Add custom template if provided
+        if ($scheduledMessage->message_template) {
+            $data['message_template'] = $scheduledMessage->message_template;
+        }
+
+        // Add custom LLM instructions if provided
+        if ($scheduledMessage->llm_instructions) {
+            $data['llm_instructions'] = $scheduledMessage->llm_instructions;
+        }
+
+        $ctx = new MessageContext(
+            key: $messageKey,
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: $data,
+            group: $group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            context: $scheduledMessage,
             currencyName: $currency
         );
     }

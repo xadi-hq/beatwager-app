@@ -104,6 +104,11 @@ class Group extends Model
         return $this->belongsTo(GroupSeason::class, 'current_season_id');
     }
 
+    public function scheduledMessages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ScheduledMessage::class);
+    }
+
     /**
      * Send a message to this group via its platform messenger
      *

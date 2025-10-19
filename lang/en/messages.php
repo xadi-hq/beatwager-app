@@ -157,11 +157,97 @@ return [
         ],
     ],
 
+    'scheduled' => [
+        'custom' => [
+            'intent' => 'Send a scheduled message for special occasions or custom dates',
+            'required_fields' => ['title', 'scheduled_date'],
+            'fallback_template' => "📅 {title}\n\n{message_template}",
+            'tone_hints' => ['celebratory', 'warm', 'engaging'],
+            'max_words' => 100,
+        ],
+        'holiday' => [
+            'intent' => 'Celebrate a holiday with the group',
+            'required_fields' => ['holiday_name'],
+            'fallback_template' => "🎉 Happy {holiday_name}!\n\nHope everyone is enjoying the day!",
+            'tone_hints' => ['festive', 'warm', 'inclusive'],
+            'max_words' => 80,
+        ],
+        'birthday' => [
+            'intent' => 'Celebrate a member\'s birthday',
+            'required_fields' => ['member_name'],
+            'fallback_template' => "🎂 Happy Birthday {member_name}!\n\nWishing you a fantastic day!",
+            'tone_hints' => ['celebratory', 'warm', 'fun'],
+            'max_words' => 60,
+        ],
+    ],
+
+    'challenge' => [
+        'announced' => [
+            'intent' => 'Announce a newly created challenge and encourage participation',
+            'required_fields' => ['title', 'description', 'reward', 'deadline_at'],
+            'fallback_template' => "🚀 New Challenge Created!\n\nChallenge: {title}\n\nDescription: {description}\nReward: {reward} points\nDeadline: {deadline_at}\n\nClick the button below to accept this challenge!",
+            'tone_hints' => ['exciting', 'challenging', 'motivating'],
+            'max_words' => 35,  // Room for challenge details
+        ],
+
+        'joined' => [
+            'intent' => 'Announce a user accepting a challenge to create excitement',
+            'required_fields' => ['user_name', 'challenge_title'],
+            'fallback_template' => "{user_name} accepted the challenge \"{challenge_title}\"! Let's see what they've got! 💪",
+            'tone_hints' => ['exciting', 'supportive', 'competitive'],
+            'max_words' => 25,
+        ],
+
+        'submitted' => [
+            'intent' => 'Announce challenge submission and build anticipation for evaluation',
+            'required_fields' => ['user_name', 'challenge_title'],
+            'fallback_template' => "📥 {user_name} submitted their work for \"{challenge_title}\"! Time to see if they crushed it! 🎯",
+            'tone_hints' => ['anticipation', 'exciting', 'supportive'],
+            'max_words' => 25,
+        ],
+
+        'evaluated' => [
+            'intent' => 'Announce challenge evaluation results with outcome',
+            'required_fields' => ['user_name', 'challenge_title', 'outcome', 'reward'],
+            'fallback_template' => "🏆 Challenge Evaluated!\n\nChallenge: {challenge_title}\nParticipant: {user_name}\nOutcome: {outcome}\n\n{note}",
+            'tone_hints' => ['dramatic', 'celebratory'],
+            'max_words' => 50,
+        ],
+
+        'completed' => [
+            'intent' => 'Celebrate successful challenge completion',
+            'required_fields' => ['user_name', 'challenge_title', 'reward'],
+            'fallback_template' => "🎉 Challenge Completed!\n\n{user_name} successfully completed \"{challenge_title}\" and earned {reward} points! 💪",
+            'tone_hints' => ['celebratory', 'congratulatory', 'triumphant'],
+            'max_words' => 30,
+        ],
+
+        'failed' => [
+            'intent' => 'Acknowledge challenge attempt with encouragement',
+            'required_fields' => ['user_name', 'challenge_title'],
+            'fallback_template' => "😅 {user_name} didn't quite nail \"{challenge_title}\" this time, but hey - you miss 100% of the shots you don't take! 🎯",
+            'tone_hints' => ['supportive', 'encouraging', 'lighthearted'],
+            'max_words' => 30,
+        ],
+
+        'reminder' => [
+            'intent' => 'Remind users about approaching challenge deadline',
+            'required_fields' => ['challenge_title', 'deadline_at'],
+            'fallback_template' => "⏰ Challenge Reminder\n\nChallenge: {challenge_title}\nDeadline: {deadline_at}\n\nTime is running out! Click below to view details:",
+            'tone_hints' => ['urgent', 'motivating'],
+            'max_words' => 25,
+        ],
+    ],
+
     'buttons' => [
         'yes' => '✅ Yes',
         'no' => '❌ No',
         'view_progress' => '📊 View Progress',
         'open_wager_page' => '🔗 Open Wager Page',
         'settle_wager' => '⚖️ Settle Wager',
+        'accept_challenge' => '🚀 Accept Challenge',
+        'view_challenge' => '🎯 View Challenge',
+        'submit_work' => '📤 Submit Work',
+        'evaluate_challenge' => '⚖️ Evaluate',
     ],
 ];

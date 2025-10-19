@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Challenge;
 use App\Models\OneTimeToken;
 use App\Models\Transaction;
 use App\Models\User;
@@ -225,6 +226,44 @@ class DashboardController extends Controller
         $pastProcessedEvents = $pastProcessedEvents->sortByDesc('event_date')->values();
         $pastUnprocessedEvents = $pastUnprocessedEvents->sortByDesc('event_date')->values();
 
+        // Load challenges (created by or accepted by user)
+        $userChallenges = Challenge::where(function($q) use ($user) {
+                $q->where('creator_id', $user->id)
+                  ->orWhere('acceptor_id', $user->id);
+            })
+            ->with(['group', 'creator', 'acceptor'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($c) use ($user) {
+                return [
+                    'id' => $c->id,
+                    'description' => $c->description,
+                    'amount' => $c->amount,
+                    'status' => $c->status,
+                    'completion_deadline' => $c->completion_deadline?->toIso8601String(),
+                    'acceptance_deadline' => $c->acceptance_deadline?->toIso8601String(),
+                    'accepted_at' => $c->accepted_at?->toIso8601String(),
+                    'submitted_at' => $c->submitted_at?->toIso8601String(),
+                    'completed_at' => $c->completed_at?->toIso8601String(),
+                    'failed_at' => $c->failed_at?->toIso8601String(),
+                    'is_creator' => $c->creator_id === $user->id,
+                    'is_acceptor' => $c->acceptor_id === $user->id,
+                    'group' => [
+                        'id' => $c->group->id,
+                        'name' => $c->group->name ?? $c->group->platform_chat_title,
+                    ],
+                    'creator' => [
+                        'id' => $c->creator->id,
+                        'name' => $c->creator->name,
+                    ],
+                    'acceptor' => $c->acceptor ? [
+                        'id' => $c->acceptor->id,
+                        'name' => $c->acceptor->name,
+                    ] : null,
+                    'url' => route('challenges.show', $c->id),
+                ];
+            });
+
         return Inertia::render('Dashboard/Me', [
             'user' => [
                 'id' => $user->id,
@@ -249,6 +288,7 @@ class DashboardController extends Controller
             'upcomingEvents' => $upcomingEvents,
             'pastProcessedEvents' => $pastProcessedEvents,
             'pastUnprocessedEvents' => $pastUnprocessedEvents,
+            'userChallenges' => $userChallenges,
             'focus' => $focus,
         ]);
     }

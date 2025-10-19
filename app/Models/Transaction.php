@@ -22,6 +22,7 @@ class Transaction extends Model
         'balance_after',
         'wager_id',
         'wager_entry_id',
+        'challenge_id',
         'description',
         'metadata',
     ];
@@ -54,5 +55,10 @@ class Transaction extends Model
     public function wagerEntry(): BelongsTo
     {
         return $this->belongsTo(WagerEntry::class);
+    }
+
+    public function challenge(): BelongsTo
+    {
+        return $this->belongsTo(Challenge::class);
     }
 }

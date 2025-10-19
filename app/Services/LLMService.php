@@ -115,8 +115,17 @@ PROMPT;
         $toneHints = $meta['tone_hints'] ?? [];
         $maxWords = $meta['max_words'] ?? 30;  // Default to 30 if not specified
 
+        // Extract custom LLM instructions if present
+        $customInstructions = '';
+        $dataForPrompt = $ctx->data;
+        if (isset($ctx->data['llm_instructions']) && !empty($ctx->data['llm_instructions'])) {
+            $customInstructions = "\n\nADDITIONAL INSTRUCTIONS (IMPORTANT):\n{$ctx->data['llm_instructions']}";
+            // Remove from data to avoid duplication in JSON
+            unset($dataForPrompt['llm_instructions']);
+        }
+
         // Flatten data for prompt
-        $dataStr = json_encode($ctx->data, JSON_PRETTY_PRINT);
+        $dataStr = json_encode($dataForPrompt, JSON_PRETTY_PRINT);
 
         // Adjust emoji and style guidance based on length
         $emojiGuidance = $maxWords > 100 ? '2-3 emojis' : '1-2 emojis maximum';
@@ -142,7 +151,7 @@ Tone hints: {$this->formatList($toneHints)}
 Required fields to include: {$this->formatList($ctx->requiredFields)}
 
 Data:
-{$dataStr}{$triggersHint}
+{$dataStr}{$triggersHint}{$customInstructions}
 
 Rules:
 - Include ALL required fields in natural language
@@ -151,6 +160,7 @@ Rules:
 - Match the tone hints
 - {$styleGuidance}
 - If engagement triggers are present, use them to add personality and create FOMO
+- If additional instructions are provided, follow them carefully
 
 Generate the message:
 PROMPT;
