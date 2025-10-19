@@ -19,13 +19,29 @@ jobs:
           script: |
             cd /home/ploi/bw.xadi.eu
             git pull origin main
-            docker compose pull
-            docker compose up -d --build
+
+            # Build new images WITHOUT bringing down existing containers
+            docker compose build
+
+            # Pull any external images
+            docker compose pull postgres redis
+
+            # Gracefully recreate only changed services (DB stays untouched)
+            docker compose up -d --no-recreate postgres redis
+            docker compose up -d app queue scheduler
+
+            # Install dependencies and build assets
             docker compose exec -T app composer install --no-dev --optimize-autoloader
             docker compose exec -T app npm ci
             docker compose exec -T app npm run build
+
+            # Run migrations (safe - only adds new tables/columns)
             docker compose exec -T app php artisan migrate --force
+
+            # Cache configuration
             docker compose exec -T app php artisan config:cache
             docker compose exec -T app php artisan route:cache
             docker compose exec -T app php artisan view:cache
+
+            # Restart queue workers to pick up new code
             docker compose exec -T app php artisan queue:restart || true

@@ -331,57 +331,57 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
 
             <!-- Messages List -->
             <div v-else-if="messages.length > 0" class="space-y-2">
-            <div
-                v-for="message in messages"
-                :key="message.id"
-                class="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-600 space-y-3"
-            >
-                <!-- Message Info -->
-                <div>
-                    <div class="flex items-start gap-2 mb-1">
-                        <span class="text-xl">{{ getTypeEmoji(message.message_type) }}</span>
-                        <h4 class="font-semibold text-neutral-900 dark:text-white">
-                            {{ message.title }}
-                        </h4>
-                        <span
-                            v-if="!message.is_active"
-                            class="text-xs bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded"
-                        >
-                            Inactive
-                        </span>
+                <div
+                    v-for="message in messages"
+                    :key="message.id"
+                    class="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-600 space-y-3"
+                >
+                    <!-- Message Info -->
+                    <div>
+                        <div class="flex items-start gap-2 mb-1">
+                            <span class="text-xl">{{ getTypeEmoji(message.message_type) }}</span>
+                            <h4 class="font-semibold text-neutral-900 dark:text-white">
+                                {{ message.title }}
+                            </h4>
+                            <span
+                                v-if="!message.is_active"
+                                class="text-xs bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded"
+                            >
+                                Inactive
+                            </span>
+                        </div>
+                        <div class="text-sm text-neutral-600 dark:text-neutral-400 ml-8">
+                            <span>{{ formatDate(message.scheduled_date) }}</span>
+                            <span class="mx-2">-</span>
+                            <span>{{ getRecurrenceLabel(message) }}</span>
+                            <span v-if="message.next_occurrence" class="mx-2">-</span>
+                            <span v-if="message.next_occurrence">
+                                Next: {{ formatDate(message.next_occurrence) }}
+                            </span>
+                        </div>
                     </div>
-                    <div class="text-sm text-neutral-600 dark:text-neutral-400 ml-8">
-                        <span>{{ formatDate(message.scheduled_date) }}</span>
-                        <span class="mx-2">-</span>
-                        <span>{{ getRecurrenceLabel(message) }}</span>
-                        <span v-if="message.next_occurrence" class="mx-2">-</span>
-                        <span v-if="message.next_occurrence">
-                            Next: {{ formatDate(message.next_occurrence) }}
-                        </span>
-                    </div>
-                </div>
 
-                <!-- Actions Row -->
-                <div class="flex items-center gap-2">
-                    <button
-                        @click="toggleActive(message)"
-                        class="flex-1 text-sm px-4 py-2 rounded border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors font-medium"
-                        :class="message.is_active ? 'text-neutral-700 dark:text-neutral-300' : 'text-green-600 dark:text-green-400'"
-                    >
-                        {{ message.is_active ? 'Deactivate' : 'Activate' }}
-                    </button>
-                    <button
-                        @click="deleteMessage(message)"
-                        class="flex-1 text-sm px-4 py-2 rounded border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
-                    >
-                        Delete
-                    </button>
+                    <!-- Actions Row -->
+                    <div class="flex items-center gap-2">
+                        <button
+                            @click="toggleActive(message)"
+                            class="flex-1 text-sm px-4 py-2 rounded border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors font-medium"
+                            :class="message.is_active ? 'text-neutral-700 dark:text-neutral-300' : 'text-green-600 dark:text-green-400'"
+                        >
+                            {{ message.is_active ? 'Deactivate' : 'Activate' }}
+                        </button>
+                        <button
+                            @click="deleteMessage(message)"
+                            class="flex-1 text-sm px-4 py-2 rounded border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
             <!-- Empty State -->
-            <div v-else class="text-center py-8 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600">
+            <div v-else class="text-center py-8 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600 mb-4">
                 <p class="text-neutral-600 dark:text-neutral-400 mb-2">No scheduled messages yet</p>
                 <p class="text-sm text-neutral-500 dark:text-neutral-500">Click "Add Message" to schedule your first message!</p>
             </div>

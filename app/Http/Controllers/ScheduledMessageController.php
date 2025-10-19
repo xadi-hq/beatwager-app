@@ -98,7 +98,19 @@ class ScheduledMessageController extends Controller
         $validated = $request->validate([
             'message_type' => 'required|in:holiday,birthday,custom',
             'title' => 'required|string|max:255',
-            'scheduled_date' => 'required|date|after_or_equal:today',
+            'scheduled_date' => [
+                'required',
+                'date',
+                // Only require future date for non-recurring messages
+                // Recurring messages (birthdays, yearly holidays) can have past dates
+                function ($attribute, $value, $fail) use ($request) {
+                    if (!$request->boolean('is_recurring')) {
+                        if (strtotime($value) < strtotime('today')) {
+                            $fail('The scheduled date must be today or in the future for one-time messages.');
+                        }
+                    }
+                },
+            ],
             'message_template' => 'nullable|string|max:1000',
             'llm_instructions' => 'nullable|string|max:500',
             'is_recurring' => 'boolean',
@@ -134,7 +146,20 @@ class ScheduledMessageController extends Controller
 
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
-            'scheduled_date' => 'sometimes|date',
+            'scheduled_date' => [
+                'sometimes',
+                'date',
+                // Only require future date for non-recurring messages
+                function ($attribute, $value, $fail) use ($request, $scheduledMessage) {
+                    $isRecurring = $request->has('is_recurring')
+                        ? $request->boolean('is_recurring')
+                        : $scheduledMessage->is_recurring;
+
+                    if (!$isRecurring && strtotime($value) < strtotime('today')) {
+                        $fail('The scheduled date must be today or in the future for one-time messages.');
+                    }
+                },
+            ],
             'message_template' => 'nullable|string|max:1000',
             'llm_instructions' => 'nullable|string|max:500',
             'is_recurring' => 'sometimes|boolean',

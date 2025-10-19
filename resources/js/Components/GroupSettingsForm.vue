@@ -139,7 +139,7 @@ function submitBot() {
                     class="w-full px-4 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                     <option value="general">General</option>
-                    <option value="notifications">Notifications</option>
+                    <!-- <option value="notifications">Notifications</option> --> <!-- Hidden: Not implemented yet -->
                     <option value="bot">Bot Personality</option>
                     <option v-if="group.has_llm_configured" value="usage">LLM Usage</option>
                 </select>
@@ -159,6 +159,7 @@ function submitBot() {
                     >
                         General
                     </button>
+                    <!-- Hidden: Not implemented yet
                     <button
                         @click="activeTab = 'notifications'"
                         :class="[
@@ -170,6 +171,7 @@ function submitBot() {
                     >
                         Notifications
                     </button>
+                    -->
                     <button
                         @click="activeTab = 'bot'"
                         :class="[
@@ -242,8 +244,8 @@ function submitBot() {
                     </form>
                 </div>
 
-                <!-- Notifications Tab -->
-                <div v-if="activeTab === 'notifications'">
+                <!-- Notifications Tab - Hidden: Not implemented yet -->
+                <!-- <div v-if="activeTab === 'notifications'">
                     <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Notification Preferences</h3>
 
                     <form @submit.prevent="submitNotifications" class="space-y-6">
@@ -305,7 +307,7 @@ function submitBot() {
                             {{ notificationForm.processing ? 'Saving...' : 'Save Notification Preferences' }}
                         </button>
                     </form>
-                </div>
+                </div> -->
 
                 <!-- Bot Personality Tab -->
                 <div v-if="activeTab === 'bot'">
