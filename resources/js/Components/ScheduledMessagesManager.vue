@@ -15,6 +15,20 @@ interface ScheduledMessage {
     next_occurrence: string | null;
 }
 
+interface BirthdaySuggestion {
+    id: string;
+    name: string;
+    birthday: string | null;
+    scheduled_message_id?: string;
+    is_active?: boolean;
+}
+
+interface BirthdaySuggestions {
+    scheduled: BirthdaySuggestion[];
+    not_scheduled: BirthdaySuggestion[];
+    missing_birthday: BirthdaySuggestion[];
+}
+
 const props = defineProps<{
     groupId: string;
 }>();
@@ -24,8 +38,14 @@ const emit = defineEmits<{
 }>();
 
 const messages = ref<ScheduledMessage[]>([]);
+const birthdaySuggestions = ref<BirthdaySuggestions>({
+    scheduled: [],
+    not_scheduled: [],
+    missing_birthday: [],
+});
 const isLoading = ref(false);
 const showAddForm = ref(false);
+const activeTab = ref<'all' | 'birthdays'>('all');
 
 // Form state
 const form = ref({
@@ -45,6 +65,41 @@ const loadMessages = async () => {
     } catch (error) {
         console.error('Failed to load messages:', error);
         alert('Failed to load scheduled messages');
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+// Load birthday suggestions
+const loadBirthdaySuggestions = async () => {
+    try {
+        const response = await axios.get(`/groups/${props.groupId}/messages/birthdays/suggestions`);
+        birthdaySuggestions.value = response.data;
+    } catch (error) {
+        console.error('Failed to load birthday suggestions:', error);
+    }
+};
+
+// Schedule a birthday
+const scheduleBirthday = async (member: BirthdaySuggestion) => {
+    if (!member.birthday) return;
+
+    isLoading.value = true;
+    try {
+        await axios.post(`/groups/${props.groupId}/messages`, {
+            message_type: 'birthday',
+            title: member.name,
+            scheduled_date: member.birthday,
+            is_recurring: true,
+            recurrence_type: 'yearly',
+        });
+
+        // Reload both lists
+        await Promise.all([loadMessages(), loadBirthdaySuggestions()]);
+        emit('updated');
+    } catch (error: any) {
+        console.error('Failed to schedule birthday:', error);
+        alert(error.response?.data?.message || 'Failed to schedule birthday');
     } finally {
         isLoading.value = false;
     }
@@ -132,6 +187,7 @@ const deleteMessage = async (message: ScheduledMessage) => {
 // Load messages on mount
 onMounted(() => {
     loadMessages();
+    loadBirthdaySuggestions();
 });
 
 // Get minimum date (today)
@@ -140,17 +196,45 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
 
 <template>
     <div class="space-y-4">
-        <!-- Header -->
-        <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">
-                📅 Scheduled Messages
-            </h3>
-            <button
-                @click="showAddForm = !showAddForm"
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-colors"
-            >
-                {{ showAddForm ? 'Cancel' : '+ Add Message' }}
-            </button>
+        <!-- Header with Tabs -->
+        <div>
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">
+                    📅 Scheduled Messages
+                </h3>
+                <button
+                    v-if="activeTab === 'all'"
+                    @click="showAddForm = !showAddForm"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                >
+                    {{ showAddForm ? 'Cancel' : '+ Add Message' }}
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-2 border-b border-neutral-200 dark:border-neutral-600">
+                <button
+                    @click="activeTab = 'all'"
+                    class="px-4 py-2 text-sm font-medium transition-colors"
+                    :class="activeTab === 'all'
+                        ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'"
+                >
+                    All Messages
+                </button>
+                <button
+                    @click="activeTab = 'birthdays'"
+                    class="px-4 py-2 text-sm font-medium transition-colors"
+                    :class="activeTab === 'birthdays'
+                        ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'"
+                >
+                    🎂 Birthdays
+                    <span v-if="birthdaySuggestions.not_scheduled.length > 0" class="ml-1 px-1.5 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded">
+                        {{ birthdaySuggestions.not_scheduled.length }}
+                    </span>
+                </button>
+            </div>
         </div>
 
         <!-- Add Form -->
@@ -238,13 +322,15 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
             </div>
         </div>
 
-        <!-- Loading State -->
-        <div v-if="isLoading && !showAddForm" class="text-center py-8">
-            <p class="text-neutral-500 dark:text-neutral-400">Loading messages...</p>
-        </div>
+        <!-- All Messages Tab -->
+        <div v-if="activeTab === 'all'">
+            <!-- Loading State -->
+            <div v-if="isLoading && !showAddForm" class="text-center py-8">
+                <p class="text-neutral-500 dark:text-neutral-400">Loading messages...</p>
+            </div>
 
-        <!-- Messages List -->
-        <div v-else-if="messages.length > 0" class="space-y-2">
+            <!-- Messages List -->
+            <div v-else-if="messages.length > 0" class="space-y-2">
             <div
                 v-for="message in messages"
                 :key="message.id"
@@ -294,17 +380,101 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
             </div>
         </div>
 
-        <!-- Empty State -->
-        <div v-else class="text-center py-8 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600">
-            <p class="text-neutral-600 dark:text-neutral-400 mb-2">No scheduled messages yet</p>
-            <p class="text-sm text-neutral-500 dark:text-neutral-500">Click "Add Message" to schedule your first message!</p>
+            <!-- Empty State -->
+            <div v-else class="text-center py-8 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600">
+                <p class="text-neutral-600 dark:text-neutral-400 mb-2">No scheduled messages yet</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-500">Click "Add Message" to schedule your first message!</p>
+            </div>
+
+            <!-- Info Box -->
+            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p class="text-xs text-blue-800 dark:text-blue-200">
+                    <strong>💡 How It Works:</strong> Messages are sent at 8am on their scheduled date. Recurring messages repeat automatically. The bot uses your personality settings to make each message unique!
+                </p>
+            </div>
         </div>
 
-        <!-- Info Box -->
-        <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <p class="text-xs text-blue-800 dark:text-blue-200">
-                <strong>💡 How It Works:</strong> Messages are sent at 8am on their scheduled date. Recurring messages repeat automatically. The bot uses your personality settings to make each message unique!
-            </p>
+        <!-- Birthdays Tab -->
+        <div v-if="activeTab === 'birthdays'" class="space-y-4">
+            <!-- Scheduled Birthdays -->
+            <div v-if="birthdaySuggestions.scheduled.length > 0">
+                <h4 class="text-sm font-semibold text-neutral-900 dark:text-white mb-2">✅ Scheduled ({{ birthdaySuggestions.scheduled.length }})</h4>
+                <div class="space-y-2">
+                    <div
+                        v-for="member in birthdaySuggestions.scheduled"
+                        :key="member.id"
+                        class="p-3 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-600 flex items-center justify-between"
+                    >
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🎂</span>
+                            <div>
+                                <p class="font-medium text-neutral-900 dark:text-white">{{ member.name }}</p>
+                                <p class="text-sm text-neutral-600 dark:text-neutral-400">{{ formatDate(member.birthday!) }} (Yearly)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span
+                                v-if="!member.is_active"
+                                class="text-xs bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 px-2 py-1 rounded"
+                            >
+                                Inactive
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Not Scheduled Birthdays -->
+            <div v-if="birthdaySuggestions.not_scheduled.length > 0">
+                <h4 class="text-sm font-semibold text-neutral-900 dark:text-white mb-2">📋 Not Scheduled ({{ birthdaySuggestions.not_scheduled.length }})</h4>
+                <div class="space-y-2">
+                    <div
+                        v-for="member in birthdaySuggestions.not_scheduled"
+                        :key="member.id"
+                        class="p-3 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-600 flex items-center justify-between"
+                    >
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">👤</span>
+                            <div>
+                                <p class="font-medium text-neutral-900 dark:text-white">{{ member.name }}</p>
+                                <p class="text-sm text-neutral-600 dark:text-neutral-400">{{ formatDate(member.birthday!) }}</p>
+                            </div>
+                        </div>
+                        <button
+                            @click="scheduleBirthday(member)"
+                            :disabled="isLoading"
+                            class="px-3 py-1.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:bg-neutral-400 dark:disabled:bg-neutral-600 text-white rounded-lg transition-colors"
+                        >
+                            + Schedule
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Missing Birthday Info -->
+            <div v-if="birthdaySuggestions.missing_birthday.length > 0">
+                <h4 class="text-sm font-semibold text-neutral-900 dark:text-white mb-2">ℹ️ Missing Birthday ({{ birthdaySuggestions.missing_birthday.length }})</h4>
+                <div class="space-y-2">
+                    <div
+                        v-for="member in birthdaySuggestions.missing_birthday"
+                        :key="member.id"
+                        class="p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600 flex items-center justify-between"
+                    >
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl opacity-50">👤</span>
+                            <p class="text-sm text-neutral-600 dark:text-neutral-400">{{ member.name }} <span class="italic">- No birthday set</span></p>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-3">
+                    Members can add birthdays in their profile settings.
+                </p>
+            </div>
+
+            <!-- Empty State -->
+            <div v-if="birthdaySuggestions.scheduled.length === 0 && birthdaySuggestions.not_scheduled.length === 0 && birthdaySuggestions.missing_birthday.length === 0" class="text-center py-8 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600">
+                <p class="text-neutral-600 dark:text-neutral-400 mb-2">No members in this group yet</p>
+            </div>
         </div>
     </div>
 </template>

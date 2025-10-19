@@ -77,6 +77,7 @@ Route::middleware(['signed.auth'])->group(function () {
 
     // Scheduled messages routes
     Route::get('/groups/{group}/messages', [ScheduledMessageController::class, 'index'])->name('messages.index');
+    Route::get('/groups/{group}/messages/birthdays/suggestions', [ScheduledMessageController::class, 'birthdaySuggestions'])->name('messages.birthdays.suggestions');
     Route::get('/groups/{group}/messages/{scheduledMessage}', [ScheduledMessageController::class, 'show'])->name('messages.show');
     Route::post('/groups/{group}/messages', [ScheduledMessageController::class, 'store'])->name('messages.store');
     Route::put('/groups/{group}/messages/{scheduledMessage}', [ScheduledMessageController::class, 'update'])->name('messages.update');

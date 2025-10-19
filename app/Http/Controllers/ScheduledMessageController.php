@@ -200,4 +200,63 @@ class ScheduledMessageController extends Controller
             'message' => 'Scheduled message deleted successfully',
         ]);
     }
+
+    /**
+     * Get birthday suggestions for a group
+     */
+    public function birthdaySuggestions(Group $group): JsonResponse
+    {
+        // Ensure user is a member of this group
+        $userGroup = $group->users()
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if (!$userGroup) {
+            abort(403, 'You are not a member of this group');
+        }
+
+        // Get all group members with their birthdays
+        $members = $group->users()
+            ->select('users.id', 'users.name', 'users.birthday')
+            ->get();
+
+        // Get all birthday scheduled messages for this group
+        $scheduledBirthdays = ScheduledMessage::where('group_id', $group->id)
+            ->where('message_type', 'birthday')
+            ->get()
+            ->keyBy('title'); // Key by member name for easy lookup
+
+        $scheduled = [];
+        $notScheduled = [];
+        $missingBirthday = [];
+
+        foreach ($members as $member) {
+            $memberData = [
+                'id' => $member->id,
+                'name' => $member->name,
+                'birthday' => $member->birthday?->toDateString(),
+            ];
+
+            if (!$member->birthday) {
+                // Member has no birthday set
+                $missingBirthday[] = $memberData;
+            } elseif (isset($scheduledBirthdays[$member->name])) {
+                // Birthday is already scheduled
+                $scheduledMessage = $scheduledBirthdays[$member->name];
+                $scheduled[] = array_merge($memberData, [
+                    'scheduled_message_id' => $scheduledMessage->id,
+                    'is_active' => $scheduledMessage->is_active,
+                ]);
+            } else {
+                // Birthday exists but not scheduled
+                $notScheduled[] = $memberData;
+            }
+        }
+
+        return response()->json([
+            'scheduled' => $scheduled,
+            'not_scheduled' => $notScheduled,
+            'missing_birthday' => $missingBirthday,
+        ]);
+    }
 }
