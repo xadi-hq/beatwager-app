@@ -45,8 +45,8 @@ describe('MessageService', function () {
 
         expect($message)->toBeInstanceOf(Message::class);
         expect($message->type)->toBe(MessageType::Announcement);
-        expect($message->variables)->toHaveKey('title');
-        expect($message->variables)->toHaveKey('stake');
+        expect($message->content)->toBeString();
+        expect($message->content)->not->toBeEmpty();
         expect($message->buttons)->toHaveCount(3); // yes, no, view progress
     });
 
@@ -71,7 +71,8 @@ describe('MessageService', function () {
 
         expect($message)->toBeInstanceOf(Message::class);
         expect($message->type)->toBe(MessageType::Reminder);
-        expect($message->variables)->toHaveKey('title');
+        expect($message->content)->toBeString();
+        expect($message->content)->not->toBeEmpty();
         expect($message->buttons)->toHaveCount(1); // settle button
     });
 

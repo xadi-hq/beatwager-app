@@ -73,7 +73,7 @@ class PointDecayTest extends TestCase
         $this->wagerService->placeWager($wager, $user, 'yes', 100);
 
         // Check that last_wager_joined_at was updated
-        $pivot = DB::table('user_group')
+        $pivot = DB::table('group_user')
             ->where('user_id', $user->id)
             ->where('group_id', $group->id)
             ->first();
@@ -89,7 +89,7 @@ class PointDecayTest extends TestCase
         $this->pointService->initializeUserPoints($user, $group);
 
         // Set last_wager_joined_at to 10 days ago (within 14-day grace period)
-        DB::table('user_group')
+        DB::table('group_user')
             ->where('user_id', $user->id)
             ->where('group_id', $group->id)
             ->update(['last_wager_joined_at' => now()->subDays(10)->toDateTimeString()]);
@@ -112,7 +112,7 @@ class PointDecayTest extends TestCase
         $this->pointService->initializeUserPoints($user, $group);
 
         // Set last_wager_joined_at to 15 days ago
-        DB::table('user_group')
+        DB::table('group_user')
             ->where('user_id', $user->id)
             ->where('group_id', $group->id)
             ->update([
@@ -146,7 +146,7 @@ class PointDecayTest extends TestCase
         $this->pointService->initializeUserPoints($user, $group);
 
         // Set last_wager_joined_at to 15 days ago and last_decay_applied_at to 1 hour ago
-        DB::table('user_group')
+        DB::table('group_user')
             ->where('user_id', $user->id)
             ->where('group_id', $group->id)
             ->update([
@@ -173,7 +173,7 @@ class PointDecayTest extends TestCase
         $this->pointService->initializeUserPoints($user, $group);
 
         // Simulate 20 days of inactivity
-        DB::table('user_group')
+        DB::table('group_user')
             ->where('user_id', $user->id)
             ->where('group_id', $group->id)
             ->update([
@@ -195,7 +195,7 @@ class PointDecayTest extends TestCase
         $this->wagerService->placeWager($wager, $user, 'yes', 100);
 
         // Reset last_decay_applied_at to allow decay check
-        DB::table('user_group')
+        DB::table('group_user')
             ->where('user_id', $user->id)
             ->where('group_id', $group->id)
             ->update(['last_decay_applied_at' => now()->subDays(2)->toDateTimeString()]);
@@ -226,7 +226,7 @@ class PointDecayTest extends TestCase
         $twelveAgo = \Carbon\Carbon::now()->startOfDay()->subDays(12);
         $twentyAgo = \Carbon\Carbon::now()->startOfDay()->subDays(20);
         
-        DB::table('user_group')
+        DB::table('group_user')
             ->where('user_id', $user->id)
             ->where('group_id', $group->id)
             ->update([
@@ -242,7 +242,7 @@ class PointDecayTest extends TestCase
         $this->assertEquals(0, $results['decay_applied']);
 
         // Check that warning timestamp was set
-        $userGroup = DB::table('user_group')
+        $userGroup = DB::table('group_user')
             ->where('user_id', $user->id)
             ->where('group_id', $group->id)
             ->first();
@@ -266,7 +266,7 @@ class PointDecayTest extends TestCase
         ]);
 
         // Set last_wager_joined_at to exactly 12 days ago and warning already sent 10 hours ago
-        DB::table('user_group')
+        DB::table('group_user')
             ->where('user_id', $user->id)
             ->where('group_id', $group->id)
             ->update([
@@ -295,7 +295,7 @@ class PointDecayTest extends TestCase
         $this->pointService->initializeUserPoints($user2, $group2);
 
         // Both users inactive for 15 days
-        DB::table('user_group')
+        DB::table('group_user')
             ->where('user_id', $user1->id)
             ->where('group_id', $group1->id)
             ->update([
@@ -303,7 +303,7 @@ class PointDecayTest extends TestCase
                 'created_at' => now()->subDays(20)->toDateTimeString(),
             ]);
 
-        DB::table('user_group')
+        DB::table('group_user')
             ->where('user_id', $user2->id)
             ->where('group_id', $group2->id)
             ->update([
@@ -333,13 +333,13 @@ class PointDecayTest extends TestCase
         $this->pointService->initializeUserPoints($highUser, $group);
 
         // Adjust balances
-        DB::table('user_group')->where('user_id', $lowUser->id)->update(['points' => 1000]);
-        DB::table('user_group')->where('user_id', $midUser->id)->update(['points' => 1500]);
-        DB::table('user_group')->where('user_id', $highUser->id)->update(['points' => 5000]);
+        DB::table('group_user')->where('user_id', $lowUser->id)->update(['points' => 1000]);
+        DB::table('group_user')->where('user_id', $midUser->id)->update(['points' => 1500]);
+        DB::table('group_user')->where('user_id', $highUser->id)->update(['points' => 5000]);
 
         // Set all as inactive for 15 days
         foreach ([$lowUser, $midUser, $highUser] as $user) {
-            DB::table('user_group')
+            DB::table('group_user')
                 ->where('user_id', $user->id)
                 ->where('group_id', $group->id)
                 ->update([

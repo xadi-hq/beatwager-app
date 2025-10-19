@@ -217,8 +217,10 @@ class MessageService
      */
     public function joinConfirmation(): Message
     {
+        $meta = __('messages.wager.joined');
+
         return new Message(
-            content: __('messages.wager.joined'),
+            content: $meta['fallback_template'] ?? 'Wager joined successfully!',
             type: MessageType::Confirmation,
         );
     }

@@ -102,12 +102,18 @@ class EventServiceTest extends TestCase
             'role' => 'participant',
         ]);
 
-        $rsvp = $this->eventService->recordRsvp($event, $user, 'going');
+        $result = $this->eventService->recordRsvp($event, $user, 'going');
 
-        $this->assertInstanceOf(GroupEventRsvp::class, $rsvp);
-        $this->assertEquals($event->id, $rsvp->event_id);
-        $this->assertEquals($user->id, $rsvp->user_id);
-        $this->assertEquals('going', $rsvp->response);
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('rsvp', $result);
+        $this->assertArrayHasKey('previous_response', $result);
+        $this->assertArrayHasKey('was_changed', $result);
+        $this->assertInstanceOf(GroupEventRsvp::class, $result['rsvp']);
+        $this->assertEquals($event->id, $result['rsvp']->event_id);
+        $this->assertEquals($user->id, $result['rsvp']->user_id);
+        $this->assertEquals('going', $result['rsvp']->response);
+        $this->assertNull($result['previous_response']);
+        $this->assertFalse($result['was_changed']);
     }
 
     public function test_records_rsvp_updates_existing_entry(): void
@@ -121,12 +127,14 @@ class EventServiceTest extends TestCase
 
         // First RSVP
         $this->eventService->recordRsvp($event, $user, 'maybe');
-        
+
         // Update RSVP
-        $updatedRsvp = $this->eventService->recordRsvp($event, $user, 'going');
+        $result = $this->eventService->recordRsvp($event, $user, 'going');
 
         $this->assertEquals(1, GroupEventRsvp::where('event_id', $event->id)->count());
-        $this->assertEquals('going', $updatedRsvp->response);
+        $this->assertEquals('going', $result['rsvp']->response);
+        $this->assertEquals('maybe', $result['previous_response']);
+        $this->assertTrue($result['was_changed']);
     }
 
     public function test_get_rsvp_counts_returns_correct_counts(): void

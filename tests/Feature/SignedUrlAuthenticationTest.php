@@ -51,6 +51,10 @@ test('it authenticates existing user from signed URL', function () {
 });
 
 test('it creates new user from signed URL if user does not exist', function () {
+    // Clear any existing users (in case of test pollution)
+    User::query()->delete();
+    MessengerService::query()->delete();
+
     // No existing user
     expect(User::count())->toBe(0);
     expect(MessengerService::count())->toBe(0);
