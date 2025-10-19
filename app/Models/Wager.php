@@ -174,4 +174,33 @@ class Wager extends Model
     {
         return $this->getSettlementTriggerDate() < now();
     }
+
+    /**
+     * Check if wager should be deleted (expired with no participants)
+     */
+    public function shouldBeDeleted(): bool
+    {
+        return $this->status === 'open'
+            && $this->isPastBettingDeadline()
+            && $this->participants_count === 0;
+    }
+
+    /**
+     * Scopes
+     */
+    public function scopeActive($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('status', '!=', 'open')
+              ->orWhere('betting_closes_at', '>=', now())
+              ->orWhere('participants_count', '>', 0);
+        });
+    }
+
+    public function scopeExpired($query)
+    {
+        return $query->where('status', 'open')
+                    ->where('betting_closes_at', '<', now())
+                    ->where('participants_count', 0);
+    }
 }

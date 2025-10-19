@@ -78,4 +78,48 @@ class GroupEvent extends Model
         $promptTime = $this->event_date->copy()->addHours($this->auto_prompt_hours_after);
         return now()->greaterThanOrEqualTo($promptTime) && $this->attendance()->count() === 0;
     }
+
+    /**
+     * Check if event should be deleted (no RSVPs and deadline passed)
+     */
+    public function shouldBeDeleted(): bool
+    {
+        $hasNoRsvps = $this->rsvps()->count() === 0;
+        $deadlinePassed = ($this->rsvp_deadline && $this->rsvp_deadline->isPast())
+                       || $this->event_date->isPast();
+
+        return $hasNoRsvps && $deadlinePassed;
+    }
+
+    /**
+     * Scopes
+     */
+    public function scopeActive($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('status', 'completed')
+              ->orWhere(function ($subQ) {
+                  $subQ->where('status', 'upcoming')
+                       ->where(function ($deadlineQ) {
+                           $deadlineQ->whereHas('rsvps')
+                                    ->orWhere(function ($dateQ) {
+                                        $dateQ->where(function ($rsvpQ) {
+                                            $rsvpQ->whereNull('rsvp_deadline')
+                                                  ->orWhere('rsvp_deadline', '>=', now());
+                                        })->where('event_date', '>=', now());
+                                    });
+                       });
+              });
+        });
+    }
+
+    public function scopeExpired($query)
+    {
+        return $query->where('status', 'upcoming')
+                    ->whereDoesntHave('rsvps')
+                    ->where(function ($q) {
+                        $q->where('rsvp_deadline', '<', now())
+                          ->orWhere('event_date', '<', now());
+                    });
+    }
 }

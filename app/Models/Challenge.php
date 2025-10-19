@@ -204,6 +204,32 @@ class Challenge extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereIn('status', ['open', 'accepted']);
+        return $query->where(function ($q) {
+            $q->whereIn('status', ['accepted', 'completed'])
+              ->orWhere(function ($subQ) {
+                  $subQ->where('status', 'open')
+                       ->where(function ($deadlineQ) {
+                           $deadlineQ->where('acceptance_deadline', '>=', now())
+                                    ->orWhereNotNull('acceptor_id');
+                       });
+              });
+        });
+    }
+
+    public function scopeExpired($query)
+    {
+        return $query->where('status', 'open')
+                    ->where('acceptance_deadline', '<', now())
+                    ->whereNull('acceptor_id');
+    }
+
+    /**
+     * Check if challenge should be deleted (expired with no acceptor)
+     */
+    public function shouldBeDeleted(): bool
+    {
+        return $this->status === 'open'
+            && $this->isAcceptanceExpired()
+            && $this->acceptor_id === null;
     }
 }

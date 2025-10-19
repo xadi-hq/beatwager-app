@@ -325,12 +325,12 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
         <!-- All Messages Tab -->
         <div v-if="activeTab === 'all'">
             <!-- Loading State -->
-            <div v-if="isLoading && !showAddForm" class="text-center py-8">
+            <div v-if="isLoading && !showAddForm" class="text-center py-8 mb-4">
                 <p class="text-neutral-500 dark:text-neutral-400">Loading messages...</p>
             </div>
 
             <!-- Messages List -->
-            <div v-else-if="messages.length > 0" class="space-y-2">
+            <div v-else-if="messages.length > 0" class="space-y-2 mb-4">
                 <div
                     v-for="message in messages"
                     :key="message.id"

@@ -50,3 +50,9 @@ Schedule::command('messages:send-scheduled')
     ->dailyAt('08:00')  // 8am - good time for special occasion messages
     ->withoutOverlapping()
     ->onOneServer();
+
+// Cleanup expired items with no engagement (wagers, challenges, events)
+Schedule::command('cleanup:expired-items')
+    ->dailyAt('02:00')  // 2am - low traffic time for cleanup
+    ->withoutOverlapping()
+    ->onOneServer();

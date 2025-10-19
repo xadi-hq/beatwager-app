@@ -44,7 +44,9 @@ class DashboardController extends Controller
         ]);
 
         // Get user's active wagers (created or joined) - split by deadline
-        $activeWagersQuery = Wager::where('status', 'open')
+        // Using active() scope to exclude expired wagers with no participants
+        $activeWagersQuery = Wager::active()
+            ->where('status', 'open')
             ->where(function($query) use ($user) {
                 $query->where('creator_id', $user->id)
                       ->orWhereHas('entries', function($q) use ($user) {
@@ -227,7 +229,9 @@ class DashboardController extends Controller
         $pastUnprocessedEvents = $pastUnprocessedEvents->sortByDesc('event_date')->values();
 
         // Load challenges (created by or accepted by user)
-        $userChallenges = Challenge::where(function($q) use ($user) {
+        // Using active() scope to exclude expired challenges with no acceptor
+        $userChallenges = Challenge::active()
+            ->where(function($q) use ($user) {
                 $q->where('creator_id', $user->id)
                   ->orWhere('acceptor_id', $user->id);
             })

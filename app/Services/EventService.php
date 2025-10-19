@@ -152,6 +152,7 @@ class EventService
     {
         return [
             'upcoming' => $group->events()
+                ->active()  // Exclude expired events with no RSVPs
                 ->where('status', 'upcoming')
                 ->where('event_date', '>=', now())
                 ->orderBy('event_date')
@@ -162,6 +163,7 @@ class EventService
                 ->limit(10)
                 ->get(),
             'past_unprocessed' => $group->events()
+                ->active()  // Exclude expired events with no RSVPs
                 ->where('status', 'upcoming')
                 ->where('event_date', '<', now())
                 ->orderByDesc('event_date')
