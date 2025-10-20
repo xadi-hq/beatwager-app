@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 class ChallengeAcceptCallbackHandler extends AbstractCallbackHandler
 {
     public function __construct(
-        protected readonly \App\Messaging\MessengerAdapterInterface $messenger,
+        \App\Messaging\MessengerAdapterInterface $messenger,
         private readonly ChallengeService $challengeService
     ) {
         parent::__construct($messenger);
