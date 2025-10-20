@@ -30,6 +30,7 @@ return new class extends Migration
             $table->integer('points_wagered');
 
             // Outcome (calculated at settlement)
+            $table->boolean('is_winner')->default(false);
             $table->enum('result', ['won', 'lost', 'refunded'])->nullable();
             $table->integer('points_won')->default(0);
             $table->integer('points_lost')->default(0);

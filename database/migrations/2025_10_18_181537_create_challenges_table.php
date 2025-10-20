@@ -56,13 +56,12 @@ return new class extends Migration
             $table->index('acceptance_deadline');
             $table->index('completion_deadline');
             $table->index('status');
-            
-            // Add check constraint using raw SQL
-            // Check constraint will be added after table creation
         });
-        
-        // Add check constraint
-        DB::statement('ALTER TABLE challenges ADD CONSTRAINT challenges_amount_positive CHECK (amount > 0)');
+
+        // Add foreign key constraint to transactions.challenge_id after table creation
+        Schema::table('transactions', function (Blueprint $table) {
+            $table->foreign('challenge_id')->references('id')->on('challenges')->cascadeOnDelete();
+        });
     }
 
     /**
@@ -70,8 +69,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop check constraint first
-        DB::statement('ALTER TABLE challenges DROP CONSTRAINT IF EXISTS challenges_amount_positive');
+        // Drop foreign key constraint first
+        Schema::table('transactions', function (Blueprint $table) {
+            $table->dropForeign(['challenge_id']);
+        });
+
         Schema::dropIfExists('challenges');
     }
 };

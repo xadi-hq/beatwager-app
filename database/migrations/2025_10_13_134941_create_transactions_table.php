@@ -21,7 +21,12 @@ return new class extends Migration
                 'wager_refunded',
                 'point_decay',
                 'admin_adjustment',
-                'initial_balance'
+                'initial_balance',
+                'event_attendance_bonus',
+                'challenge_hold',
+                'challenge_completed',
+                'challenge_failed',
+                'challenge_cancelled'
             ]);
 
             $table->integer('amount'); // Positive for credit, negative for debit
@@ -31,6 +36,7 @@ return new class extends Migration
             // Related entities
             $table->foreignUuid('wager_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignUuid('wager_entry_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->uuid('challenge_id')->nullable(); // Foreign key added in challenges migration
 
             // Metadata
             $table->text('description')->nullable();
@@ -40,6 +46,7 @@ return new class extends Migration
 
             $table->index(['user_id', 'group_id']);
             $table->index('wager_id');
+            $table->index('challenge_id');
             $table->index('type');
             $table->index('created_at');
         });

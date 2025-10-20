@@ -35,6 +35,11 @@ return new class extends Migration
             $table->index(['group_id', 'season_number']);
             $table->unique(['group_id', 'season_number']);
         });
+
+        // Add foreign key constraint to groups.current_season_id after table creation
+        Schema::table('groups', function (Blueprint $table) {
+            $table->foreign('current_season_id')->references('id')->on('group_seasons')->nullOnDelete();
+        });
     }
 
     /**
@@ -42,6 +47,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Drop foreign key constraint first
+        Schema::table('groups', function (Blueprint $table) {
+            $table->dropForeign(['current_season_id']);
+        });
+
         Schema::dropIfExists('group_seasons');
     }
 };

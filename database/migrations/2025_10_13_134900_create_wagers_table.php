@@ -44,7 +44,8 @@ return new class extends Migration
             $table->integer('stake_amount');
 
             // Timing
-            $table->timestamp('deadline');
+            $table->timestamp('betting_closes_at');
+            $table->timestamp('expected_settlement_at')->nullable();
             $table->timestamp('locked_at')->nullable();
             $table->timestamp('settled_at')->nullable();
 
@@ -59,6 +60,7 @@ return new class extends Migration
 
             // Outcome - flexible storage for any answer type
             $table->text('outcome_value')->nullable(); // "yes", "1", "42", "2025-06-15"
+            $table->foreignUuid('settler_id')->nullable()->constrained('users');
             $table->text('settlement_note')->nullable();
 
             // Statistics
@@ -68,8 +70,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['group_id', 'status']);
-            $table->index(['group_id', 'deadline']);
+            $table->index(['group_id', 'betting_closes_at']);
             $table->index('status');
+            $table->index('betting_closes_at');
         });
     }
 

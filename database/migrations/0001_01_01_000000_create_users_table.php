@@ -14,18 +14,11 @@ return new class extends Migration
             $table->string('email')->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
-
-            // Telegram authentication fields
-            $table->bigInteger('telegram_id')->unique();
-            $table->string('telegram_username')->nullable();
-            $table->string('telegram_first_name')->nullable();
-            $table->string('telegram_last_name')->nullable();
-            $table->string('telegram_photo_url')->nullable();
+            $table->text('taunt_line')->nullable();
+            $table->date('birthday')->nullable();
 
             $table->rememberToken();
             $table->timestamps();
-
-            $table->index('telegram_id');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
