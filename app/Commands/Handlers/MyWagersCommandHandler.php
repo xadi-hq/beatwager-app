@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Log;
 class MyWagersCommandHandler extends AbstractCommandHandler
 {
     public function __construct(
-        protected readonly MessengerAdapterInterface $messenger
+        MessengerAdapterInterface $messenger
     ) {
         parent::__construct($messenger);
     }
