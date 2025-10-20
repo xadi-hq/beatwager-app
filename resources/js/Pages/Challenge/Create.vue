@@ -158,7 +158,7 @@ const submit = () => {
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
                             What type of challenge? *
                         </label>
-                        <div class="space-y-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <label class="flex items-start p-3 border-2 rounded-lg cursor-pointer transition-all"
                                    :class="!form.is_offering_service
                                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'

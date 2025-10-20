@@ -164,10 +164,9 @@ class ChallengeController extends Controller
 
         try {
             $acceptedChallenge = $this->challengeService->acceptChallenge($challenge, $user);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Challenge accepted successfully!',
+
+            return back()->with([
+                'success' => 'Challenge accepted successfully!',
                 'challenge' => [
                     'id' => $acceptedChallenge->id,
                     'status' => $acceptedChallenge->status,
@@ -178,10 +177,9 @@ class ChallengeController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
+            return back()->withErrors([
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -205,9 +203,8 @@ class ChallengeController extends Controller
                 $validated['submission_media'] ?? null
             );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Challenge submitted for review!',
+            return back()->with([
+                'success' => 'Challenge submitted for review!',
                 'challenge' => [
                     'id' => $submittedChallenge->id,
                     'status' => $submittedChallenge->status,
@@ -215,10 +212,9 @@ class ChallengeController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
+            return back()->withErrors([
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -232,9 +228,8 @@ class ChallengeController extends Controller
         try {
             $approvedChallenge = $this->challengeService->approveChallenge($challenge, $user);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Challenge approved! Points have been transferred.',
+            return back()->with([
+                'success' => 'Challenge approved! Points have been transferred.',
                 'challenge' => [
                     'id' => $approvedChallenge->id,
                     'status' => $approvedChallenge->status,
@@ -242,10 +237,9 @@ class ChallengeController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
+            return back()->withErrors([
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -267,9 +261,8 @@ class ChallengeController extends Controller
                 $validated['reason']
             );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Challenge rejected. Points have been returned to creator.',
+            return back()->with([
+                'success' => 'Challenge rejected. Points have been returned to creator.',
                 'challenge' => [
                     'id' => $rejectedChallenge->id,
                     'status' => $rejectedChallenge->status,
@@ -278,10 +271,9 @@ class ChallengeController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
+            return back()->withErrors([
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -295,9 +287,8 @@ class ChallengeController extends Controller
         try {
             $cancelledChallenge = $this->challengeService->cancelChallenge($challenge, $user);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Challenge cancelled successfully.',
+            return back()->with([
+                'success' => 'Challenge cancelled successfully.',
                 'challenge' => [
                     'id' => $cancelledChallenge->id,
                     'status' => $cancelledChallenge->status,
@@ -305,10 +296,9 @@ class ChallengeController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
+            return back()->withErrors([
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
