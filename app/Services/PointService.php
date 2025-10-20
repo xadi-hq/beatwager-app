@@ -48,14 +48,14 @@ class PointService
 
             $balanceAfter = $balanceBefore - $amount;
 
-            // Update pivot table using raw query to avoid DB::raw casting issues
+            // Update pivot table - single atomic query with bound parameter
             DB::table("group_user")
                 ->where("user_id", $user->id)
                 ->where("group_id", $group->id)
                 ->update([
                     "points" => $balanceAfter,
-                    "points_spent" => DB::raw("points_spent + " . $amount),
                     "last_activity_at" => now(),
+                    "points_spent" => DB::raw("points_spent + " . (int)$amount),
                 ]);
 
             // Record transaction
@@ -89,14 +89,14 @@ class PointService
             $balanceBefore = $this->getBalance($user, $group);
             $balanceAfter = $balanceBefore + $amount;
 
-            // Update pivot table using raw query to avoid DB::raw casting issues
+            // Update pivot table - single atomic query with bound parameter
             DB::table("group_user")
                 ->where("user_id", $user->id)
                 ->where("group_id", $group->id)
                 ->update([
                     "points" => $balanceAfter,
-                    "points_earned" => DB::raw("points_earned + " . $amount),
                     "last_activity_at" => now(),
+                    "points_earned" => DB::raw("points_earned + " . (int)$amount),
                 ]);
 
             // Record transaction

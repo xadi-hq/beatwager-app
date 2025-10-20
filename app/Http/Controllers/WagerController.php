@@ -182,14 +182,15 @@ class WagerController extends Controller
         }
 
         $wager = $token->wager;
-        $wager->load(['creator:id,name', 'group:id,name,platform_chat_title,points_currency_name', 'entries.user:id,name']);
-
-        // Eager load user balances for all entry users to avoid N+1
-        $userIds = $wager->entries->pluck('user_id')->unique();
-        $userBalances = \DB::table('group_user')
-            ->where('group_id', $wager->group_id)
-            ->whereIn('user_id', $userIds)
-            ->pluck('points', 'user_id');
+        $wager->load([
+            'creator:id,name',
+            'group:id,name,platform_chat_title,points_currency_name',
+            'entries.user:id,name',
+            'entries.user.groups' => function ($query) use ($wager) {
+                $query->where('groups.id', $wager->group_id)
+                    ->withPivot('points');
+            }
+        ]);
 
         return Inertia::render('Wager/Settle', [
             'token' => $token->token,
@@ -215,7 +216,7 @@ class WagerController extends Controller
                 'entries' => $wager->entries->map(fn($entry) => [
                     'id' => $entry->id,
                     'user_name' => $entry->user->name,
-                    'user_balance' => $userBalances[$entry->user_id] ?? 0,
+                    'user_balance' => $entry->user->groups->first()?->pivot->points ?? 0,
                     'answer_value' => $entry->answer_value,
                     'points_wagered' => $entry->points_wagered,
                 ]),
@@ -295,21 +296,25 @@ class WagerController extends Controller
         // Get authenticated user from session (middleware handles auth)
         $user = Auth::user();
 
-        // Find wager
-        $wager = \App\Models\Wager::with(['creator:id,name', 'group:id,name,platform_chat_title,points_currency_name', 'entries.user:id,name', 'settler:id,name'])->findOrFail($wagerId);
+        // Find wager with optimized eager loading including user balances
+        $wager = \App\Models\Wager::with([
+            'creator:id,name',
+            'group:id,name,platform_chat_title,points_currency_name',
+            'entries.user:id,name',
+            'settler:id,name'
+        ])->findOrFail($wagerId);
+
+        // Eager load user balances for entry users
+        $wager->load(['entries.user.groups' => function ($query) use ($wager) {
+            $query->where('groups.id', $wager->group_id)
+                ->withPivot('points');
+        }]);
 
         $isPastDeadline = $wager->isPastBettingDeadline();
         $canSettle = $isPastDeadline && $wager->status === 'open';
 
         // Get user's Telegram username for display
         $telegramService = $user->getTelegramService();
-
-        // Eager load user balances for all entry users to avoid N+1
-        $userIds = $wager->entries->pluck('user_id')->unique();
-        $userBalances = \DB::table('group_user')
-            ->where('group_id', $wager->group_id)
-            ->whereIn('user_id', $userIds)
-            ->pluck('points', 'user_id');
 
         return Inertia::render('Wager/Show', [
             'wager' => [
@@ -342,7 +347,7 @@ class WagerController extends Controller
                 'entries' => $wager->entries->map(fn($entry) => [
                     'id' => $entry->id,
                     'user_name' => $entry->user->name,
-                    'user_balance' => $userBalances[$entry->user_id] ?? 0,
+                    'user_balance' => $entry->user->groups->first()?->pivot->points ?? 0,
                     'answer_value' => $isPastDeadline ? $entry->answer_value : null,
                     'points_wagered' => $entry->points_wagered,
                     'is_winner' => $entry->is_winner,
