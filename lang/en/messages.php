@@ -21,9 +21,15 @@ return [
 
         'settled' => [
             'intent' => 'Announce a wager settlement with outcome and winners',
-            'required_fields' => ['title', 'outcome'],
-            'fallback_template' => "🏁 Wager Settled!\n\nQuestion: {title}\nOutcome: {outcome}\n\n{note}",
+            'required_fields' => ['title', 'outcome', 'winners', 'currency'],
+            'optional_fields' => ['note', 'grudge_context'],
+            'fallback_template' => "🏁 Wager Settled!\n\nQuestion: {title}\nOutcome: {outcome}\nWinners: {winners}\n\n{note}",
             'tone_hints' => ['dramatic'],
+            'personality_notes' => 'Use grudge_context for rivalries. Add trash talk for streaks.',
+            'examples' => [
+                'With grudge: "🔥 Sarah wins AGAIN! That\'s 3 in a row against John. When will you learn, John?"',
+                'Without grudge: "🎯 Marathon Bet settled! Sarah takes home 150 points."',
+            ],
             'max_words' => 50,  // Longer for winners list and celebration
         ],
 
@@ -144,6 +150,23 @@ return [
             'fallback_template' => "😴 Haven't heard from you in {days_inactive} days!\n\nTime to wake up and place some wagers! Who's in?",
             'tone_hints' => ['playful', 'encouraging', 'energetic'],
             'max_words' => 40,  // Room for creative revival messaging
+        ],
+    ],
+
+    'engagement' => [
+        'stale_wager' => [
+            'intent' => 'Encourage participation in a wager with low or no participants',
+            'required_fields' => ['wager_title', 'hours_since_created', 'participant_count', 'stake_amount', 'currency'],
+            'optional_fields' => ['betting_closes_at', 'deadline_hours'],
+            'fallback_template' => "👀 {wager_title} needs some action!\n\n{hours_since_created} hours and only {participant_count} participant(s)?\n\nCome on, who's brave enough to wager {stake_amount} {currency}?",
+            'tone_hints' => ['playful', 'encouraging', 'FOMO', 'competitive'],
+            'personality_notes' => 'Call out inactivity, create urgency, mention low stakes for easy bets',
+            'examples' => [
+                '🦗 Cricket sounds... "Marathon Bet" has been sitting here for 26 hours with ZERO participants. Is everyone scared or just broke?',
+                '⏰ Time is ticking! "Who wins the election?" closes in 8 hours and only Sarah had the guts to join. Who else is in?',
+                '💰 Low risk, high bragging rights! Only 10 points to join "Movie night attendance" - what are you waiting for?',
+            ],
+            'max_words' => 40,
         ],
     ],
 

@@ -117,6 +117,16 @@ class MessageService
         $meta = __('messages.wager.settled');
         $currency = $wager->group->points_currency_name ?? 'points';
 
+        // NEW: Get grudge context if it's a 1v1 wager
+        $grudgeContext = null;
+        if ($wager->entries->count() === 2) {
+            $grudgeService = app(GrudgeService::class);
+            $user1 = $wager->entries[0]->user;
+            $user2 = $wager->entries[1]->user;
+            $grudge = $grudgeService->getRecentHistory($user1, $user2, $wager->group);
+            $grudgeContext = $grudge['narrative'];
+        }
+
         // Build winners data
         $winnersData = $winners->map(fn($w) => [
             'name' => $w->user->name,
@@ -133,6 +143,7 @@ class MessageService
                 'note' => $wager->settlement_note ?? '',
                 'winners' => $winnersData,
                 'currency' => $currency,
+                'grudge_context' => $grudgeContext, // NEW: Pass to LLM
             ],
             group: $wager->group
         );
@@ -390,11 +401,12 @@ class MessageService
             data: [
                 'title' => $challenge->description, // Using description as title
                 'description' => $challenge->description,
-                'reward' => $challenge->amount,
+                'reward' => $challenge->getAbsoluteAmount(), // Use absolute value for display
                 'currency' => $currency,
                 'deadline_at' => $challenge->completion_deadline->format('M j, Y g:i A'),
                 'acceptance_deadline' => $challenge->acceptance_deadline?->format('M j, Y g:i A'),
                 'creator' => $challenge->creator->name ?? 'Someone',
+                'type' => $challenge->isOfferingService() ? 'offering_service' : 'offering_payment',
             ],
             group: $challenge->group
         );
@@ -680,6 +692,59 @@ class MessageService
             type: MessageType::Announcement,
             variables: [],
             context: $scheduledMessage,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Generate an engagement prompt for a stale wager
+     *
+     * @param \App\Models\Wager $wager The wager with low engagement
+     * @return Message
+     */
+    public function engagementPrompt(Wager $wager): Message
+    {
+        $meta = __('messages.engagement.stale_wager');
+        $currency = $wager->group->points_currency_name ?? 'points';
+
+        // Calculate how long since wager was created
+        $hoursSinceCreated = (int) $wager->created_at->diffInHours(now());
+
+        // Calculate deadline info if available
+        $deadlineHours = $wager->betting_closes_at ? (int) now()->diffInHours($wager->betting_closes_at) : null;
+
+        $ctx = new MessageContext(
+            key: 'engagement.stale_wager',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'wager_title' => $wager->title,
+                'hours_since_created' => $hoursSinceCreated,
+                'participant_count' => $wager->participants_count,
+                'stake_amount' => $wager->stake_amount,
+                'currency' => $currency,
+                'betting_closes_at' => $wager->betting_closes_at?->format('M j, Y g:i A'),
+                'deadline_hours' => $deadlineHours,
+            ],
+            group: $wager->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $wager->group);
+
+        // Build wager-specific buttons
+        $buttons = $this->buildWagerButtons($wager);
+        $buttons[] = new Button(
+            label: __('messages.buttons.view_progress'),
+            action: ButtonAction::Callback,
+            value: "view:{$wager->id}"
+        );
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: $buttons,
+            context: $wager,
             currencyName: $currency
         );
     }

@@ -29,6 +29,7 @@ const props = defineProps<{
 const form = useForm({
     description: '',
     amount: 100,
+    is_offering_service: false, // false = Type 1 (I need help), true = Type 2 (I want to help)
     group_id: props.defaultGroup?.id || '',
     completion_deadline: '',
     acceptance_deadline: '',
@@ -78,7 +79,12 @@ const submit = () => {
     // Clear previous errors and toasts
     showToast.value = false;
 
-    form.post('/challenges/store', {
+    // Transform amount to negative if offering service (Type 2)
+    form.transform((data) => ({
+        ...data,
+        amount: data.is_offering_service ? -Math.abs(data.amount) : Math.abs(data.amount),
+        is_offering_service: undefined, // Remove UI-only field
+    })).post('/challenges/store', {
         onSuccess: () => {
             toastType.value = 'success';
             toastMessage.value = 'Challenge created successfully!';
@@ -147,6 +153,54 @@ const submit = () => {
                         <FormError :error="form.errors.group_id" />
                     </div>
 
+                    <!-- Challenge Type Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+                            What type of challenge? *
+                        </label>
+                        <div class="space-y-2">
+                            <label class="flex items-start p-3 border-2 rounded-lg cursor-pointer transition-all"
+                                   :class="!form.is_offering_service
+                                       ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                                       : 'border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700'">
+                                <input
+                                    type="radio"
+                                    v-model="form.is_offering_service"
+                                    :value="false"
+                                    class="mt-1 mr-3"
+                                />
+                                <div>
+                                    <div class="font-medium text-neutral-900 dark:text-white">
+                                        🫳 I need help (I'll pay)
+                                    </div>
+                                    <div class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                                        You'll pay points to whoever completes the task
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start p-3 border-2 rounded-lg cursor-pointer transition-all"
+                                   :class="form.is_offering_service
+                                       ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                                       : 'border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700'">
+                                <input
+                                    type="radio"
+                                    v-model="form.is_offering_service"
+                                    :value="true"
+                                    class="mt-1 mr-3"
+                                />
+                                <div>
+                                    <div class="font-medium text-neutral-900 dark:text-white">
+                                        🫴 I want to help (I need points)
+                                    </div>
+                                    <div class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                                        You'll receive points from whoever accepts your offer
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- Description -->
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
@@ -156,11 +210,13 @@ const submit = () => {
                             v-model="form.description"
                             required
                             rows="3"
-                            placeholder="e.g., Who will clean the office kitchen by Friday? I'll pay 200 points for this to get done!"
+                            :placeholder="form.is_offering_service
+                                ? 'e.g., I\'ll clean the office kitchen this Friday for 200 points!'
+                                : 'e.g., Who will clean the office kitchen by Friday? I\'ll pay 200 points for this to get done!'"
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         ></textarea>
                         <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                            Describe what needs to be done to earn the points
+                            {{ form.is_offering_service ? 'Describe what you\'ll do to earn the points' : 'Describe what needs to be done to earn the points' }}
                         </p>
                         <FormError :error="form.errors.description" />
                     </div>
@@ -168,7 +224,7 @@ const submit = () => {
                     <!-- Points Amount -->
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                            Points Reward *
+                            {{ form.is_offering_service ? 'Points You\'ll Earn *' : 'Points Reward *' }}
                         </label>
                         <input
                             v-model.number="form.amount"
@@ -179,7 +235,9 @@ const submit = () => {
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         />
                         <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                            Points you'll pay to whoever completes this challenge
+                            {{ form.is_offering_service
+                                ? 'Points you\'ll receive from whoever accepts this challenge'
+                                : 'Points you\'ll pay to whoever completes this challenge' }}
                         </p>
                         <FormError :error="form.errors.amount" />
                     </div>
@@ -258,12 +316,19 @@ const submit = () => {
                     <!-- How it works info -->
                     <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <h3 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">How it works:</h3>
-                        <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        <ul v-if="!form.is_offering_service" class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                             <li>1️⃣ One person from your group can accept this challenge</li>
                             <li>2️⃣ Your points will be held in reserve when accepted</li>
                             <li>3️⃣ They complete the task and submit proof</li>
                             <li>4️⃣ You approve or reject their submission</li>
                             <li>5️⃣ If approved, they get your points!</li>
+                        </ul>
+                        <ul v-else class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                            <li>1️⃣ One person from your group can accept your offer</li>
+                            <li>2️⃣ Their points will be held in reserve when accepted</li>
+                            <li>3️⃣ You complete the task and submit proof</li>
+                            <li>4️⃣ They approve or reject your submission</li>
+                            <li>5️⃣ If approved, you get their points!</li>
                         </ul>
                     </div>
 

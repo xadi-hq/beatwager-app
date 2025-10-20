@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\ApplyPointDecay;
+use App\Jobs\SendEngagementPrompts;
 use App\Jobs\SendEventAttendancePrompts;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -21,6 +22,12 @@ Schedule::job(new ApplyPointDecay())
 
 // Check for events needing attendance prompts (hourly)
 Schedule::job(new SendEventAttendancePrompts())
+    ->hourly()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Send engagement prompts for stale wagers (hourly)
+Schedule::job(new SendEngagementPrompts())
     ->hourly()
     ->withoutOverlapping()
     ->onOneServer();

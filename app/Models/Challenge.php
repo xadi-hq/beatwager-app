@@ -232,4 +232,52 @@ class Challenge extends Model
             && $this->isAcceptanceExpired()
             && $this->acceptor_id === null;
     }
+
+    /**
+     * Challenge Type Methods
+     */
+
+    /**
+     * Check if this is an "offering payment" challenge (Type 1)
+     * Creator pays points, acceptor receives points
+     * Example: "I'll pay 200 points for someone to clean my car"
+     */
+    public function isOfferingPayment(): bool
+    {
+        return $this->amount > 0;
+    }
+
+    /**
+     * Check if this is an "offering service" challenge (Type 2)
+     * Acceptor pays points, creator receives points
+     * Example: "I'll clean your car for 200 points"
+     */
+    public function isOfferingService(): bool
+    {
+        return $this->amount < 0;
+    }
+
+    /**
+     * Get absolute amount value for display
+     */
+    public function getAbsoluteAmount(): int
+    {
+        return abs($this->amount);
+    }
+
+    /**
+     * Get who pays for this challenge
+     */
+    public function getPayer(): User
+    {
+        return $this->isOfferingPayment() ? $this->creator : $this->acceptor;
+    }
+
+    /**
+     * Get who receives payment for this challenge
+     */
+    public function getPayee(): User
+    {
+        return $this->isOfferingPayment() ? $this->acceptor : $this->creator;
+    }
 }

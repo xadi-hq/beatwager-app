@@ -1,268 +1,72 @@
 # BeatWager TODO
 
-**Last Updated:** October 18, 2025
+**Last Updated:** October 20, 2025
 **Current Phase:** Phase 2 - Engagement & Advanced Features
-**Status:** Core features complete, LLM integration complete, Seasons implemented, Scheduled messages next
+**Status:** Core features complete, LLM integration complete, Seasons implemented, Scheduled messages complete
 
 ---
 
-## ✅ RECENTLY COMPLETED (October 2025)
+## HIGH PRIORITY: Core Commands & Message Infrastructure
 
-### Seasons Feature Complete (October 18, 2025 - Today's Session)
-- ✅ **Database Schema**
-  - Created `group_seasons` table with history tracking (season_number, started_at, ended_at, is_active)
-  - Added `current_season_id` and `season_ends_at` to groups table
-  - JSON storage for final_leaderboard, stats, and highlights
+### 0. Implement /leaderboard Command ✅ COMPLETE (Oct 20, 2025)
+- ✅ **Current status**: Fully implemented
+- ✅ Implement actual leaderboard display
+  - Show top 10 players in group by points
+  - Include win rate (W-L record with percentage)
+  - Format with emojis (🥇 🥈 🥉 for top 3)
+  - Link to full leaderboard on web with short URLs
+  - Custom currency support
+- ⏳ Weekly automated leaderboard posts (Monday mornings) (FUTURE)
+  - Ties into `SendWeeklyRecap` job (Section 4)
+  - Use same LLM personality for engagement
+- ⏳ Generate personalized LLM commentary about standings (FUTURE - enhancement)
 
-- ✅ **Backend Services**
-  - Created `SeasonService` for complete lifecycle management (create, end, calculate leaderboard)
-  - Created `SeasonController` with web authentication (no API tokens)
-  - Created `CheckSeasonEndings` scheduled command (daily at 00:01)
-  - Added `seasonEnded()` to MessageService for LLM-powered recaps
+### 0b. Message Tracking & Anti-Spam System ✅ COMPLETE (Oct 20, 2025)
+- ✅ Create `sent_messages` table migration
+  - Fields: id, group_id, message_type, context_id (wager_id, event_id, etc.), sent_at, metadata
+  - Message types: 'wager.announcement', 'engagement.prompt', 'birthday.reminder', 'weekly.recap', etc.
+  - Purpose: Track what messages were sent to prevent spam/duplicates
+- ✅ Create `MessageTrackingService`
+  - `canSendMessage(Group $group, string $messageType, array $rules): bool`
+  - Rules: max_per_day, cooldown_hours, per_context_limit
+  - Example: Only 1 engagement prompt per wager per 24h
+- ⏳ Integrate into all message-sending services (READY - Phase 2)
+  - Check before sending engagement prompts, birthday reminders, etc.
+  - Log successful sends to `sent_messages`
+- ✅ **Bonus**: Use as LLM context for "last week we..."
+  - Query recent messages for context injection
+  - "Remember the Marathon bet from last Tuesday?"
+  - `getRecentHistory()` method implemented
 
-- ✅ **LLM Integration**
-  - Added `season.ended` message type with dramatic recap intent
-  - Generates winner celebration, top 3 leaderboard, season highlights
-  - Highlights include: biggest win, most active creator, most participated wager
-  - Falls back to template if LLM unavailable
+### 0c. Message Chunking & Delays (Joke Delivery)
+- ⏳ Add delay capability to MessengerAdapter
+  - `sendMessageWithDelay(OutgoingMessage $message, int $delaySeconds): void`
+  - Use queued jobs for delayed delivery
+- ⏳ Add support for message sequences
+  - `sendMessageSequence(array $messages, int $delayBetween): void`
+  - Example: "Know what's green and doesn't fly?" ...10sec... "A grass!"
+- ⏳ LLM can request delays via special syntax
+  - Parse `[DELAY:10]` markers in LLM responses
+  - Split into multiple messages with delays
 
-- ✅ **Frontend UI**
-  - Created `SeasonManagement.vue` component (start/end seasons with optional dates)
-  - Created `PastSeasons.vue` component (browse last 10 seasons with expandable details)
-  - Integrated into Groups/Show page with dedicated drawer
-  - Button layout: [Seasons] [Settings] over [Back to Dashboard]
-  - Responsive design for mobile and desktop
-
-- ✅ **Bug Fixes**
-  - Fixed authentication error (moved from Sanctum API to web session auth)
-  - Fixed pivot table error (points stored in group_user, not users table)
-  - Fixed day display showing decimals (rounded to whole numbers, min Day 1)
-
-- ✅ **NSFW Checkbox** (October 18, 2025)
-  - Added `allow_nsfw` boolean to groups table
-  - Integrated into LLM system prompts for content filtering
-  - UI toggle in Bot Personality settings tab
-  - Cache invalidation when setting changes
-
-- ✅ **Activity Tracking Infrastructure** (October 18, 2025)
-  - Added `last_activity_at` and `inactivity_threshold_days` to groups table
-  - Created feature flag system (`config/features.php`)
-  - Created `CheckGroupActivity` command with dry-run mode
-  - Redis throttling for webhook tracking (98% DB write reduction)
-  - Added `activity.revival` message type for re-engagement
-  - Created `MessageService::revivalMessage()` with LLM personality
-
-## ✅ RECENTLY COMPLETED (October 2025)
-
-### LLM Integration Complete (October 16, 2025 - Today's Session)
-- ✅ **Complete Event/Listener Architecture for All Messages**
-  - Created `WagerSettled` event + `SendWagerSettlement` listener
-  - Created `EventCreated` event + `SendEventAnnouncement` listener
-  - Created `AttendanceRecorded` event + `SendAttendanceAnnouncement` listener
-  - Created `WagerJoined` event + `SendWagerJoinAnnouncement` listener
-  - Created `EventRsvpUpdated` event + `SendRsvpAnnouncement` listener
-  - All listeners queued with 3 retries and 5s backoff
-  - Replaced ALL hardcoded Telegram message methods with LLM-powered system
-
-- ✅ **Message Types & LLM Integration**
-  - Added `event.announced` and `event.attendance_recorded` to messages.php
-  - Updated `wager.joined` for engagement announcements with FOMO tone (NO answer reveal!)
-  - Added playful RSVP messages: `event.rsvp_going` (party!), `event.rsvp_maybe` (teasing), `event.rsvp_not_going` (guilt-trip)
-  - Added `eventAnnouncement()`, `attendanceRecorded()`, `wagerJoined()`, and `rsvpUpdated()` methods to MessageService
-  - All messages now use group's `points_currency_name` (e.g., "chips" not "points")
-  - All messages apply bot personality from `bot_tone` setting
-  - Dynamic word limits per message type (20-200 words)
-  - Emoji guidance based on message length
-
-- ✅ **Engagement Trigger System**
-  - Created `EngagementTriggerService` to detect contextual triggers when users join wagers
-  - Implemented 11 Phase 1 triggers across 5 categories:
-    - Position: is_first, is_leader, is_underdog
-    - Stakes: is_high_stakes, stake_percentage
-    - Comeback: is_comeback, days_inactive
-    - Momentum: is_contrarian, is_bandwagon
-    - Timing: is_last_minute, is_early_bird
-  - Enhanced LLM prompts with `buildTriggersGuidance()` method
-  - Triggers provide contextual hints like "trendsetter!", "look who's back!", "bold contrarian move!"
-  - Creates FOMO and personality in join announcements
-  - Documented 15 total triggers in `/docs/ENGAGEMENT_TRIGGERS.md` (Phase 2-3 ready for future)
-
-- ✅ **LLM Metrics & Monitoring**
-  - Created `llm_usage_daily` table for aggregated metrics
-  - Created `AggregateLLMMetrics` command (scheduled daily at midnight)
-  - Metrics tracked: total calls, cache hits, fallbacks, cost, providers, message types
-  - LLM Usage tab in group settings shows monthly metrics dashboard
-  - Cache hit rate calculation and cost tracking
-
-- ✅ **Form Validation Improvements**
-  - Created reusable `FormError` component for inline field errors
-  - Created `FormErrorBox` component for general form errors
-  - Applied to all forms: Wager Create, Event Create, Wager Settlement
-  - Consistent error display across entire application
-  - Fixed settlement bug (sending telegram_id instead of user UUID)
-
-- ✅ **Removed All Hardcoded Messages**
-  - Deleted `postSettlementToTelegram()` from WagerController (35+ lines)
-  - Deleted `postEventToTelegram()` from EventController (55+ lines)
-  - Deleted `announceAttendanceToTelegram()` from EventController (40+ lines)
-  - All replaced with simple event dispatches (1 line each)
-  - 130+ lines of hardcoded message logic removed
-
-### Infrastructure - Operational Logging
-- ✅ Added operational channel to `config/logging.php`
-  - JSON-formatted logs for structured parsing
-  - 14-day retention policy
-  - Separate from application logs
-- ✅ Created `LogService` for operational logging
-  - LLM event tracking (generation, caching, errors)
-  - Performance metrics logging
-  - Feature usage tracking
-  - Error logging with context
-- ✅ Created `audit_events` table for LLM context storage
-  - Stores event summaries for grudge memory
-  - Participant tracking
-  - Impact/results metadata
-  - Queryable for AI-powered features
-
-### Group Customization Features (October 16, 2025)
-- ✅ **Custom Point Currency Names**
-  - Added `points_currency_name` to groups table (default: "points")
-  - Updated all messaging to use custom currency
-  - UI displays custom currency everywhere (dashboards, wagers, events, transactions)
-  - Group settings drawer for configuration
-
-- ✅ **Bot Notification Preferences**
-  - Added `notification_preferences` JSON field to groups table
-    - Birthday reminders (boolean, default: false)
-    - Event reminders (boolean, default: true)
-    - Wager reminders (boolean, default: true)
-    - Weekly summaries (boolean, default: false)
-  - Group settings UI with toggles
-  - Ready for notification jobs to respect preferences
-
-- ✅ **AI-Powered Bot Personality (Database & UI)**
-  - Added `llm_api_key` field (encrypted, nullable)
-  - Added `llm_provider` field (anthropic, openai)
-  - Added `bot_tone` text field for personality instructions
-  - Group settings UI with LLM configuration
-    - API key input with encrypted storage
-    - Tone textarea with examples
-    - Provider selection
-
-- ✅ **LLM Service Implementation**
-  - Created `LLMService` with Anthropic & OpenAI support
-  - Caching layer (1-hour TTL for similar prompts)
-  - Fallback to default templates if LLM fails
-  - Cost estimation and performance tracking
-  - Integration with operational logging
-  - Created `MessageContext` DTO for structured message data
-  - Created `lang/en/messages.php` with LLM-ready message metadata
-    - Intent descriptions for each message type
-    - Required fields validation
-    - Fallback templates
-    - Tone hints for personality
-
-- ✅ **Group Settings Drawer UI**
-  - Reusable `Drawer` component (slide-over pattern)
-  - `GroupSettingsForm` component with 3 tabs:
-    - General (currency name, description)
-    - Notifications (4 preference toggles)
-    - Bot Personality (LLM key, provider, tone)
-  - Accessible from group detail page
-  - Settings button in navbar opens drawer
-  - Auto-refreshes data after updates
-
-- ✅ **Profile Settings Drawer UI**
-  - Reusable drawer for user profile
-  - Clickable username in navbar opens profile drawer
-  - Profile tab removed from Dashboard (cleaner focus)
-  - Consistent drawer pattern across app
+### 0d. External API Integration (GIFs & Jokes)
+- ⏳ Add Giphy API integration for GIF search
+  - Create `GiphyService` with `search(string $query): string` (returns GIF URL)
+  - LLM can request GIFs via tool/function calling
+  - Example: LLM generates "celebration.gif" → Giphy finds relevant GIF
+- ⏳ Add JokeAPI integration
+  - Create `JokeService` with `getRandom(string $category): string`
+  - LLM can fetch jokes for engagement messages
+  - Categories: programming, dad jokes, puns, etc.
+- ⏳ Make APIs available to LLM via tool/function calling
+  - Add to LLM context as available tools
+  - "You can search for GIFs using giphy_search(query) and get jokes using get_joke(category)"
 
 ---
-
-## ✅ HIGH PRIORITY COMPLETED: Scheduled Engagement Messages (October 19, 2025)
-
-### 1. Scheduled Messages System ✅ COMPLETE
-- ✅ **Database Schema**
-  - Created `scheduled_messages` table migration
-    - Fields: id, group_id, message_type (enum: holiday, birthday, custom), title, scheduled_date, message_template, llm_instructions, is_recurring, recurrence_type, is_active, last_sent_at
-    - Support for one-time and recurring messages (yearly, monthly, weekly, daily)
-    - Optional custom LLM instructions per message
-    - Added `scheduledMessages()` relationship to Group model
-
-- ✅ **Backend Services**
-  - Created `ScheduledMessage` model with smart recurrence logic
-    - `shouldSendToday()` method for intelligent date matching
-    - `matchesRecurrence()` for yearly/monthly/weekly/daily patterns
-    - `getNextOccurrence()` for UI display
-  - Created `ScheduledMessageService` for CRUD operations
-    - `getForGroup()` with filter support (upcoming_only, is_active)
-    - Full CRUD: create, update, delete, toggleActive
-    - `getMessagesToSendToday()` for scheduled job
-    - `markAsSent()` tracks last_sent_at timestamp
-  - Created `SendScheduledMessages` command (scheduled daily at 8:00 AM)
-    - Supports `--dry-run` flag for testing
-    - Supports `--force` flag for manual testing (bypasses schedule check)
-    - Operational logging for success/failures
-  - Created `ScheduledMessageController` with web auth pattern
-    - Full REST API: index, show, store, update, toggleActive, destroy
-    - Manual membership checks (consistent with other controllers)
-  - Added 3 scheduled message types to messages.php:
-    - `scheduled.custom` - General celebrations and reminders
-    - `scheduled.holiday` - Holiday celebrations
-    - `scheduled.birthday` - Birthday celebrations
-  - Integrated with MessageService for LLM-powered messages
-    - `scheduledMessage()` method generates personalized content
-    - Custom LLM instructions passed via data array
-    - Fallback templates for each message type
-
-- ✅ **Frontend UI** (Option 2: Separate Messages drawer - IMPLEMENTED)
-  - Created `ScheduledMessagesManager.vue` component (MVP version)
-    - List all scheduled messages with type emojis
-    - Add message form (type, title, date, recurring options)
-    - Toggle active/inactive status
-    - Delete messages with confirmation
-    - Next occurrence display for recurring messages
-    - Info box explaining how the feature works
-  - Integrated into Groups/Show page
-    - Three-button layout: [🏆 Seasons] [📅 Messages] [⚙️ Settings]
-    - Separate Messages drawer (content != settings)
-    - Responsive design for mobile and desktop
-  - Improved card layout:
-    - Title on one line with emoji
-    - Metadata condensed: "Apr 27 - One-time - Next: Apr 27"
-    - Full-width action buttons on separate row
-
-- ✅ **Message Types**
-  - Holiday messages with festive tone
-  - Birthday celebrations with personal touch
-  - Custom dates for group traditions and anniversaries
-  - All messages use LLM with group personality settings
-  - Custom instructions field for per-message customization
 
 ## HIGH PRIORITY: LLM Integration & Engagement
 
-### 1. Integrate LLM Service into Message Flow ✅ COMPLETED (October 16, 2025)
-- ✅ Update `MessageService` to use `LLMService`
-  - Check if group has LLM configured
-  - If yes: generate personalized message via LLM
-  - If no: use fallback template from `messages.php`
-  - Handle LLM failures gracefully (fallback to templates)
-- ✅ Apply to all bot message types:
-  - ✅ Wager announcements (`wager.announced`) - Event/Listener pattern
-  - ✅ Wager settlements (`wager.settled`) - Event/Listener pattern
-  - ✅ Wager reminders (`wager.reminder`) - SendSettlementReminders command
-  - ✅ Event announcements (`event.announced`) - Event/Listener pattern
-  - ✅ Event attendance (`event.attendance_recorded`) - Event/Listener pattern
-  - ✅ Decay warnings (`decay.warning`, `decay.applied`) - MessageService methods
-  - ⏳ Badge announcements (when badge system implemented)
-- ✅ Add LLM usage metrics to group stats
-  - ✅ Track: total calls, cache hits, estimated cost, fallbacks, providers, message types
-  - ✅ Display in group settings LLM Usage tab (read-only monthly stats)
-  - ✅ Daily aggregation job (`llm:aggregate`) stores metrics in `llm_usage_daily` table
-  - ✅ Metrics dashboard shows: Total Calls, Cost, Cache Hit Rate, Fallbacks
-
-### 2. Badge System (US-009)
+### 1. Badge System (US-009)
 - ⏳ Create `badges` table migration
   - Fields: id, user_id, group_id, badge_type, earned_at, season_id
   - Badge types: 'oracle', 'degen', 'shark', 'loyalist', 'referee', 'ghost'
@@ -275,28 +79,36 @@
 - ⏳ Display badges in leaderboard and user profiles
 - ⏳ Store badge events in `audit_events` for grudge context
 
-### 3. Grudge Memory System (US-006)
-- ⏳ Create `GrudgeService` for recent history
+### 2. Grudge Memory System (US-006) ✅ COMPLETE (Oct 20, 2025)
+- ✅ Create `GrudgeService` for recent history
   - `getRecentHistory(User $user1, User $user2, Group $group): array`
   - Query last 5 wagers between two users
   - Format context for LLM ("Sarah has beaten John 3 times in a row")
-- ⏳ Integrate grudge context into settlement messages
+- ✅ Integrate grudge context into settlement messages
   - Pass grudge history to LLM via `MessageContext`
   - LLM generates dramatic commentary based on history
-- ⏳ Store wager outcomes in `audit_events` for faster queries
+  - Automatically injected for 1v1 wagers in `MessageService::settlementResult()`
+- ✅ Store wager outcomes in `audit_events` for faster queries
+  - Already implemented in `WagerService::createAuditEvents()`
+  - Uses `AuditEventService::wagerWon()` for 1v1 matches
 
-### 4. Notification Jobs (Respect Preferences)
+### 3. Notification Jobs (Respect Preferences)
 - ⏳ Create `SendBirthdayReminders` job (daily check)
   - Check `notification_preferences.birthday_reminders`
   - Send only to groups with preference enabled
+  - **-7 days reminder**: "When are WE celebrating your upcoming 40th birthday John?" (opt-in per group)
+  - Day-of message at 8am: Current implementation complete
 - ⏳ Update decay warning job to respect preferences
   - Check `notification_preferences.wager_reminders`
-- ⏳ Create `SendWeeklyRecap` job (weekly summary)
+- ⏳ Create `SendWeeklyRecap` job (weekly summary - Monday mornings)
   - Check `notification_preferences.weekly_summaries`
   - Generate engaging summary with LLM if configured
-  - Stats: most wins, biggest pot, most active member
+  - Stats: most wins, biggest pot, most active member, current point totals
+  - **Personalized engagement**: Mention lowest ranking ("Come on John, this is your week!")
+  - **Competitive motivation**: Mention leader ("Who's going to prevent Jane from becoming untouchable?")
+  - Show planned season end date (if any season is active)
 
-### 5. Code Quality & Organization
+### 4. Code Quality & Organization
 - ⏳ **Centralize Telegram Callback Responses** (Optional improvement)
   - Create `/lang/en/system.php` for callback acknowledgments and error messages
   - Move hardcoded `answerCallbackQuery()` strings from TelegramWebhookController
@@ -312,7 +124,37 @@
 
 ## MEDIUM PRIORITY: Engagement Features
 
-### 5. Revenge Bet System (US-012)
+### 5. Custom Prize System (Seasons Focus)
+- ⏳ Add `prize_structure` JSON column to `group_seasons` table
+  - **Note**: Prizes primarily for seasons (winner/runner-up/loser of season)
+  - Can optionally extend to individual high-stakes wagers
+  - Examples: "Season loser buys drinks", "Winner gets trophy/embarrassing photo privileges"
+- ⏳ Create Prize Configuration UI in season settings
+  - Allow admins to set custom prizes for season placements
+  - Examples: 1st place: bragging rights, 2nd: honorable mention, Last: buys round
+- ⏳ Display prizes in season start/recap announcements
+  - Include prize context in LLM-generated season messages
+  - "Remember: Last place buys drinks at next meetup!"
+- ⏳ Prize reminders in season end messages
+  - Mention earned prizes when season concludes
+  - Optional: Track prize fulfillment status
+
+### 6. Engagement Follow-up Prompts (Context-Aware) ✅ COMPLETE (Oct 20, 2025)
+- ✅ Create `SendEngagementPrompts` job (hourly check for stale wagers)
+  - Detect open wagers with 0-1 participants after 24 hours
+  - Generate LLM-powered encouragement: "Come on guys, no one's betting yet?"
+  - Respect group `notification_preferences.engagement_prompts`
+  - Integrated with `MessageTrackingService` for anti-spam (24h cooldown)
+  - Scheduled hourly in `routes/console.php`
+- ⏳ Target specific users based on activity patterns (FUTURE)
+  - "John, you usually join these kinds of wagers!"
+  - "Sarah hasn't placed a wager in 5 days - what's up?"
+- ⏳ Vary messaging based on wager characteristics (FUTURE - LLM can already do this)
+  - Small stakes: "Low risk, high fun - who's in?"
+  - High stakes: "This is a big one, folks!"
+  - Deadline approaching: "Only 2 hours left to join!"
+
+### 7. Revenge Bet System (US-012)
 - ⏳ Create `OfferRevengeBet` job (triggered after big losses)
   - Detect losses >100 points
   - Create auto-generated revenge bet opportunity
@@ -321,49 +163,39 @@
   - One-click to create reverse wager
   - Same stakes, opposite outcome
 
-### 6. Long-tail Bet Reminders (US-014)
+### 8. Long-tail Bet Reminders (US-014)
 - ⏳ Create `RemindLongWagers` job (weekly check for wagers >30 days out)
   - Send reminder about upcoming long-dated wagers
   - "Don't forget: Marathon bet settles in 45 days!"
 - ⏳ Special UI treatment for long wagers (badge/indicator)
 
-### 7. Bailout System (US-011)
-- ⏳ Create `bailout_assignments` table migration
-  - Fields: id, user_id, group_id, bailout_number, assignment_type, details, status, expires_at
-  - Assignment types: 'task', 'challenge', 'trivia', 'dare'
-- ⏳ Create `BailoutAssignment` model
-- ⏳ Create `AssignBailout` service
-  - Trigger when user balance drops below threshold
-  - Generate random assignment based on group type
-  - LLM generates creative assignment descriptions
-- ⏳ Add bailout completion flow in web UI
-  - Submit proof (text/photo)
-  - Group votes to approve/reject
-  - Points restored on approval
+---
+
+## ✅ RECENTLY COMPLETED
+
+### Display Commands (Oct 20, 2025)
+- ✅ `/wagers` command - Show top 3 open wagers in group
+- ✅ `/challenges` command - Show top 3 open challenges in group
+- ✅ `/events` command - Show top 3 upcoming events in group
+- All three commands include participant counts, deadlines, and link to view all
 
 ---
 
 ## Current Work: Phase 2 Final Polish
-
 ### Testing - Events System
 - ⏳ EventService unit tests (RSVP, attendance, bonus distribution)
 - ⏳ Integration tests for RSVP flow
 - ⏳ Integration tests for attendance recording flow
 - ⏳ E2E tests for complete event lifecycle
 
-### Telegram Messaging - Events ✅ COMPLETED (October 16, 2025)
-- ✅ Event announcement messages to group (when created)
-  - ✅ Event/Listener architecture (EventCreated → SendEventAnnouncement)
-  - ✅ Uses LLM for personality if configured with fallback templates
-  - ✅ Includes RSVP inline buttons (Going/Maybe/Can't Make It)
-  - ✅ Uses group's custom currency name
-- ✅ RSVP inline buttons in Telegram (handled by TelegramWebhookController)
+### Testing - General
+- ⏳ Increase test coverage from 38% to 60%
+- ⏳ Unit tests for all command/callback handlers
+- ⏳ Authentication middleware edge case tests
+- ⏳ Integration tests for critical flows
+
+### Telegram Messaging - Events
 - ⏳ Attendance prompt messages (auto-sent after event via scheduled job)
-- ✅ Attendance confirmation messages (when submitted)
-  - ✅ Event/Listener architecture (AttendanceRecorded → SendAttendanceAnnouncement)
-  - ✅ Uses LLM to celebrate attendees with bot personality
-  - ✅ Lists all attendees with natural language formatting
-  - ✅ Mentions point bonus with custom currency
 
 ### UI/UX Polish
 - ⏳ Frontend error message improvements
@@ -458,13 +290,10 @@
 - ⏳ SQL injection prevention check
 - ⏳ XSS protection verification
 - ⏳ One-time token validation security review
-- ⏳ Rate limiting on API endpoints
-- ⏳ Telegram webhook validation
 - ⏳ Secure environment variable handling
 - ⏳ LLM API key encryption validation
 
 ### Performance Optimization
-- ⏳ Database query optimization (add indexes where needed)
 - ⏳ N+1 query prevention (eager loading review)
 - ⏳ Redis caching for frequent reads
 - ⏳ Queue all non-critical notifications
@@ -510,12 +339,6 @@
 
 ## Known Issues & Technical Debt
 
-### High Priority
-- ⏳ TelegramWebhookController not unit tested
-  - Current: `new BotApi()` in constructor makes it unmockable
-  - Solution: Accept BotApi via constructor parameter
-  - Alternative: Manual testing with test Telegram bot
-
 ### Medium Priority
 - ⏳ User leaves group mid-wager - No handling for this edge case yet
 - ⏳ Network retry logic - Need retry mechanism for failed Telegram API calls
@@ -523,8 +346,6 @@
 - ⏳ LLM fallback testing - Ensure graceful degradation when LLM fails
 
 ### Low Priority
-- ⏳ Optimize N+1 queries - Review all relationships for eager loading opportunities
-- ⏳ Add database indexes - Performance optimization for frequent queries
 - ⏳ LLM cache invalidation - Better cache key strategy for dynamic content
 
 ---
@@ -543,12 +364,6 @@
   - Case-insensitive matching
   - UI for answer management
 
-### Timezone Support (REMOVED - Not Needed)
-- ❌ Group-level timezone settings
-- ❌ Reason: Platform handles this, not needed for MVP
-
-## Feature Backlog (Future Phases)
-
 ### Wager Features
 - ⏳ Wager Templates - Pre-built templates for common wager types
 - ⏳ Event-Specific Wagers - Meta-wagers about events
@@ -560,7 +375,6 @@
 
 ### Smart Notifications
 - ⏳ Context-Aware Prompts (post-loss, pre-deadline, low balance, inactive friends)
-- ⏳ Decay warnings (day 12 of inactivity)
 - ⏳ All powered by LLM for personality
 
 ### Advanced Features (Phase 3)
@@ -582,6 +396,8 @@ For detailed implementation guidance, see:
 - `./app/Services/LLMService.php` - LLM service implementation
 - `./app/Services/LogService.php` - Operational logging
 - `./lang/en/messages.php` - Message metadata for LLM
+- `./claudedocs/improvement-implementation-plan.md` - Code quality improvement plan
+- `./claudedocs/implementation-progress-summary.md` - Current refactoring progress
 
 ---
 
@@ -593,3 +409,4 @@ For detailed implementation guidance, see:
 - Keep TODO.md as single source of truth for current work
 - Monitor LLM usage and costs in production
 - See IMPLEMENTATION_PLAN.md for architecture patterns and code examples
+- Code quality improvements tracked in `./claudedocs/` - 4 of 5 phases complete (80%)

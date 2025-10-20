@@ -37,6 +37,12 @@ const props = defineProps<{
     userRole: 'creator' | 'acceptor' | 'viewer';
 }>();
 
+// Computed property for absolute amount display
+const absoluteAmount = computed(() => Math.abs(props.challenge.amount));
+
+// Determine challenge type
+const isOfferingService = computed(() => props.challenge.amount < 0);
+
 const now = ref(Date.now());
 const completionDeadline = new Date(props.challenge.completion_deadline);
 const acceptanceDeadline = props.challenge.acceptance_deadline ? new Date(props.challenge.acceptance_deadline) : null;
@@ -246,9 +252,14 @@ const cancelChallenge = () => {
 
                     <!-- Reward -->
                     <div class="mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                        <div class="text-sm text-neutral-600 dark:text-neutral-400">Reward</div>
+                        <div class="text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ isOfferingService ? 'Will Earn' : 'Reward' }}
+                        </div>
                         <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                            {{ challenge.amount }} {{ challenge.currency }}
+                            {{ absoluteAmount }} {{ challenge.currency }}
+                        </div>
+                        <div v-if="isOfferingService" class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            🫴 Service offering
                         </div>
                     </div>
 
@@ -452,9 +463,14 @@ const cancelChallenge = () => {
 
                     <!-- Reward -->
                     <div class="mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                        <div class="text-sm text-neutral-600 dark:text-neutral-400">Reward</div>
+                        <div class="text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ isOfferingService ? 'Will Earn' : 'Reward' }}
+                        </div>
                         <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                            {{ challenge.amount }} {{ challenge.currency }}
+                            {{ absoluteAmount }} {{ challenge.currency }}
+                        </div>
+                        <div v-if="isOfferingService" class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            🫴 Service offering
                         </div>
                     </div>
 

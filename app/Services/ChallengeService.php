@@ -71,11 +71,16 @@ class ChallengeService
                 throw new \Exception('Challenge acceptance deadline has passed');
             }
 
-            // Reserve points from creator
+            // Determine who pays based on challenge type
+            // Type 1 (offering payment): creator pays
+            // Type 2 (offering service): acceptor pays
+            $payer = $challenge->isOfferingPayment() ? $challenge->creator : $acceptor;
+
+            // Reserve points from the payer
             $holdTransaction = $this->reservePoints(
-                $challenge->creator,
+                $payer,
                 $challenge->group,
-                $challenge->amount,
+                $challenge->getAbsoluteAmount(),
                 $challenge
             );
 
@@ -125,28 +130,32 @@ class ChallengeService
 
     /**
      * Approve challenge completion
+     * The payer (person who pays the points) approves the work
      */
     public function approveChallenge(
         Challenge $challenge,
-        User $creator
+        User $approver
     ): Challenge {
-        if ($challenge->creator_id !== $creator->id) {
-            throw new \Exception('Only the creator can approve the challenge');
+        // The payer approves the work (creator for Type 1, acceptor for Type 2)
+        $expectedApprover = $challenge->getPayer();
+
+        if ($expectedApprover->id !== $approver->id) {
+            throw new \Exception('Only the payer can approve the challenge');
         }
 
         if (!$challenge->isAwaitingReview()) {
             throw new \Exception('Challenge is not awaiting review');
         }
 
-        return DB::transaction(function () use ($challenge, $creator) {
-            // Settle points from hold to acceptor
+        return DB::transaction(function () use ($challenge, $approver) {
+            // Settle points from hold to payee
             $this->settleHoldToAcceptor($challenge);
 
             // Update challenge status
             $challenge->update([
                 'status' => 'completed',
                 'verified_at' => now(),
-                'verified_by_id' => $creator->id,
+                'verified_by_id' => $approver->id,
                 'completed_at' => now(),
             ]);
 
@@ -159,22 +168,26 @@ class ChallengeService
 
     /**
      * Reject challenge completion
+     * The payer (person who pays the points) can reject the work
      */
     public function rejectChallenge(
         Challenge $challenge,
-        User $creator,
+        User $rejecter,
         string $reason
     ): Challenge {
-        if ($challenge->creator_id !== $creator->id) {
-            throw new \Exception('Only the creator can reject the challenge');
+        // The payer rejects the work (creator for Type 1, acceptor for Type 2)
+        $expectedRejecter = $challenge->getPayer();
+
+        if ($expectedRejecter->id !== $rejecter->id) {
+            throw new \Exception('Only the payer can reject the challenge');
         }
 
         if (!$challenge->isAwaitingReview()) {
             throw new \Exception('Challenge is not awaiting review');
         }
 
-        return DB::transaction(function () use ($challenge, $creator, $reason) {
-            // Release hold back to creator
+        return DB::transaction(function () use ($challenge, $reason) {
+            // Release hold back to payer
             $this->releaseHold($challenge);
 
             // Update challenge status
@@ -318,7 +331,7 @@ class ChallengeService
     }
 
     /**
-     * Settle hold points to acceptor
+     * Settle hold points to the payee
      */
     private function settleHoldToAcceptor(Challenge $challenge): void
     {
@@ -326,11 +339,13 @@ class ChallengeService
             throw new \Exception('No hold transaction found for challenge');
         }
 
-        // Award points to acceptor
+        // Award points to the payee (acceptor for Type 1, creator for Type 2)
+        $payee = $challenge->getPayee();
+
         $this->pointService->awardPoints(
-            $challenge->acceptor,
+            $payee,
             $challenge->group,
-            $challenge->amount,
+            $challenge->getAbsoluteAmount(),
             'challenge_completed',
             null, // no wager
             null, // no wager entry
@@ -339,7 +354,7 @@ class ChallengeService
     }
 
     /**
-     * Release hold back to creator
+     * Release hold back to the payer
      */
     private function releaseHold(Challenge $challenge): void
     {
@@ -347,14 +362,16 @@ class ChallengeService
             return; // No hold to release
         }
 
-        // Return points to creator
+        // Return points to the payer (creator for Type 1, acceptor for Type 2)
+        $payer = $challenge->getPayer();
+
         $this->pointService->awardPoints(
-            $challenge->creator,
+            $payer,
             $challenge->group,
-            $challenge->amount,
+            $challenge->getAbsoluteAmount(),
             'challenge_failed',
             null, // no wager
-            null, // no wager entry  
+            null, // no wager entry
             $challenge
         );
     }

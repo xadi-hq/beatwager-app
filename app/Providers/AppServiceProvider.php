@@ -47,6 +47,9 @@ class AppServiceProvider extends ServiceProvider
             $registry->register(new \App\Commands\Handlers\MyWagersCommandHandler($messenger));
             $registry->register(new \App\Commands\Handlers\BalanceCommandHandler($messenger));
             $registry->register(new \App\Commands\Handlers\LeaderboardCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\WagersCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\ChallengesCommandHandler($messenger));
+            $registry->register(new \App\Commands\Handlers\EventsCommandHandler($messenger));
 
             // Set fallback handler for unknown commands
             $registry->setFallbackHandler(new \App\Commands\Handlers\UnknownCommandHandler($messenger));

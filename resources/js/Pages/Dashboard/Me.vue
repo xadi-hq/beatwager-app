@@ -297,7 +297,7 @@ function formatDate(dateStr: string): string {
                                             <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ challenge.group.name }}</div>
                                         </div>
                                         <div class="text-right">
-                                            <div class="text-sm font-medium text-green-600 dark:text-green-400">{{ challenge.amount }} pts</div>
+                                            <div class="text-sm font-medium text-green-600 dark:text-green-400">{{ Math.abs(challenge.amount) }} pts</div>
                                             <div v-if="challenge.acceptance_deadline" class="text-xs text-neutral-500 dark:text-neutral-400">Accept by: {{ formatDate(challenge.acceptance_deadline) }}</div>
                                         </div>
                                     </div>
@@ -327,7 +327,7 @@ function formatDate(dateStr: string): string {
                                         </div>
                                         <div class="text-right">
                                             <div class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ formatTimeRemaining(challenge.completion_deadline) }}</div>
-                                            <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ challenge.amount }} pts reward</div>
+                                            <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ Math.abs(challenge.amount) }} pts reward</div>
                                         </div>
                                     </div>
                                     <div class="flex items-center justify-between">
@@ -361,7 +361,7 @@ function formatDate(dateStr: string): string {
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm">
-                                            <span v-if="challenge.status === 'completed'" class="text-green-600 dark:text-green-400 font-medium">✅ Completed (+{{ challenge.amount }} pts)</span>
+                                            <span v-if="challenge.status === 'completed'" class="text-green-600 dark:text-green-400 font-medium">✅ Completed (+{{ Math.abs(challenge.amount) }} pts)</span>
                                             <span v-else class="text-red-600 dark:text-red-400">❌ Failed</span>
                                             <span v-if="challenge.acceptor" class="ml-2 text-neutral-600 dark:text-neutral-400">by {{ challenge.acceptor.name }}</span>
                                         </div>
