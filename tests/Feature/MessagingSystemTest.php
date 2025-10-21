@@ -47,7 +47,10 @@ describe('MessageService', function () {
         expect($message->type)->toBe(MessageType::Announcement);
         expect($message->content)->toBeString();
         expect($message->content)->not->toBeEmpty();
-        expect($message->buttons)->toHaveCount(4); // yes, no, track progress, view details
+        // Buttons are now organized in rows: [[yes, no], [track, view]]
+        expect($message->buttons)->toHaveCount(2); // 2 rows
+        expect($message->buttons[0])->toHaveCount(2); // Row 1: yes, no
+        expect($message->buttons[1])->toHaveCount(2); // Row 2: track progress, view details
     });
 
     it('generates settlement reminder message', function () {

@@ -50,20 +50,22 @@ class MessageService
 
         $content = $this->contentGenerator->generate($ctx, $wager->group);
 
-        // Build wager-specific buttons
+        // Build wager-specific buttons (organized in rows)
         $buttons = $this->buildWagerButtons($wager);
 
-        // Add Track Progress and View Details buttons side by side
-        $buttons[] = new Button(
-            label: '📊 Track Progress',
-            action: ButtonAction::Callback,
-            value: "track_progress:{$wager->id}"
-        );
-        $buttons[] = new Button(
-            label: '👀 View Details',
-            action: ButtonAction::Callback,
-            value: "view:{$wager->id}"
-        );
+        // Add Track Progress and View Details buttons as final row
+        $buttons[] = [
+            new Button(
+                label: '📊 Track Progress',
+                action: ButtonAction::Callback,
+                value: "track_progress:{$wager->id}"
+            ),
+            new Button(
+                label: '👀 View Details',
+                action: ButtonAction::Callback,
+                value: "view:{$wager->id}"
+            ),
+        ];
 
         return new Message(
             content: $content,
@@ -248,7 +250,7 @@ class MessageService
      */
     private function buildWagerButtons(Wager $wager): array
     {
-        return match ($wager->type) {
+        $buttons = match ($wager->type) {
             'binary' => [
                 new Button(
                     label: __('messages.buttons.yes'),
@@ -270,6 +272,9 @@ class MessageService
                 ->toArray(),
             default => [],
         };
+
+        // Organize buttons into rows (max 3 per row)
+        return array_chunk($buttons, 3);
     }
 
     /**
@@ -430,23 +435,29 @@ class MessageService
 
         $content = $this->contentGenerator->generate($ctx, $challenge->group);
 
-        // Build challenge buttons
+        // Build challenge buttons with two-row layout
         $buttons = [
-            new Button(
-                label: '🏃 Accept Challenge',
-                action: ButtonAction::Callback,
-                value: "challenge_accept:{$challenge->id}"
-            ),
-            new Button(
-                label: '📊 Track Progress',
-                action: ButtonAction::Callback,
-                value: "track_challenge_progress:{$challenge->id}"
-            ),
-            new Button(
-                label: '👀 View Details',
-                action: ButtonAction::Callback,
-                value: "challenge_view:{$challenge->id}"
-            ),
+            [
+                // Row 1: Accept Challenge (full width)
+                new Button(
+                    label: '🏃 Accept Challenge',
+                    action: ButtonAction::Callback,
+                    value: "challenge_accept:{$challenge->id}"
+                ),
+            ],
+            [
+                // Row 2: Track Progress and View Details (side by side)
+                new Button(
+                    label: '📊 Track Progress',
+                    action: ButtonAction::Callback,
+                    value: "track_challenge_progress:{$challenge->id}"
+                ),
+                new Button(
+                    label: '👀 View Details',
+                    action: ButtonAction::Callback,
+                    value: "challenge_view:{$challenge->id}"
+                ),
+            ],
         ];
 
         return new Message(
@@ -770,20 +781,22 @@ class MessageService
 
         $content = $this->contentGenerator->generate($ctx, $wager->group);
 
-        // Build wager-specific buttons
+        // Build wager-specific buttons (organized in rows)
         $buttons = $this->buildWagerButtons($wager);
 
-        // Add Track Progress and View Details buttons side by side
-        $buttons[] = new Button(
-            label: '📊 Track Progress',
-            action: ButtonAction::Callback,
-            value: "track_progress:{$wager->id}"
-        );
-        $buttons[] = new Button(
-            label: '👀 View Details',
-            action: ButtonAction::Callback,
-            value: "view:{$wager->id}"
-        );
+        // Add Track Progress and View Details buttons as final row
+        $buttons[] = [
+            new Button(
+                label: '📊 Track Progress',
+                action: ButtonAction::Callback,
+                value: "track_progress:{$wager->id}"
+            ),
+            new Button(
+                label: '👀 View Details',
+                action: ButtonAction::Callback,
+                value: "view:{$wager->id}"
+            ),
+        ];
 
         return new Message(
             content: $content,
