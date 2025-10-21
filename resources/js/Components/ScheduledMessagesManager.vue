@@ -125,12 +125,6 @@ const getRecurrenceLabel = (msg: ScheduledMessage) => {
     return msg.recurrence_type ? msg.recurrence_type.charAt(0).toUpperCase() + msg.recurrence_type.slice(1) : 'Recurring';
 };
 
-// Get message type emoji
-const getTypeEmoji = (type: string) => {
-    const emojis = { holiday: '🎉', birthday: '🎂', custom: '📅' };
-    return emojis[type as keyof typeof emojis] || '📅';
-};
-
 // Add new message
 const addMessage = async () => {
     if (!form.value.title || !form.value.scheduled_date) {
@@ -375,34 +369,36 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
                     class="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-600 space-y-3"
                 >
                     <!-- Message Info -->
-                    <div>
-                        <div class="flex items-start gap-2 mb-1">
-                            <span class="text-xl">{{ getTypeEmoji(message.message_type) }}</span>
-                            <h4 class="font-semibold text-neutral-900 dark:text-white">
-                                {{ message.title }}
-                            </h4>
-                            <span
-                                v-if="message.is_drop_event && message.drop_amount"
-                                class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded font-medium"
-                            >
-                                🎁 {{ message.drop_amount }} pts
-                            </span>
-                            <span
-                                v-if="!message.is_active"
-                                class="text-xs bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded"
-                            >
-                                Inactive
-                            </span>
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span v-if="message.is_drop_event && message.drop_amount" class="text-xl">🎁</span>
+                                <h4 class="font-semibold text-neutral-900 dark:text-white">
+                                    {{ message.title }}
+                                </h4>
+                                <span
+                                    v-if="message.is_drop_event && message.drop_amount"
+                                    class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded font-medium"
+                                >
+                                    {{ message.drop_amount }} pts drop
+                                </span>
+                            </div>
+                            <div class="text-sm text-neutral-600 dark:text-neutral-400">
+                                <span>{{ formatDate(message.scheduled_date) }}</span>
+                                <span class="mx-2">•</span>
+                                <span>{{ getRecurrenceLabel(message) }}</span>
+                                <span v-if="message.next_occurrence" class="mx-2">•</span>
+                                <span v-if="message.next_occurrence">
+                                    Next: {{ formatDate(message.next_occurrence) }}
+                                </span>
+                            </div>
                         </div>
-                        <div class="text-sm text-neutral-600 dark:text-neutral-400 ml-8">
-                            <span>{{ formatDate(message.scheduled_date) }}</span>
-                            <span class="mx-2">-</span>
-                            <span>{{ getRecurrenceLabel(message) }}</span>
-                            <span v-if="message.next_occurrence" class="mx-2">-</span>
-                            <span v-if="message.next_occurrence">
-                                Next: {{ formatDate(message.next_occurrence) }}
-                            </span>
-                        </div>
+                        <span
+                            v-if="!message.is_active"
+                            class="text-xs bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded self-start"
+                        >
+                            Inactive
+                        </span>
                     </div>
 
                     <!-- Actions Row -->

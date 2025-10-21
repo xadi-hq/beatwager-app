@@ -37,49 +37,33 @@ class DonateCommandHandler extends AbstractCommandHandler
             ]
         );
 
-        // Must be in group context
-        if (!$message->isGroupContext()) {
+        // Must be in DM context (not group) for privacy
+        if ($message->isGroupContext()) {
             $this->messenger->sendMessage(
                 OutgoingMessage::text(
                     $message->chatId,
-                    '❌ Donations can only be sent from within a group.'
+                    '💡 Please use /donate in a direct message with me for privacy. I\'ll send you a link!'
                 )
             );
             return;
         }
 
-        // Find group
-        $group = Group::where('platform', $message->platform)
-            ->where('platform_chat_id', $message->chatId)
-            ->first();
+        // Get all groups user is a member of
+        $groups = $user->groups()->get();
 
-        if (!$group) {
+        if ($groups->isEmpty()) {
             $this->messenger->sendMessage(
                 OutgoingMessage::text(
                     $message->chatId,
-                    '❌ This group is not registered in BeatWager.'
+                    '❌ You are not a member of any groups yet. Join a group first to send donations.'
                 )
             );
             return;
         }
 
-        // Verify user is a member
-        $groupUser = $group->users()->where('users.id', $user->id)->first();
-
-        if (!$groupUser) {
-            $this->messenger->sendMessage(
-                OutgoingMessage::text(
-                    $message->chatId,
-                    '❌ You are not a member of this group.'
-                )
-            );
-            return;
-        }
-
-        // Generate signed URL for donation page
+        // Generate signed URL for donation page (no group_id - user selects)
         $params = [
             'u' => encrypt($message->platform . ':' . $message->userId),
-            'group_id' => $group->id,
         ];
 
         $fullUrl = $this->messenger->createAuthenticatedUrl(
@@ -97,32 +81,19 @@ class DonateCommandHandler extends AbstractCommandHandler
         ]);
         $shortUrl = url('/l/' . $shortCode);
 
-        // Send DM to user with donation link
-        $currencyName = $group->points_currency_name ?? 'points';
-        $groupName = $this->escapeMarkdown($group->name);
-
-        $messageText = "🎁 *Send {$currencyName} in {$groupName}*\n\n";
-        $messageText .= "Choose a recipient and amount:\n";
+        // Send donation link in DM
+        $messageText = "🎁 *Send Points to Friends*\n\n";
+        $messageText .= "Choose your group, recipient, and amount:\n";
         $messageText .= "👉 {$shortUrl}\n\n";
-        $messageText .= "_No minimum amount required\\. Link expires in 1 hour\\._";
+        $messageText .= "_You can choose to send silently \\(DM only\\) or publicly \\(announced in group\\)\\._\n";
+        $messageText .= "_Link expires in 1 hour\\._";
 
         try {
-            $this->messenger->sendDirectMessage(
-                $message->userId,
+            $this->messenger->sendMessage(
                 OutgoingMessage::markdown($message->chatId, $messageText)
             );
-
-            // Acknowledge in group
-            $username = $message->username ? "@{$message->username}" : $message->firstName;
-            $this->messenger->sendMessage(
-                OutgoingMessage::text(
-                    $message->chatId,
-                    "✅ Donation page sent to your DM, {$username}!"
-                )
-            );
         } catch (\Exception $e) {
-            // Fallback if user hasn't started bot
-            Log::error('Failed to send donate DM', [
+            Log::error('Failed to send donate link', [
                 'user_id' => $message->userId,
                 'error' => $e->getMessage(),
             ]);
@@ -130,7 +101,7 @@ class DonateCommandHandler extends AbstractCommandHandler
             $this->messenger->sendMessage(
                 OutgoingMessage::text(
                     $message->chatId,
-                    "❌ I couldn't send you a DM. Please use /start first to begin a conversation with me."
+                    "❌ Failed to send donation link. Please try again."
                 )
             );
         }

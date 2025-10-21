@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import axios from 'axios';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Toast from '@/Components/Toast.vue';
+
+interface Group {
+    id: string;
+    name: string;
+    currency_name: string;
+    donor_points: number;
+    platform_chat_id: string;
+}
 
 interface Recipient {
     id: string;
@@ -13,25 +21,25 @@ interface Recipient {
 }
 
 const props = defineProps<{
-    group: {
-        id: string;
-        name: string;
-        currency_name: string;
-    };
     donor: {
         id: string;
         name: string;
-        points: number;
+        platform: string;
+        platform_user_id: string;
     };
-    recipients: Recipient[];
+    groups: Group[];
     encrypted_user: string;
 }>();
 
+const selectedGroupId = ref<string>('');
 const selectedRecipient = ref<string>('');
 const amount = ref<number | null>(null);
-const isPublic = ref<boolean>(false);
+const isSilent = ref<boolean>(true); // Default to silent (DM only)
 const message = ref<string>('');
 const isSubmitting = ref(false);
+const isLoadingRecipients = ref(false);
+const recipients = ref<Recipient[]>([]);
+const donorPoints = ref<number>(0);
 
 // Toast notification state
 const showToast = ref(false);
@@ -39,15 +47,53 @@ const toastType = ref<'success' | 'error'>('success');
 const toastMessage = ref('');
 
 // Computed properties
+const selectedGroup = computed(() => {
+    return props.groups.find(g => g.id === selectedGroupId.value);
+});
+
 const selectedRecipientData = computed(() => {
-    return props.recipients.find(r => r.id === selectedRecipient.value);
+    return recipients.value.find(r => r.id === selectedRecipient.value);
 });
 
 const isValid = computed(() => {
-    return selectedRecipient.value &&
+    return selectedGroupId.value &&
+           selectedRecipient.value &&
            amount.value !== null &&
            amount.value > 0 &&
-           amount.value <= props.donor.points;
+           amount.value <= donorPoints.value;
+});
+
+// Watch for group selection changes
+watch(selectedGroupId, async (newGroupId) => {
+    if (!newGroupId) {
+        recipients.value = [];
+        selectedRecipient.value = '';
+        donorPoints.value = 0;
+        return;
+    }
+
+    // Update donor points
+    const group = props.groups.find(g => g.id === newGroupId);
+    if (group) {
+        donorPoints.value = group.donor_points;
+    }
+
+    // Load recipients for this group
+    isLoadingRecipients.value = true;
+    try {
+        const response = await axios.get(`/donations/groups/${newGroupId}/recipients`, {
+            params: { u: props.encrypted_user }
+        });
+        recipients.value = response.data.recipients;
+        donorPoints.value = response.data.donor_points;
+    } catch (error: any) {
+        toastType.value = 'error';
+        toastMessage.value = error.response?.data?.message || 'Failed to load recipients';
+        showToast.value = true;
+        recipients.value = [];
+    } finally {
+        isLoadingRecipients.value = false;
+    }
 });
 
 const submit = async () => {
@@ -62,10 +108,10 @@ const submit = async () => {
 
     try {
         await axios.post('/donations', {
-            group_id: props.group.id,
+            group_id: selectedGroupId.value,
             recipient_id: selectedRecipient.value,
             amount: amount.value,
-            is_public: isPublic.value,
+            is_public: !isSilent.value, // Invert: silent = false public, !silent = true public
             message: message.value || null,
             encrypted_user: props.encrypted_user,
         });
@@ -75,10 +121,12 @@ const submit = async () => {
         showToast.value = true;
 
         // Reset form
+        selectedGroupId.value = '';
         selectedRecipient.value = '';
         amount.value = null;
         message.value = '';
-        isPublic.value = false;
+        isSilent.value = true;
+        recipients.value = [];
 
     } catch (error: any) {
         toastType.value = 'error';
@@ -97,44 +145,68 @@ const submit = async () => {
         <div class="max-w-2xl mx-auto py-12 px-4">
             <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
                 <h1 class="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
-                    🎁 Send {{ group.currency_name }}
+                    🎁 Send Points to Friends
                 </h1>
                 <p class="text-neutral-600 dark:text-neutral-400 mb-6">
-                    in <strong>{{ group.name }}</strong>
+                    Sending as <strong>{{ donor.name }}</strong>
                 </p>
 
-                <!-- Donor Balance -->
-                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 mb-6">
-                    <p class="text-sm text-blue-800 dark:text-blue-200">
-                        💰 Your Balance: <strong>{{ donor.points }} {{ group.currency_name }}</strong>
-                    </p>
-                </div>
-
                 <form @submit.prevent="submit" class="space-y-6">
-                    <!-- Recipient Selection -->
+                    <!-- Group Selection -->
                     <div>
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                            From Group *
+                        </label>
+                        <select
+                            v-model="selectedGroupId"
+                            required
+                            class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                        >
+                            <option value="" disabled>Select a group</option>
+                            <option v-for="group in groups" :key="group.id" :value="group.id">
+                                {{ group.name }} ({{ group.donor_points }} {{ group.currency_name }})
+                            </option>
+                        </select>
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                            Choose which group's points to send
+                        </p>
+                    </div>
+
+                    <!-- Donor Balance (shown after group selection) -->
+                    <div v-if="selectedGroup" class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <p class="text-sm text-blue-800 dark:text-blue-200">
+                            💰 Your Balance in <strong>{{ selectedGroup.name }}</strong>:
+                            <strong>{{ donorPoints }} {{ selectedGroup.currency_name }}</strong>
+                        </p>
+                    </div>
+
+                    <!-- Recipient Selection -->
+                    <div v-if="selectedGroupId">
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                             Recipient *
                         </label>
                         <select
                             v-model="selectedRecipient"
                             required
-                            class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                            :disabled="isLoadingRecipients || recipients.length === 0"
+                            class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white disabled:opacity-50"
                         >
-                            <option value="" disabled>Select a member</option>
+                            <option value="" disabled>
+                                {{ isLoadingRecipients ? 'Loading recipients...' : 'Select a member' }}
+                            </option>
                             <option v-for="recipient in recipients" :key="recipient.id" :value="recipient.id">
                                 {{ recipient.name }}
                                 <span v-if="recipient.username"> (@{{ recipient.username }})</span>
-                                - {{ recipient.points }} {{ group.currency_name }}
+                                - {{ recipient.points }} {{ selectedGroup?.currency_name }}
                             </option>
                         </select>
-                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                            Choose who receives the {{ group.currency_name }}
+                        <p v-if="recipients.length === 0 && !isLoadingRecipients" class="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                            No other members in this group
                         </p>
                     </div>
 
                     <!-- Amount -->
-                    <div>
+                    <div v-if="selectedGroupId">
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                             Amount *
                         </label>
@@ -142,46 +214,47 @@ const submit = async () => {
                             v-model.number="amount"
                             type="number"
                             min="1"
-                            :max="donor.points"
+                            :max="donorPoints"
                             required
-                            :placeholder="`How many ${group.currency_name}?`"
+                            :placeholder="`How many ${selectedGroup?.currency_name}?`"
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         />
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                            Available: {{ donor.points }} {{ group.currency_name }}
+                            Available: {{ donorPoints }} {{ selectedGroup?.currency_name }}
                         </p>
                     </div>
 
-                    <!-- Public/Private Toggle -->
-                    <div class="border border-neutral-200 dark:border-neutral-600 rounded-lg p-4">
+                    <!-- Silent/Public Toggle -->
+                    <div v-if="selectedGroupId" class="border border-neutral-200 dark:border-neutral-600 rounded-lg p-4">
                         <label class="flex items-start gap-3 cursor-pointer">
                             <input
-                                v-model="isPublic"
+                                v-model="isSilent"
                                 type="checkbox"
                                 class="mt-1 rounded border-neutral-300 dark:border-neutral-600"
                             />
                             <div>
                                 <span class="font-medium text-neutral-900 dark:text-white">
-                                    Public Announcement
+                                    🤫 Send Silently
                                 </span>
                                 <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                                    If checked: Everyone sees who sent to whom<br />
-                                    If unchecked: Private - the bot announces the donation anonymously
+                                    If checked: Only recipient gets a DM (completely private)<br />
+                                    If unchecked: Announced publicly in the group chat<br />
+                                    <span class="italic">Both options use AI to craft a nice message!</span>
                                 </p>
                             </div>
                         </label>
                     </div>
 
                     <!-- Optional Message -->
-                    <div>
+                    <div v-if="selectedGroupId">
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                            Message (Optional)
+                            Personal Message (Optional)
                         </label>
                         <textarea
                             v-model="message"
                             rows="3"
                             maxlength="500"
-                            :placeholder="`Add a personal message (${isPublic ? 'will be shown publicly' : 'may be incorporated into announcement'})`"
+                            placeholder="Add a personal note to include with your gift..."
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         ></textarea>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
@@ -191,18 +264,20 @@ const submit = async () => {
 
                     <!-- Submit Button -->
                     <button
+                        v-if="selectedGroupId"
                         type="submit"
                         :disabled="!isValid || isSubmitting"
                         class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-neutral-400 disabled:to-neutral-400 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all"
                     >
-                        {{ isSubmitting ? 'Sending...' : `🎁 Send ${amount || 0} ${group.currency_name}` }}
+                        {{ isSubmitting ? 'Sending...' : `🎁 Send ${amount || 0} ${selectedGroup?.currency_name || 'points'}` }}
                     </button>
 
                     <!-- Info Box -->
-                    <div class="p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600">
+                    <div v-if="selectedGroupId" class="p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600">
                         <p class="text-xs text-neutral-600 dark:text-neutral-400">
-                            💡 <strong>How it works:</strong> {{ group.currency_name }} will be instantly transferred from your balance to the recipient.
-                            A message will be posted to the group chat announcing the donation.
+                            💡 <strong>How it works:</strong> Points will be instantly transferred.
+                            {{ isSilent ? 'The recipient will get a private DM.' : 'Everyone in the group will see the announcement.' }}
+                            All messages are crafted by AI to make them special!
                         </p>
                     </div>
                 </form>

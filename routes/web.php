@@ -87,5 +87,6 @@ Route::middleware(['signed.auth'])->group(function () {
 
     // Donation routes
     Route::get('/donations/create', [DonationController::class, 'create'])->name('donations.create');
+    Route::get('/donations/groups/{group}/recipients', [DonationController::class, 'recipients'])->name('donations.recipients');
     Route::post('/donations', [DonationController::class, 'store'])->name('donations.store');
 });

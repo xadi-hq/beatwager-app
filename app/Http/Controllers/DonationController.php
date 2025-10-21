@@ -35,23 +35,62 @@ class DonationController extends Controller
             abort(403, 'Invalid or expired link');
         }
 
-        $groupId = $request->input('group_id');
-
-        // Find group
-        $group = Group::with('users')->findOrFail($groupId);
-
         // Find donor user
         $donor = User::where('platform', $platform)
             ->where('platform_user_id', $platformUserId)
             ->firstOrFail();
 
-        // Verify donor is a member
-        $donorMembership = $group->users()
-            ->where('users.id', $donor->id)
-            ->first();
+        // Get all groups the donor is a member of
+        $groups = $donor->groups()->get()->map(function($group) use ($donor) {
+            $membership = $group->users()->where('users.id', $donor->id)->first();
 
+            return [
+                'id' => $group->id,
+                'name' => $group->name,
+                'currency_name' => $group->points_currency_name ?? 'points',
+                'donor_points' => $membership->pivot->points,
+                'platform_chat_id' => $group->platform_chat_id,
+            ];
+        });
+
+        if ($groups->isEmpty()) {
+            abort(403, 'You are not a member of any groups');
+        }
+
+        return Inertia::render('Donations/Create', [
+            'donor' => [
+                'id' => $donor->id,
+                'name' => $donor->name,
+                'platform' => $donor->platform,
+                'platform_user_id' => $donor->platform_user_id,
+            ],
+            'groups' => $groups,
+            'encrypted_user' => $request->input('u'),
+        ]);
+    }
+
+    /**
+     * Get recipients for a specific group
+     */
+    public function recipients(Request $request, Group $group): JsonResponse
+    {
+        // Decrypt user identifier
+        try {
+            $userIdentifier = decrypt($request->input('u'));
+            [$platform, $platformUserId] = explode(':', $userIdentifier, 2);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Invalid or expired link'], 403);
+        }
+
+        // Find donor
+        $donor = User::where('platform', $platform)
+            ->where('platform_user_id', $platformUserId)
+            ->firstOrFail();
+
+        // Verify donor is a member
+        $donorMembership = $group->users()->where('users.id', $donor->id)->first();
         if (!$donorMembership) {
-            abort(403, 'You are not a member of this group');
+            return response()->json(['message' => 'Not a member of this group'], 403);
         }
 
         // Get eligible recipients (all members except donor)
@@ -65,19 +104,9 @@ class DonationController extends Controller
                 'points' => $user->pivot->points,
             ]);
 
-        return Inertia::render('Donations/Create', [
-            'group' => [
-                'id' => $group->id,
-                'name' => $group->name,
-                'currency_name' => $group->points_currency_name ?? 'points',
-            ],
-            'donor' => [
-                'id' => $donor->id,
-                'name' => $donor->name,
-                'points' => $donorMembership->pivot->points,
-            ],
+        return response()->json([
             'recipients' => $recipients,
-            'encrypted_user' => $request->input('u'),
+            'donor_points' => $donorMembership->pivot->points,
         ]);
     }
 
@@ -189,8 +218,8 @@ class DonationController extends Controller
                 ],
             ]);
 
-            // Generate and send message
-            $message = $this->generateDonationMessage(
+            // Generate and send messages based on public/silent preference
+            $this->sendDonationMessages(
                 $group,
                 $donor,
                 $recipient,
@@ -198,8 +227,6 @@ class DonationController extends Controller
                 $validated['is_public'],
                 $validated['message'] ?? null
             );
-
-            $group->sendMessage($message);
 
             Log::channel('operational')->info('donation.completed', [
                 'group_id' => $group->id,
@@ -217,50 +244,82 @@ class DonationController extends Controller
     }
 
     /**
-     * Generate donation message (public or private)
+     * Send donation messages (silent DM-only or public group announcement)
      */
-    private function generateDonationMessage(
+    private function sendDonationMessages(
         Group $group,
         User $donor,
         User $recipient,
         int $amount,
         bool $isPublic,
         ?string $userMessage
-    ): string {
+    ): void {
         $currencyName = $group->points_currency_name ?? 'points';
 
         if ($isPublic) {
-            // Public announcement
-            $message = "🎁 Generous Donation!\n\n";
-            $message .= "{$donor->name} → {$recipient->name}\n";
-            $message .= "Amount: {$amount} {$currencyName}\n";
+            // Public announcement in group (via LLM)
+            try {
+                $prompt = "{$donor->name} just sent {$amount} {$currencyName} to {$recipient->name}! ";
+                $prompt .= "Write a brief, celebratory announcement (2-3 sentences) celebrating this generous act. ";
+                $prompt .= "Make it warm and fun!";
 
-            if ($userMessage) {
-                $message .= "\nMessage: \"{$userMessage}\"\n";
+                if ($userMessage) {
+                    $prompt .= " Include their message: \"{$userMessage}\"";
+                }
+
+                $groupMessage = $this->messageService->generateWithLLM($group, $prompt);
+                $group->sendMessage($groupMessage);
+
+            } catch (\Exception $e) {
+                Log::error('Failed to generate public donation message', [
+                    'group_id' => $group->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                // Fallback public message
+                $fallback = "🎁 {$donor->name} just sent {$amount} {$currencyName} to {$recipient->name}!";
+                if ($userMessage) {
+                    $fallback .= "\n\nMessage: \"{$userMessage}\"";
+                }
+                $group->sendMessage($fallback);
             }
+        } else {
+            // Silent - DM only to recipient (via LLM)
+            try {
+                $prompt = "{$donor->name} just sent you {$amount} {$currencyName}! ";
+                $prompt .= "Write a brief, warm message (2-3 sentences) letting them know about this gift. ";
+                $prompt .= "Make it personal and kind!";
 
-            return $message;
-        }
+                if ($userMessage) {
+                    $prompt .= " Include their message: \"{$userMessage}\"";
+                }
 
-        // Private donation - use LLM for creative message
-        try {
-            $prompt = "A generous donation of {$amount} {$currencyName} was just made in the group. ";
-            $prompt .= "Write a brief, celebratory message (2-3 sentences) announcing this WITHOUT revealing who sent or received it. ";
-            $prompt .= "Make it fun and encouraging! Focus on the community spirit.";
+                $dmMessage = $this->messageService->generateWithLLM($group, $prompt);
 
-            if ($userMessage) {
-                $prompt .= " Optional donor message to incorporate naturally: \"{$userMessage}\"";
+                // Send DM to recipient via messenger
+                app(\App\Messaging\MessengerAdapterInterface::class)->sendDirectMessage(
+                    $recipient->platform_user_id,
+                    \App\Messaging\DTOs\OutgoingMessage::text($recipient->platform_user_id, $dmMessage)
+                );
+
+            } catch (\Exception $e) {
+                Log::error('Failed to send silent donation DM', [
+                    'group_id' => $group->id,
+                    'recipient_id' => $recipient->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                // Fallback DM
+                $fallback = "🎁 {$donor->name} just sent you {$amount} {$currencyName}!";
+                if ($userMessage) {
+                    $fallback .= "\n\nMessage: \"{$userMessage}\"";
+                }
+
+                app(\App\Messaging\MessengerAdapterInterface::class)->sendDirectMessage(
+                    $recipient->platform_user_id,
+                    \App\Messaging\DTOs\OutgoingMessage::text($recipient->platform_user_id, $fallback)
+                );
             }
-
-            return $this->messageService->generateWithLLM($group, $prompt);
-        } catch (\Exception $e) {
-            Log::error('Failed to generate donation message', [
-                'group_id' => $group->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            // Fallback message
-            return "🎁 Someone just made a generous donation of {$amount} {$currencyName}! The kindness is real! 💚";
         }
     }
 }
