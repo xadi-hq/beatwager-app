@@ -61,8 +61,11 @@ class HelpCommandHandler extends AbstractCommandHandler
         $helpMessage = "📖 *BeatWager Help*\n\n";
         $helpMessage .= "*Available Commands:*\n\n";
         $helpMessage .= "• `/newwager` - Create a new wager in a group\n";
+        $helpMessage .= "• `/wagers` - View recent open wagers in this group\n";
         $helpMessage .= "• `/newevent` - Create a group event with attendance tracking\n";
-        $helpMessage .= "• `/newchallenge` - Create a 1-on-1 challenge with points reward\n";
+        $helpMessage .= "• `/events` - View recent open events in this group\n";
+        $helpMessage .= "• `/newchallenge` - Create a 1-on-1 challenge\n";
+        $helpMessage .= "• `/challenges` - View recent open challenges in this group\n";
         $helpMessage .= "• `/mybets` - View your active wagers\n";
         $helpMessage .= "• `/balance` - Check your points balance\n";
         $helpMessage .= "• `/leaderboard` - View group rankings\n";
@@ -76,8 +79,8 @@ class HelpCommandHandler extends AbstractCommandHandler
         $helpMessage .= "📅 Use `/newevent` to organize meetups with attendance bonuses\n";
         $helpMessage .= "✅ RSVP to events and earn points for showing up!\n\n";
         $helpMessage .= "*Challenges:*\n";
-        $helpMessage .= "💪 Use `/newchallenge` to offer points for completing a task\n";
-        $helpMessage .= "⚡ One person accepts and completes it to earn your points!\n\n";
+        $helpMessage .= "💪 Use `/newchallenge` to offer points OR request points for a task\n";
+        $helpMessage .= "⚡ Someone accepts and completes it to earn (or award) the points!\n\n";
 
         // Create short URL to help page
         $shortCode = ShortUrl::generateUniqueCode(6);

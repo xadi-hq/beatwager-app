@@ -40,37 +40,83 @@ import AppLayout from '@/Layouts/AppLayout.vue';
             <!-- Commands -->
             <section class="bg-white rounded-lg shadow p-6 mb-6">
                 <h2 class="text-2xl font-semibold text-gray-900 mb-4">Bot Commands</h2>
-                <div class="space-y-4">
+
+                <h3 class="font-semibold text-gray-800 mb-3 mt-4">Wagers</h3>
+                <div class="space-y-4 mb-6">
                     <div class="border-l-4 border-blue-500 pl-4">
-                        <h3 class="font-semibold text-gray-900">/newwager</h3>
+                        <h4 class="font-semibold text-gray-900">/newwager</h4>
                         <p class="text-gray-600 text-sm">
                             Create a new wager in your group. Click the link to set up the wager type, question, options, stake amount, and deadline.
                         </p>
                     </div>
 
+                    <div class="border-l-4 border-blue-400 pl-4">
+                        <h4 class="font-semibold text-gray-900">/wagers</h4>
+                        <p class="text-gray-600 text-sm">
+                            View the top 3 most recent open wagers in this group.
+                        </p>
+                    </div>
+                </div>
+
+                <h3 class="font-semibold text-gray-800 mb-3 mt-4">Events</h3>
+                <div class="space-y-4 mb-6">
+                    <div class="border-l-4 border-orange-500 pl-4">
+                        <h4 class="font-semibold text-gray-900">/newevent</h4>
+                        <p class="text-gray-600 text-sm">
+                            Create a group event with attendance tracking. Organize meetups and reward participants with points bonuses.
+                        </p>
+                    </div>
+
+                    <div class="border-l-4 border-orange-400 pl-4">
+                        <h4 class="font-semibold text-gray-900">/events</h4>
+                        <p class="text-gray-600 text-sm">
+                            View the top 3 most recent open events in this group.
+                        </p>
+                    </div>
+                </div>
+
+                <h3 class="font-semibold text-gray-800 mb-3 mt-4">Challenges</h3>
+                <div class="space-y-4 mb-6">
+                    <div class="border-l-4 border-red-500 pl-4">
+                        <h4 class="font-semibold text-gray-900">/newchallenge</h4>
+                        <p class="text-gray-600 text-sm">
+                            Create a 1-on-1 challenge. You can either <strong>offer points</strong> for someone to complete a task, or <strong>request points</strong> to complete a task yourself.
+                        </p>
+                    </div>
+
+                    <div class="border-l-4 border-red-400 pl-4">
+                        <h4 class="font-semibold text-gray-900">/challenges</h4>
+                        <p class="text-gray-600 text-sm">
+                            View the top 3 most recent open challenges in this group.
+                        </p>
+                    </div>
+                </div>
+
+                <h3 class="font-semibold text-gray-800 mb-3 mt-4">Your Account</h3>
+                <div class="space-y-4">
                     <div class="border-l-4 border-green-500 pl-4">
-                        <h3 class="font-semibold text-gray-900">/mybets</h3>
+                        <h4 class="font-semibold text-gray-900">/mybets</h4>
                         <p class="text-gray-600 text-sm">
                             View your active wagers. The bot will send you a DM with your top 5 upcoming wagers and a link to your full dashboard.
                         </p>
                     </div>
 
                     <div class="border-l-4 border-purple-500 pl-4">
-                        <h3 class="font-semibold text-gray-900">/balance</h3>
+                        <h4 class="font-semibold text-gray-900">/balance</h4>
                         <p class="text-gray-600 text-sm">
                             Check your points balance. If used in a group, shows your balance in that group. If used in a DM, shows all your group balances.
                         </p>
                     </div>
 
                     <div class="border-l-4 border-yellow-500 pl-4">
-                        <h3 class="font-semibold text-gray-900">/leaderboard</h3>
+                        <h4 class="font-semibold text-gray-900">/leaderboard</h4>
                         <p class="text-gray-600 text-sm">
                             View the rankings in your group. See who has the most points and who's on a winning streak!
                         </p>
                     </div>
 
                     <div class="border-l-4 border-gray-500 pl-4">
-                        <h3 class="font-semibold text-gray-900">/help</h3>
+                        <h4 class="font-semibold text-gray-900">/help</h4>
                         <p class="text-gray-600 text-sm">
                             Shows this help information with available commands and how to use them.
                         </p>
@@ -113,6 +159,38 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                         <div class="bg-gray-50 rounded p-3 text-sm">
                             <strong>Example:</strong> "What will the temperature be at noon?"<br>
                             Range: 60-85°F, Winner: Closest
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Challenges -->
+            <section class="bg-white rounded-lg shadow p-6 mb-6">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Challenges</h2>
+                <p class="text-gray-700 mb-4">
+                    Challenges are 1-on-1 tasks where points are at stake. Unlike wagers, challenges have a challenger and an acceptor.
+                </p>
+
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Offer Points (Positive Amount)</h3>
+                        <p class="text-gray-600 mb-2">
+                            You offer points for someone to complete a task. The challenger puts up the points, and the acceptor earns them upon completion.
+                        </p>
+                        <div class="bg-green-50 rounded p-3 text-sm border border-green-200">
+                            <strong>Example:</strong> "I'll give 100 points to whoever brings me coffee"<br>
+                            <span class="text-green-800">→ Someone accepts, completes the task, and earns 100 points from you</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Request Points (Negative Amount)</h3>
+                        <p class="text-gray-600 mb-2">
+                            You request points to complete a task for someone else. The acceptor puts up the points, and the challenger earns them upon completion.
+                        </p>
+                        <div class="bg-blue-50 rounded p-3 text-sm border border-blue-200">
+                            <strong>Example:</strong> "I'll clean the garage for 150 points"<br>
+                            <span class="text-blue-800">→ Someone accepts, you complete the task, and you earn 150 points from them</span>
                         </div>
                     </div>
                 </div>

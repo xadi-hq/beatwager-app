@@ -137,8 +137,21 @@ import LandingLayout from '@/Layouts/LandingLayout.vue';
 
         <!-- Footer -->
         <footer class="bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 py-8">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-600 dark:text-neutral-400 text-sm">
-                <p>Made with ❤️ for Telegram communities</p>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p class="text-center text-neutral-600 dark:text-neutral-400 text-sm">
+                        Made with ❤️ for Telegram communities
+                    </p>
+                    <a
+                        href="/help"
+                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#5da7f8] hover:text-[#4a8bc9] dark:text-[#7ac1ff] dark:hover:text-[#5da7f8] transition-colors"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Help & Documentation
+                    </a>
+                </div>
             </div>
         </footer>
     </LandingLayout>

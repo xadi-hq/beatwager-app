@@ -16,6 +16,11 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 });
 
+// Public help documentation
+Route::get('/help', function () {
+    return Inertia::render('Help');
+})->name('help');
+
 // Short URL redirects
 Route::get('/l/{code}', [ShortUrlController::class, 'redirect'])->name('short.redirect');
 
@@ -26,11 +31,6 @@ Route::middleware(['signed.auth'])->group(function () {
     // User dashboard routes
     Route::get('/me', [DashboardController::class, 'show'])->name('dashboard.me');
     Route::post('/me/profile', [DashboardController::class, 'updateProfile'])->name('dashboard.profile.update');
-
-    // Help page
-    Route::get('/help', function () {
-        return Inertia::render('Help');
-    })->name('help');
 
     // Wager creation routes
     Route::get('/wager/create', [WagerController::class, 'create'])->name('wager.create');
