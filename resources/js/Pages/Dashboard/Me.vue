@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
@@ -29,6 +29,50 @@ const getDefaultTab = () => {
 };
 
 const activeTab = ref(getDefaultTab());
+
+// Group filter - default to 'all', only show filter if user has 2+ groups
+const selectedGroupFilter = ref<string>('all');
+
+// Computed properties for filtered data
+const filteredOpenWagers = computed(() => {
+    if (selectedGroupFilter.value === 'all') return props.openWagers;
+    return props.openWagers.filter(w => w.group.id === selectedGroupFilter.value);
+});
+
+const filteredAwaitingSettlement = computed(() => {
+    if (selectedGroupFilter.value === 'all') return props.awaitingSettlement;
+    return props.awaitingSettlement.filter(w => w.group.id === selectedGroupFilter.value);
+});
+
+const filteredSettledWagers = computed(() => {
+    if (selectedGroupFilter.value === 'all') return props.settledWagers;
+    return props.settledWagers.filter(w => w.group.id === selectedGroupFilter.value);
+});
+
+const filteredChallenges = computed(() => {
+    if (selectedGroupFilter.value === 'all') return props.userChallenges;
+    return props.userChallenges.filter(c => c.group.id === selectedGroupFilter.value);
+});
+
+const filteredUpcomingEvents = computed(() => {
+    if (selectedGroupFilter.value === 'all') return props.upcomingEvents;
+    return props.upcomingEvents.filter(e => e.group.id === selectedGroupFilter.value);
+});
+
+const filteredPastUnprocessedEvents = computed(() => {
+    if (selectedGroupFilter.value === 'all') return props.pastUnprocessedEvents;
+    return props.pastUnprocessedEvents.filter(e => e.group.id === selectedGroupFilter.value);
+});
+
+const filteredPastProcessedEvents = computed(() => {
+    if (selectedGroupFilter.value === 'all') return props.pastProcessedEvents;
+    return props.pastProcessedEvents.filter(e => e.group.id === selectedGroupFilter.value);
+});
+
+const filteredTransactions = computed(() => {
+    if (selectedGroupFilter.value === 'all') return props.recentTransactions;
+    return props.recentTransactions.filter(t => t.group && t.group.id === selectedGroupFilter.value);
+});
 
 // Time formatting helpers
 function formatTimeRemaining(deadlineStr: string): string {
@@ -111,6 +155,24 @@ function formatDate(dateStr: string): string {
                 </div>
             </div>
 
+            <!-- Group Filter (only show if user has 2+ groups) -->
+            <div v-if="groups.length > 1" class="mb-6">
+                <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-4">
+                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                        Filter by Group
+                    </label>
+                    <select
+                        v-model="selectedGroupFilter"
+                        class="w-full md:w-auto px-4 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="all">All Groups</option>
+                        <option v-for="group in groups" :key="group.id" :value="group.id">
+                            {{ group.name }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+
             <!-- Tabs -->
             <div class="bg-white dark:bg-neutral-800 rounded-lg shadow">
                 <!-- Mobile: Dropdown -->
@@ -119,7 +181,7 @@ function formatDate(dateStr: string): string {
                         v-model="activeTab"
                         class="w-full px-4 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                        <option value="wagers">My Wagers</option>
+                        <option value="wagers">Wagers</option>
                         <option value="challenges">Challenges</option>
                         <option value="events">Events</option>
                         <option value="transactions">Transactions</option>
@@ -139,7 +201,7 @@ function formatDate(dateStr: string): string {
                                     : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300'
                             ]"
                         >
-                            My Wagers
+                            Wagers
                         </button>
                         <button
                             @click="activeTab = 'challenges'"
@@ -193,12 +255,12 @@ function formatDate(dateStr: string): string {
                     <div v-if="activeTab === 'wagers'">
                         <!-- Open Wagers (Before Deadline) -->
                         <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Open ({{ openWagers.length }})</h3>
-                            <div v-if="openWagers.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Open ({{ filteredOpenWagers.length }})</h3>
+                            <div v-if="filteredOpenWagers.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                 No open wagers
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="wager in openWagers" :key="wager.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                <div v-for="wager in filteredOpenWagers" :key="wager.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
                                             <a :href="wager.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ wager.title }}</a>
@@ -223,12 +285,12 @@ function formatDate(dateStr: string): string {
 
                         <!-- Awaiting Settlement (Past Deadline) -->
                         <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Awaiting Settlement ({{ awaitingSettlement.length }})</h3>
-                            <div v-if="awaitingSettlement.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Awaiting Settlement ({{ filteredAwaitingSettlement.length }})</h3>
+                            <div v-if="filteredAwaitingSettlement.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                 No wagers awaiting settlement
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="wager in awaitingSettlement" :key="wager.id" class="bg-amber-50 dark:bg-amber-900/20 rounded p-4 border border-amber-200 dark:border-amber-800">
+                                <div v-for="wager in filteredAwaitingSettlement" :key="wager.id" class="bg-amber-50 dark:bg-amber-900/20 rounded p-4 border border-amber-200 dark:border-amber-800">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
                                             <a :href="wager.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ wager.title }}</a>
@@ -254,11 +316,11 @@ function formatDate(dateStr: string): string {
                         <!-- Settled Wagers -->
                         <div>
                             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Settled</h3>
-                            <div v-if="settledWagers.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                            <div v-if="filteredSettledWagers.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                 No settled wagers yet
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="wager in settledWagers" :key="wager.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                <div v-for="wager in filteredSettledWagers" :key="wager.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
                                             <a :href="wager.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ wager.title }}</a>
@@ -285,12 +347,12 @@ function formatDate(dateStr: string): string {
                     <div v-if="activeTab === 'challenges'">
                         <!-- Open Challenges -->
                         <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Open ({{ userChallenges.filter(c => c.status === 'open').length }})</h3>
-                            <div v-if="userChallenges.filter(c => c.status === 'open').length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Open ({{ filteredChallenges.filter(c => c.status === 'open').length }})</h3>
+                            <div v-if="filteredChallenges.filter(c => c.status === 'open').length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                 No open challenges
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="challenge in userChallenges.filter(c => c.status === 'open')" :key="challenge.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                <div v-for="challenge in filteredChallenges.filter(c => c.status === 'open')" :key="challenge.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
                                             <a :href="challenge.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ challenge.description }}</a>
@@ -314,12 +376,12 @@ function formatDate(dateStr: string): string {
 
                         <!-- Accepted Challenges -->
                         <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Accepted ({{ userChallenges.filter(c => c.status === 'accepted').length }})</h3>
-                            <div v-if="userChallenges.filter(c => c.status === 'accepted').length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Accepted ({{ filteredChallenges.filter(c => c.status === 'accepted').length }})</h3>
+                            <div v-if="filteredChallenges.filter(c => c.status === 'accepted').length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                 No accepted challenges
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="challenge in userChallenges.filter(c => c.status === 'accepted')" :key="challenge.id" class="bg-blue-50 dark:bg-blue-900/20 rounded p-4 border border-blue-200 dark:border-blue-800">
+                                <div v-for="challenge in filteredChallenges.filter(c => c.status === 'accepted')" :key="challenge.id" class="bg-blue-50 dark:bg-blue-900/20 rounded p-4 border border-blue-200 dark:border-blue-800">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
                                             <a :href="challenge.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ challenge.description }}</a>
@@ -345,11 +407,11 @@ function formatDate(dateStr: string): string {
                         <!-- Completed Challenges -->
                         <div>
                             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Completed</h3>
-                            <div v-if="userChallenges.filter(c => ['completed', 'failed'].includes(c.status)).length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                            <div v-if="filteredChallenges.filter(c => ['completed', 'failed'].includes(c.status)).length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                 No completed challenges yet
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="challenge in userChallenges.filter(c => ['completed', 'failed'].includes(c.status))" :key="challenge.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                <div v-for="challenge in filteredChallenges.filter(c => ['completed', 'failed'].includes(c.status))" :key="challenge.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
                                             <a :href="challenge.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ challenge.description }}</a>
@@ -376,12 +438,12 @@ function formatDate(dateStr: string): string {
                     <div v-if="activeTab === 'events'">
                         <!-- Upcoming Events -->
                         <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Upcoming ({{ upcomingEvents.length }})</h3>
-                            <div v-if="upcomingEvents.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Upcoming ({{ filteredUpcomingEvents.length }})</h3>
+                            <div v-if="filteredUpcomingEvents.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                 No upcoming events
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="event in upcomingEvents" :key="event.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                <div v-for="event in filteredUpcomingEvents" :key="event.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
                                             <a :href="event.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ event.name }}</a>
@@ -407,12 +469,12 @@ function formatDate(dateStr: string): string {
 
                         <!-- Past Unprocessed Events -->
                         <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Past (Unprocessed) ({{ pastUnprocessedEvents.length }})</h3>
-                            <div v-if="pastUnprocessedEvents.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Past (Unprocessed) ({{ filteredPastUnprocessedEvents.length }})</h3>
+                            <div v-if="filteredPastUnprocessedEvents.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                 No unprocessed events
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="event in pastUnprocessedEvents" :key="event.id" class="bg-amber-50 dark:bg-amber-900/20 rounded p-4 border border-amber-200 dark:border-amber-800">
+                                <div v-for="event in filteredPastUnprocessedEvents" :key="event.id" class="bg-amber-50 dark:bg-amber-900/20 rounded p-4 border border-amber-200 dark:border-amber-800">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
                                             <a :href="event.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ event.name }}</a>
@@ -436,11 +498,11 @@ function formatDate(dateStr: string): string {
                         <!-- Past Processed Events -->
                         <div>
                             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Past (Completed)</h3>
-                            <div v-if="pastProcessedEvents.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                            <div v-if="filteredPastProcessedEvents.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                 No completed events yet
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="event in pastProcessedEvents" :key="event.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                <div v-for="event in filteredPastProcessedEvents" :key="event.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
                                             <a :href="event.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ event.name }}</a>
@@ -465,11 +527,11 @@ function formatDate(dateStr: string): string {
                     <!-- Transactions Tab -->
                     <div v-if="activeTab === 'transactions'">
                         <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Recent Transactions</h3>
-                        <div v-if="recentTransactions.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                        <div v-if="filteredTransactions.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                             No transactions yet
                         </div>
                         <div v-else class="space-y-2">
-                            <div v-for="tx in recentTransactions" :key="tx.id" class="flex justify-between items-center bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                            <div v-for="tx in filteredTransactions" :key="tx.id" class="flex justify-between items-center bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                 <div class="flex-1">
                                     <div class="font-medium text-neutral-900 dark:text-neutral-100">{{ tx.description || tx.type }}</div>
                                     <div class="text-xs text-neutral-600 dark:text-neutral-400">

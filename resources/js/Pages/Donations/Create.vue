@@ -31,7 +31,7 @@ const props = defineProps<{
 const selectedGroupId = ref<string>('');
 const selectedRecipient = ref<string>('');
 const amount = ref<number | null>(null);
-const isSilent = ref<boolean>(true); // Default to silent (DM only)
+const announcementType = ref<'private' | 'public'>('private'); // Default to private DM
 const message = ref<string>('');
 const isSubmitting = ref(false);
 const isLoadingRecipients = ref(false);
@@ -106,7 +106,7 @@ const submit = async () => {
             group_id: selectedGroupId.value,
             recipient_id: selectedRecipient.value,
             amount: amount.value,
-            is_public: !isSilent.value, // Invert: silent = false public, !silent = true public
+            is_public: announcementType.value === 'public',
             message: message.value || null,
         });
 
@@ -119,7 +119,7 @@ const submit = async () => {
         selectedRecipient.value = '';
         amount.value = null;
         message.value = '';
-        isSilent.value = true;
+        announcementType.value = 'private';
         recipients.value = [];
 
     } catch (error: any) {
@@ -218,25 +218,59 @@ const submit = async () => {
                         </p>
                     </div>
 
-                    <!-- Silent/Public Toggle -->
-                    <div v-if="selectedGroupId" class="border border-neutral-200 dark:border-neutral-600 rounded-lg p-4">
-                        <label class="flex items-start gap-3 cursor-pointer">
-                            <input
-                                v-model="isSilent"
-                                type="checkbox"
-                                class="mt-1 rounded border-neutral-300 dark:border-neutral-600"
-                            />
-                            <div>
-                                <span class="font-medium text-neutral-900 dark:text-white">
-                                    🤫 Send Silently
-                                </span>
-                                <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                                    If checked: Only recipient gets a DM (completely private)<br />
-                                    If unchecked: Announced publicly in the group chat<br />
-                                    <span class="italic">Both options use AI to craft a nice message!</span>
-                                </p>
-                            </div>
+                    <!-- Announcement Type -->
+                    <div v-if="selectedGroupId">
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                            Announcement
                         </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Private DM Option -->
+                            <label
+                                class="relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all"
+                                :class="announcementType === 'private'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                    : 'border-neutral-200 dark:border-neutral-600 hover:border-neutral-300 dark:hover:border-neutral-500'"
+                            >
+                                <input
+                                    type="radio"
+                                    v-model="announcementType"
+                                    value="private"
+                                    class="sr-only"
+                                />
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-lg">💌</span>
+                                    <span class="font-medium text-neutral-900 dark:text-white">Private DM</span>
+                                </div>
+                                <p class="text-xs text-neutral-600 dark:text-neutral-400">
+                                    Only recipient gets a personal DM
+                                </p>
+                            </label>
+
+                            <!-- Public Group Option -->
+                            <label
+                                class="relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all"
+                                :class="announcementType === 'public'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                    : 'border-neutral-200 dark:border-neutral-600 hover:border-neutral-300 dark:hover:border-neutral-500'"
+                            >
+                                <input
+                                    type="radio"
+                                    v-model="announcementType"
+                                    value="public"
+                                    class="sr-only"
+                                />
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-lg">📢</span>
+                                    <span class="font-medium text-neutral-900 dark:text-white">Public Group</span>
+                                </div>
+                                <p class="text-xs text-neutral-600 dark:text-neutral-400">
+                                    Announced in group chat
+                                </p>
+                            </label>
+                        </div>
+                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2 italic">
+                            ✨ AI crafts a personalized message for either channel
+                        </p>
                     </div>
 
                     <!-- Optional Message -->
@@ -270,8 +304,7 @@ const submit = async () => {
                     <div v-if="selectedGroupId" class="p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600">
                         <p class="text-xs text-neutral-600 dark:text-neutral-400">
                             💡 <strong>How it works:</strong> Points will be instantly transferred.
-                            {{ isSilent ? 'The recipient will get a private DM.' : 'Everyone in the group will see the announcement.' }}
-                            All messages are crafted by AI to make them special!
+                            {{ announcementType === 'private' ? 'The recipient will get a private DM.' : 'Everyone in the group will see the announcement.' }}
                         </p>
                     </div>
                 </form>
