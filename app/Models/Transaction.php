@@ -30,6 +30,7 @@ class Transaction extends Model
     protected function casts(): array
     {
         return [
+            'type' => \App\Enums\TransactionType::class,
             'amount' => 'integer',
             'balance_before' => 'integer',
             'balance_after' => 'integer',

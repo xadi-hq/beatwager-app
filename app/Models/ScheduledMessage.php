@@ -130,13 +130,24 @@ class ScheduledMessage extends Model
             \App\Models\AuditEvent::create([
                 'event_type' => 'drop.received',
                 'group_id' => $group->id,
-                'user_id' => $user->id,
+                'summary' => "Received {$this->drop_amount} points from {$this->title}",
+                'participants' => [
+                    [
+                        'user_id' => $user->id,
+                        'username' => $user->name,
+                        'role' => 'recipient',
+                    ]
+                ],
+                'impact' => [
+                    'points' => $this->drop_amount,
+                ],
                 'metadata' => [
                     'amount' => $this->drop_amount,
                     'source' => 'scheduled_message',
                     'message_id' => $this->id,
                     'message_title' => $this->title,
                 ],
+                'created_at' => now(),
             ]);
 
             $recipientsCount++;

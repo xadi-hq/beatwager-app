@@ -14,20 +14,8 @@ return new class extends Migration
             $table->foreignUuid('group_id')->constrained()->cascadeOnDelete();
 
             // Transaction details
-            $table->enum('type', [
-                'wager_placed',
-                'wager_won',
-                'wager_lost',
-                'wager_refunded',
-                'point_decay',
-                'admin_adjustment',
-                'initial_balance',
-                'event_attendance_bonus',
-                'challenge_hold',
-                'challenge_completed',
-                'challenge_failed',
-                'challenge_cancelled'
-            ]);
+            // Type is validated via App\Enums\TransactionType enum, not database constraint
+            $table->string('type', 50);
 
             $table->integer('amount'); // Positive for credit, negative for debit
             $table->integer('balance_before');

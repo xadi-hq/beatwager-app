@@ -89,11 +89,11 @@ class SendSeasonMilestoneDrops implements ShouldQueue
         // Get the current season
         $season = $group->seasons()->where('id', $group->current_season_id)->first();
 
-        if (!$season || !$season->start_date) {
+        if (!$season || !$season->started_at) {
             return null;
         }
 
-        $start = $season->start_date;
+        $start = $season->started_at;
         $end = $group->season_ends_at;
         $now = now();
 
@@ -125,19 +125,35 @@ class SendSeasonMilestoneDrops implements ShouldQueue
             AuditEvent::create([
                 'event_type' => 'drop.season_milestone',
                 'group_id' => $group->id,
-                'user_id' => $user->id,
+                'summary' => "Received {$amount} points from {$threshold}% season milestone",
+                'participants' => [
+                    [
+                        'user_id' => $user->id,
+                        'username' => $user->name,
+                        'role' => 'recipient',
+                    ]
+                ],
+                'impact' => [
+                    'points' => $amount,
+                ],
                 'metadata' => [
                     'amount' => $amount,
                     'milestone' => "{$threshold}%",
                     'season_id' => $group->current_season_id,
                 ],
+                'created_at' => now(),
             ]);
 
             $recipientsCount++;
         }
 
         // Send message to group
-        $message = $this->generateMilestoneMessage($group, $threshold, $amount);
+        $messageText = $this->generateMilestoneMessage($group, $threshold, $amount);
+        $message = new \App\DTOs\Message(
+            content: $messageText,
+            type: \App\DTOs\MessageType::Announcement,
+            currencyName: $group->points_currency_name ?? 'points'
+        );
         $group->sendMessage($message);
 
         Log::channel('operational')->info('season_drops.milestone_triggered', [

@@ -127,60 +127,67 @@ class DonationController extends Controller
         DB::transaction(function () use ($donor, $recipient, $group, $validated) {
             $amount = $validated['amount'];
 
-            // Deduct from donor
-            $donor->adjustPoints($group, -$amount);
+            // Deduct from donor (PointService creates transaction automatically)
+            $donor->adjustPoints($group, -$amount, 'donation_sent');
 
-            // Add to recipient
-            $recipient->adjustPoints($group, $amount);
-
-            // Create transactions
-            Transaction::create([
-                'user_id' => $donor->id,
-                'group_id' => $group->id,
-                'type' => 'donation_sent',
-                'amount' => -$amount,
-                'description' => "Donated to {$recipient->name}",
-                'metadata' => [
-                    'recipient_id' => $recipient->id,
-                    'is_public' => $validated['is_public'],
-                ],
-            ]);
-
-            Transaction::create([
-                'user_id' => $recipient->id,
-                'group_id' => $group->id,
-                'type' => 'donation_received',
-                'amount' => $amount,
-                'description' => "Received from {$donor->name}",
-                'metadata' => [
-                    'donor_id' => $donor->id,
-                    'is_public' => $validated['is_public'],
-                ],
-            ]);
+            // Add to recipient (PointService creates transaction automatically)
+            $recipient->adjustPoints($group, $amount, 'donation_received');
 
             // Create audit events
             AuditEvent::create([
                 'event_type' => 'donation.sent',
                 'group_id' => $group->id,
-                'user_id' => $donor->id,
+                'summary' => "Donated {$amount} points to {$recipient->name}",
+                'participants' => [
+                    [
+                        'user_id' => $donor->id,
+                        'username' => $donor->name,
+                        'role' => 'donor',
+                    ],
+                    [
+                        'user_id' => $recipient->id,
+                        'username' => $recipient->name,
+                        'role' => 'recipient',
+                    ]
+                ],
+                'impact' => [
+                    'points' => -$amount,
+                ],
                 'metadata' => [
                     'amount' => $amount,
                     'recipient_id' => $recipient->id,
                     'recipient_name' => $recipient->name,
                     'is_public' => $validated['is_public'],
                 ],
+                'created_at' => now(),
             ]);
 
             AuditEvent::create([
                 'event_type' => 'donation.received',
                 'group_id' => $group->id,
-                'user_id' => $recipient->id,
+                'summary' => "Received {$amount} points from {$donor->name}",
+                'participants' => [
+                    [
+                        'user_id' => $donor->id,
+                        'username' => $donor->name,
+                        'role' => 'donor',
+                    ],
+                    [
+                        'user_id' => $recipient->id,
+                        'username' => $recipient->name,
+                        'role' => 'recipient',
+                    ]
+                ],
+                'impact' => [
+                    'points' => $amount,
+                ],
                 'metadata' => [
                     'amount' => $amount,
                     'donor_id' => $donor->id,
                     'donor_name' => $donor->name,
                     'is_public' => $validated['is_public'],
                 ],
+                'created_at' => now(),
             ]);
 
             // Generate and send messages based on public/silent preference
@@ -233,7 +240,15 @@ class DonationController extends Controller
                 }
 
                 $groupMessage = $this->messageService->generateWithLLM($group, $prompt);
-                $group->sendMessage($groupMessage);
+
+                try {
+                    $group->sendMessage($groupMessage);
+                } catch (\Exception $sendError) {
+                    Log::warning('Failed to send donation message', [
+                        'group_id' => $group->id,
+                        'error' => $sendError->getMessage(),
+                    ]);
+                }
 
             } catch (\Exception $e) {
                 Log::error('Failed to generate public donation message', [
@@ -242,11 +257,24 @@ class DonationController extends Controller
                 ]);
 
                 // Fallback public message
-                $fallback = "🎁 {$donor->name} just sent {$amount} {$currencyName} to {$recipient->name}!";
+                $fallbackText = "🎁 {$donor->name} just sent {$amount} {$currencyName} to {$recipient->name}!";
                 if ($userMessage) {
-                    $fallback .= "\n\nMessage: \"{$userMessage}\"";
+                    $fallbackText .= "\n\nMessage: \"{$userMessage}\"";
                 }
-                $group->sendMessage($fallback);
+                $fallback = new \App\DTOs\Message(
+                    content: $fallbackText,
+                    type: \App\DTOs\MessageType::Announcement,
+                    currencyName: $currencyName
+                );
+
+                try {
+                    $group->sendMessage($fallback);
+                } catch (\Exception $sendError) {
+                    Log::warning('Failed to send fallback donation message', [
+                        'group_id' => $group->id,
+                        'error' => $sendError->getMessage(),
+                    ]);
+                }
             }
         } else {
             // Silent - DM only to recipient (via LLM)
@@ -262,13 +290,23 @@ class DonationController extends Controller
                 $dmMessage = $this->messageService->generateWithLLM($group, $prompt);
 
                 // Send DM to recipient via messenger
-                app(\App\Messaging\MessengerAdapterInterface::class)->sendDirectMessage(
-                    $recipient->platform_user_id,
-                    \App\Messaging\DTOs\OutgoingMessage::text($recipient->platform_user_id, $dmMessage)
-                );
+                if ($recipient->platform_user_id) {
+                    try {
+                        app(\App\Messaging\MessengerAdapterInterface::class)->sendDirectMessage(
+                            $recipient->platform_user_id,
+                            \App\Messaging\DTOs\OutgoingMessage::text($recipient->platform_user_id, $dmMessage->getFormattedContent())
+                        );
+                    } catch (\Exception $sendError) {
+                        Log::warning('Failed to send donation DM', [
+                            'group_id' => $group->id,
+                            'recipient_id' => $recipient->id,
+                            'error' => $sendError->getMessage(),
+                        ]);
+                    }
+                }
 
             } catch (\Exception $e) {
-                Log::error('Failed to send silent donation DM', [
+                Log::error('Failed to generate silent donation DM', [
                     'group_id' => $group->id,
                     'recipient_id' => $recipient->id,
                     'error' => $e->getMessage(),
@@ -280,10 +318,20 @@ class DonationController extends Controller
                     $fallback .= "\n\nMessage: \"{$userMessage}\"";
                 }
 
-                app(\App\Messaging\MessengerAdapterInterface::class)->sendDirectMessage(
-                    $recipient->platform_user_id,
-                    \App\Messaging\DTOs\OutgoingMessage::text($recipient->platform_user_id, $fallback)
-                );
+                if ($recipient->platform_user_id) {
+                    try {
+                        app(\App\Messaging\MessengerAdapterInterface::class)->sendDirectMessage(
+                            $recipient->platform_user_id,
+                            \App\Messaging\DTOs\OutgoingMessage::text($recipient->platform_user_id, $fallback)
+                        );
+                    } catch (\Exception $sendError) {
+                        Log::warning('Failed to send fallback donation DM', [
+                            'group_id' => $group->id,
+                            'recipient_id' => $recipient->id,
+                            'error' => $sendError->getMessage(),
+                        ]);
+                    }
+                }
             }
         }
     }

@@ -32,7 +32,7 @@ class ChallengeFactory extends Factory
         ];
     }
 
-    public function accepted(User $acceptor = null): static
+    public function accepted(?User $acceptor = null): static
     {
         return $this->state(fn (array $attributes) => [
             'acceptor_id' => $acceptor?->id ?? User::factory(),

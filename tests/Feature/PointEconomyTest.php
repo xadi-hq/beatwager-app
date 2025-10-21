@@ -140,7 +140,7 @@ describe('Transaction History', function () {
         expect($transactions)->toHaveCount(1);
 
         $transaction = $transactions->first();
-        expect($transaction->type)->toBe('wager_placed');
+        expect($transaction->type)->toBe(\App\Enums\TransactionType::WagerPlaced);
         expect($transaction->amount)->toBe(-100);
         expect($transaction->wager_id)->toBe($wager->id);
     });

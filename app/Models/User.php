@@ -83,4 +83,32 @@ class User extends Authenticatable
     {
         return $this->getMessengerService('telegram');
     }
+
+    /**
+     * Adjust user's points in a group (positive or negative)
+     * This is a convenience wrapper around PointService
+     *
+     * @param string $type Transaction type (e.g., 'drop', 'donation_sent', 'donation_received')
+     */
+    public function adjustPoints(Group $group, int $amount, string $type = 'drop'): void
+    {
+        $pointService = app(\App\Services\PointService::class);
+
+        if ($amount > 0) {
+            $pointService->awardPoints(
+                user: $this,
+                group: $group,
+                amount: $amount,
+                type: $type
+            );
+        } elseif ($amount < 0) {
+            $pointService->deductPoints(
+                user: $this,
+                group: $group,
+                amount: abs($amount),
+                type: $type
+            );
+        }
+        // If amount is 0, do nothing
+    }
 }
