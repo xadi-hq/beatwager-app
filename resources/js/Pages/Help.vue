@@ -33,6 +33,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                         <li>Friends click the buttons to join and make their predictions</li>
                         <li>When the event concludes, settle the wager with the outcome</li>
                         <li>Winners split the pot proportionally!</li>
+                        <li>Check your progress with <code class="bg-blue-100 px-2 py-0.5 rounded">/mywagers</code> and <code class="bg-blue-100 px-2 py-0.5 rounded">/mybalance</code></li>
                     </ol>
                 </div>
             </section>
@@ -95,14 +96,14 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                 <h3 class="font-semibold text-gray-800 mb-3 mt-4">Your Account</h3>
                 <div class="space-y-4">
                     <div class="border-l-4 border-green-500 pl-4">
-                        <h4 class="font-semibold text-gray-900">/mybets</h4>
+                        <h4 class="font-semibold text-gray-900">/mywagers</h4>
                         <p class="text-gray-600 text-sm">
                             View your active wagers. The bot will send you a DM with your top 5 upcoming wagers and a link to your full dashboard.
                         </p>
                     </div>
 
                     <div class="border-l-4 border-purple-500 pl-4">
-                        <h4 class="font-semibold text-gray-900">/balance</h4>
+                        <h4 class="font-semibold text-gray-900">/mybalance</h4>
                         <p class="text-gray-600 text-sm">
                             Check your points balance. If used in a group, shows your balance in that group. If used in a DM, shows all your group balances.
                         </p>
@@ -151,16 +152,6 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                         </div>
                     </div>
 
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">Numeric</h3>
-                        <p class="text-gray-600 mb-2">
-                            Predict a specific number within a range. Winner can be closest, exact match, highest, or lowest.
-                        </p>
-                        <div class="bg-gray-50 rounded p-3 text-sm">
-                            <strong>Example:</strong> "What will the temperature be at noon?"<br>
-                            Range: 60-85°F, Winner: Closest
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -211,27 +202,25 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                     <div>
                         <h3 class="font-semibold text-gray-900 mb-2">Wagering</h3>
                         <p class="text-gray-600">
-                            When you join a wager, you stake points on your prediction. All staked points go into the pot.
+                            The wager creator sets a stake amount that everyone pays to join. When you join a wager, you pay the same stake and make your prediction. All staked points go into the pot.
                         </p>
                     </div>
 
                     <div>
                         <h3 class="font-semibold text-gray-900 mb-2">Winning</h3>
                         <p class="text-gray-600">
-                            Winners split the pot proportionally based on their stake. If you wagered 100 points and the total winning stake was 500 points from a pot of 1000, you'd win 200 points (100/500 * 1000).
+                            Winners split the pot equally. Since everyone stakes the same amount, winners receive equal shares of the total pot.
                         </p>
                     </div>
 
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                         <h3 class="font-semibold text-green-900 mb-2">Example Payout:</h3>
                         <div class="text-green-800 space-y-1 text-sm">
-                            <p>• Total pot: 1000 points</p>
-                            <p>• Winner A wagered: 100 points</p>
-                            <p>• Winner B wagered: 150 points</p>
-                            <p>• Total winning stake: 250 points</p>
+                            <p>• Stake amount: 100 points per person</p>
+                            <p>• 10 people joined: 1000 points total pot</p>
+                            <p>• 2 people won (predicted correctly)</p>
                             <p class="font-semibold mt-2">Payouts:</p>
-                            <p>• Winner A: (100/250) × 1000 = 400 points</p>
-                            <p>• Winner B: (150/250) × 1000 = 600 points</p>
+                            <p>• Each winner receives: 1000 ÷ 2 = 500 points</p>
                         </div>
                     </div>
                 </div>
@@ -275,12 +264,12 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 
                     <div>
                         <h3 class="font-semibold text-gray-900">Can I run out of points?</h3>
-                        <p class="text-gray-600">Yes, manage your points wisely! If you run out, you won't be able to join new wagers until you win some back.</p>
+                        <p class="text-gray-600">Yes, manage your points wisely! If you run out, you can create challenges (offering your time/skills to earn points), receive donations from friends, or wait for occasional point drops from the bot.</p>
                     </div>
 
                     <div>
                         <h3 class="font-semibold text-gray-900">Who can settle wagers?</h3>
-                        <p class="text-gray-600">Only the wager creator or group admins can settle wagers to ensure trusted outcomes.</p>
+                        <p class="text-gray-600">Only the wager creator can settle wagers to ensure trusted outcomes.</p>
                     </div>
 
                     <div>

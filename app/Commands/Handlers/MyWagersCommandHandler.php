@@ -167,7 +167,7 @@ class MyWagersCommandHandler extends AbstractCommandHandler
 
     public function getAliases(): array
     {
-        return ['/mybets'];
+        return [];
     }
 
     public function getDescription(): string

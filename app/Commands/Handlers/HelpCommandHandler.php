@@ -66,8 +66,8 @@ class HelpCommandHandler extends AbstractCommandHandler
         $helpMessage .= "• `/events` - View recent open events in this group\n";
         $helpMessage .= "• `/newchallenge` - Create a 1-on-1 challenge\n";
         $helpMessage .= "• `/challenges` - View recent open challenges in this group\n";
-        $helpMessage .= "• `/mybets` - View your active wagers\n";
-        $helpMessage .= "• `/balance` - Check your points balance\n";
+        $helpMessage .= "• `/mywagers` - View your active wagers\n";
+        $helpMessage .= "• `/mybalance` - Check your points balance\n";
         $helpMessage .= "• `/leaderboard` - View group rankings\n";
         $helpMessage .= "• `/help` - Show this help message\n\n";
         $helpMessage .= "*How it works:*\n";

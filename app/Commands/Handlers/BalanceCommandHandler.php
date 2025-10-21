@@ -183,12 +183,12 @@ class BalanceCommandHandler extends AbstractCommandHandler
 
     public function getCommand(): string
     {
-        return '/balance';
+        return '/mybalance';
     }
 
     public function getAliases(): array
     {
-        return ['/mybalance'];
+        return ['/balance'];
     }
 
     public function getDescription(): string
