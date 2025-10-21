@@ -500,7 +500,8 @@ class MessageService
                 'event_name' => $event->name,
                 'event_date' => $event->event_date->format('M j, Y'),
                 'currency' => $currency,
-                'previous_response' => $previousResponseText,
+                'response' => $response, // Current response (going, maybe, not_going)
+                'previous_response' => $previousResponseText, // Only for change messages
             ],
             group: $event->group
         );
