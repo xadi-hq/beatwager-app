@@ -24,11 +24,8 @@ const props = defineProps<{
     donor: {
         id: string;
         name: string;
-        platform: string;
-        platform_user_id: string;
     };
     groups: Group[];
-    encrypted_user: string;
 }>();
 
 const selectedGroupId = ref<string>('');
@@ -81,9 +78,7 @@ watch(selectedGroupId, async (newGroupId) => {
     // Load recipients for this group
     isLoadingRecipients.value = true;
     try {
-        const response = await axios.get(`/donations/groups/${newGroupId}/recipients`, {
-            params: { u: props.encrypted_user }
-        });
+        const response = await axios.get(`/donations/groups/${newGroupId}/recipients`);
         recipients.value = response.data.recipients;
         donorPoints.value = response.data.donor_points;
     } catch (error: any) {
@@ -113,7 +108,6 @@ const submit = async () => {
             amount: amount.value,
             is_public: !isSilent.value, // Invert: silent = false public, !silent = true public
             message: message.value || null,
-            encrypted_user: props.encrypted_user,
         });
 
         toastType.value = 'success';

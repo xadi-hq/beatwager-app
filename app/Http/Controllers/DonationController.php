@@ -27,18 +27,8 @@ class DonationController extends Controller
      */
     public function create(Request $request): Response
     {
-        // Decrypt user identifier
-        try {
-            $userIdentifier = decrypt($request->input('u'));
-            [$platform, $platformUserId] = explode(':', $userIdentifier, 2);
-        } catch (\Exception $e) {
-            abort(403, 'Invalid or expired link');
-        }
-
-        // Find donor user
-        $donor = User::where('platform', $platform)
-            ->where('platform_user_id', $platformUserId)
-            ->firstOrFail();
+        // User is already authenticated via signed.auth middleware
+        $donor = auth()->user();
 
         // Get all groups the donor is a member of
         $groups = $donor->groups()->get()->map(function($group) use ($donor) {
@@ -49,7 +39,6 @@ class DonationController extends Controller
                 'name' => $group->name,
                 'currency_name' => $group->points_currency_name ?? 'points',
                 'donor_points' => $membership->pivot->points,
-                'platform_chat_id' => $group->platform_chat_id,
             ];
         });
 
@@ -61,11 +50,8 @@ class DonationController extends Controller
             'donor' => [
                 'id' => $donor->id,
                 'name' => $donor->name,
-                'platform' => $donor->platform,
-                'platform_user_id' => $donor->platform_user_id,
             ],
             'groups' => $groups,
-            'encrypted_user' => $request->input('u'),
         ]);
     }
 
@@ -74,18 +60,8 @@ class DonationController extends Controller
      */
     public function recipients(Request $request, Group $group): JsonResponse
     {
-        // Decrypt user identifier
-        try {
-            $userIdentifier = decrypt($request->input('u'));
-            [$platform, $platformUserId] = explode(':', $userIdentifier, 2);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Invalid or expired link'], 403);
-        }
-
-        // Find donor
-        $donor = User::where('platform', $platform)
-            ->where('platform_user_id', $platformUserId)
-            ->firstOrFail();
+        // User is already authenticated via signed.auth middleware
+        $donor = auth()->user();
 
         // Verify donor is a member
         $donorMembership = $group->users()->where('users.id', $donor->id)->first();
@@ -100,7 +76,6 @@ class DonationController extends Controller
             ->map(fn($user) => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'username' => $user->username,
                 'points' => $user->pivot->points,
             ]);
 
@@ -115,13 +90,8 @@ class DonationController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        // Decrypt user identifier
-        try {
-            $userIdentifier = decrypt($request->input('encrypted_user'));
-            [$platform, $platformUserId] = explode(':', $userIdentifier, 2);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Invalid or expired link'], 403);
-        }
+        // User is already authenticated via signed.auth middleware
+        $donor = auth()->user();
 
         $validated = $request->validate([
             'group_id' => 'required|uuid|exists:groups,id',
@@ -130,11 +100,6 @@ class DonationController extends Controller
             'is_public' => 'required|boolean',
             'message' => 'nullable|string|max:500',
         ]);
-
-        // Find donor
-        $donor = User::where('platform', $platform)
-            ->where('platform_user_id', $platformUserId)
-            ->firstOrFail();
 
         // Find group and recipient
         $group = Group::findOrFail($validated['group_id']);
