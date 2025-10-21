@@ -113,6 +113,11 @@ class TelegramWebhookController extends Controller
         // Track group activity (if feature enabled)
         $this->trackGroupActivity($chatId);
 
+        // Ignore non-text messages (photos, stickers, documents, etc.)
+        if ($text === null) {
+            return;
+        }
+
         // Handle commands
         if (str_starts_with($text, '/')) {
             $this->handleCommand($message);
