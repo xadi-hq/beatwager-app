@@ -33,6 +33,13 @@ return new class extends Migration
             // Additional settings as JSON for flexibility
             $table->json('settings')->nullable();
 
+            // Enable/disable automatic season milestone drops
+            $table->boolean('surprise_drops_enabled')->default(false);
+
+            // Track which milestones have been triggered for current season
+            // JSON array: ["50", "75", "90"] to prevent duplicate drops
+            $table->json('season_milestones_triggered')->nullable();
+
             // Season management (foreign key added later in group_seasons migration)
             $table->uuid('current_season_id')->nullable();
             $table->timestamp('season_ends_at')->nullable();

@@ -22,6 +22,10 @@ return new class extends Migration
             $table->text('message_template')->nullable(); // Optional custom template
             $table->text('llm_instructions')->nullable(); // Optional custom LLM guidance
 
+            // Drop event settings
+            $table->boolean('is_drop_event')->default(false)->after('is_active');
+            $table->integer('drop_amount')->nullable()->after('is_drop_event');
+
             // Recurrence settings
             $table->boolean('is_recurring')->default(false);
             $table->enum('recurrence_type', ['yearly', 'monthly', 'weekly', 'daily'])->nullable();
@@ -34,6 +38,7 @@ return new class extends Migration
 
             // Indexes
             $table->index(['group_id', 'scheduled_date']);
+            $table->index(['group_id', 'is_drop_event', 'scheduled_date']);
             $table->index(['group_id', 'is_active']);
             $table->index('scheduled_date');
         });
