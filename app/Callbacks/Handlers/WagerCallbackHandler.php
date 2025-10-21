@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Callbacks\Handlers;
 
 use App\Callbacks\AbstractCallbackHandler;
+use App\Events\WagerJoined;
 use App\Messaging\DTOs\IncomingCallback;
 use App\Messaging\MessengerAdapterInterface;
 use App\Models\Wager;
@@ -150,6 +151,9 @@ class WagerCallbackHandler extends AbstractCallbackHandler
                 ),
                 showAlert: false
             );
+
+            // Dispatch event for LLM-powered announcement
+            WagerJoined::dispatch($wager, $entry, $user);
 
         } catch (\App\Exceptions\UserAlreadyJoinedException $e) {
             $this->messenger->answerCallback(

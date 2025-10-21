@@ -28,7 +28,7 @@ class MessageService
     public function wagerAnnouncement(Wager $wager): Message
     {
         $meta = __('messages.wager.announced');
-        
+
         $currency = $wager->group->points_currency_name ?? 'points';
 
         $ctx = new MessageContext(
@@ -52,8 +52,15 @@ class MessageService
 
         // Build wager-specific buttons
         $buttons = $this->buildWagerButtons($wager);
+
+        // Add Track Progress and View Details buttons side by side
         $buttons[] = new Button(
-            label: __('messages.buttons.view_progress'),
+            label: '📊 Track Progress',
+            action: ButtonAction::Callback,
+            value: "track_progress:{$wager->id}"
+        );
+        $buttons[] = new Button(
+            label: '👀 View Details',
             action: ButtonAction::Callback,
             value: "view:{$wager->id}"
         );
@@ -374,6 +381,16 @@ class MessageService
                 action: ButtonAction::Callback,
                 value: "event_rsvp:{$event->id}:not_going"
             ),
+            new Button(
+                label: '📊 Track Progress',
+                action: ButtonAction::Callback,
+                value: "track_event_progress:{$event->id}"
+            ),
+            new Button(
+                label: '👀 View Details',
+                action: ButtonAction::Callback,
+                value: "view_event_details:{$event->id}"
+            ),
         ];
 
         return new Message(
@@ -419,6 +436,11 @@ class MessageService
                 label: '🏃 Accept Challenge',
                 action: ButtonAction::Callback,
                 value: "challenge_accept:{$challenge->id}"
+            ),
+            new Button(
+                label: '📊 Track Progress',
+                action: ButtonAction::Callback,
+                value: "track_challenge_progress:{$challenge->id}"
             ),
             new Button(
                 label: '👀 View Details',
@@ -733,8 +755,15 @@ class MessageService
 
         // Build wager-specific buttons
         $buttons = $this->buildWagerButtons($wager);
+
+        // Add Track Progress and View Details buttons side by side
         $buttons[] = new Button(
-            label: __('messages.buttons.view_progress'),
+            label: '📊 Track Progress',
+            action: ButtonAction::Callback,
+            value: "track_progress:{$wager->id}"
+        );
+        $buttons[] = new Button(
+            label: '👀 View Details',
             action: ButtonAction::Callback,
             value: "view:{$wager->id}"
         );

@@ -10,6 +10,7 @@ use App\Messaging\DTOs\OutgoingMessage;
 use App\Models\ShortUrl;
 use App\Models\Wager;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Handle view callback - User wants to view wager details/progress
@@ -42,31 +43,51 @@ class ViewWagerCallbackHandler extends AbstractCallbackHandler
         }
 
         try {
-            // Build wager details message
-            $message = $this->buildWagerDetailsMessage($wager);
+            // Generate signed URL with encrypted user ID
+            $signedUrl = URL::temporarySignedRoute(
+                'wagers.show',
+                now()->addDays(30),
+                [
+                    'wager' => $wagerId,
+                    'u' => encrypt($callback->platform . ':' . $callback->userId)
+                ]
+            );
 
-            // Create short URL for wager details page
+            // Create short URL
             $shortCode = ShortUrl::generateUniqueCode(6);
             ShortUrl::create([
                 'code' => $shortCode,
-                'target_url' => config('app.url') . '/wagers/' . $wager->id,
+                'target_url' => $signedUrl,
                 'expires_at' => now()->addDays(30),
             ]);
-            $shortUrl = url('/l/' . $shortCode);
 
-            $message .= "\n\n📊 Full details: {$shortUrl}";
+            // Build short URL
+            $shortUrlFull = url('/l/' . $shortCode);
 
-            // Send the message
-            $this->messenger->sendMessage(
-                OutgoingMessage::markdown($callback->chatId, $message)
-            );
-
-            // Answer the callback
+            // Answer callback query
             $this->messenger->answerCallback(
                 $callback->callbackId,
-                '✅ Wager details sent',
-                showAlert: false
+                '📊 Opening wager details...'
             );
+
+            // Send short URL as direct message to user
+            $dmMessage = "📊 *View Wager Details*\n\n";
+            $dmMessage .= "💰 Wager: {$wager->title}\n\n";
+            $dmMessage .= "Click to view full details and distribution:\n";
+            $dmMessage .= $shortUrlFull;
+
+            try {
+                $this->messenger->sendDirectMessage(
+                    $callback->userId,
+                    OutgoingMessage::markdown($callback->chatId, $dmMessage)
+                );
+            } catch (\Exception $e) {
+                // If DM fails, log warning
+                Log::warning('Failed to send wager view DM', [
+                    'user_id' => $callback->userId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
         } catch (\Exception $e) {
             Log::error('Error viewing wager details', [
@@ -81,66 +102,6 @@ class ViewWagerCallbackHandler extends AbstractCallbackHandler
                 showAlert: true
             );
         }
-    }
-
-    /**
-     * Build wager details message
-     */
-    private function buildWagerDetailsMessage(Wager $wager): string
-    {
-        $group = $wager->group;
-        $currencyName = $group->points_currency_name ?? 'points';
-
-        $message = "📊 *Wager Details*\n\n";
-        $message .= "*{$wager->title}*\n";
-
-        if ($wager->description) {
-            $message .= "_{$wager->description}_\n";
-        }
-
-        $message .= "\n*Status:* " . ucfirst($wager->status);
-        $message .= "\n*Type:* " . ucfirst(str_replace('_', ' ', $wager->type));
-        $message .= "\n*Stake:* {$wager->stake_amount} {$currencyName}";
-
-        // Deadline
-        $deadline = $wager->betting_closes_at;
-        if ($deadline > now()) {
-            $message .= "\n*Betting closes:* " . $deadline->diffForHumans();
-        } else {
-            $message .= "\n*Betting closed:* " . $deadline->diffForHumans();
-        }
-
-        // Participants
-        $participantCount = $wager->entries->count();
-        $message .= "\n*Participants:* {$participantCount}";
-        $message .= "\n*Total pot:* {$wager->total_points_wagered} {$currencyName}";
-
-        // Show options for multiple choice
-        if ($wager->type === 'multiple_choice' && $wager->options) {
-            $message .= "\n\n*Options:*\n";
-            foreach ($wager->options as $option) {
-                $count = $wager->entries->where('answer_value', $option)->count();
-                $message .= "• {$option} ({$count} bets)\n";
-            }
-        }
-
-        // Show distribution for binary
-        if ($wager->type === 'binary') {
-            $yesCount = $wager->entries->where('answer_value', 'yes')->count();
-            $noCount = $wager->entries->where('answer_value', 'no')->count();
-            $message .= "\n\n*Distribution:*\n";
-            $message .= "• Yes: {$yesCount} bets\n";
-            $message .= "• No: {$noCount} bets";
-        }
-
-        // Show outcome if settled
-        if ($wager->status === 'settled' && $wager->outcome_value) {
-            $message .= "\n\n*✅ Result:* {$wager->outcome_value}";
-            $winnerCount = $wager->entries->where('is_winner', true)->count();
-            $message .= "\n*Winners:* {$winnerCount}";
-        }
-
-        return $message;
     }
 
     public function getAction(): string

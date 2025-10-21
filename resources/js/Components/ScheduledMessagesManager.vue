@@ -242,21 +242,6 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
             <h4 class="font-semibold text-neutral-900 dark:text-white mb-3">Add Scheduled Message</h4>
 
             <div class="space-y-3">
-                <!-- Message Type -->
-                <div>
-                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                        Type
-                    </label>
-                    <select
-                        v-model="form.message_type"
-                        class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
-                    >
-                        <option value="custom">Custom</option>
-                        <option value="holiday">Holiday</option>
-                        <option value="birthday">Birthday</option>
-                    </select>
-                </div>
-
                 <!-- Title -->
                 <div>
                     <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">

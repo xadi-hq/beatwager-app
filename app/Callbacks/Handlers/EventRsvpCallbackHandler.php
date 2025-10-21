@@ -64,10 +64,12 @@ class EventRsvpCallbackHandler extends AbstractCallbackHandler
         }
 
         // Check if event is still open for RSVPs
-        if ($event->starts_at < now()) {
+        // Use rsvp_deadline if set, otherwise use event start time
+        $deadline = $event->rsvp_deadline ?? $event->event_date;
+        if ($deadline < now()) {
             $this->messenger->answerCallback(
                 $callback->callbackId,
-                '❌ This event has already started',
+                '❌ The RSVP deadline has passed',
                 showAlert: true
             );
             return;

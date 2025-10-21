@@ -47,7 +47,7 @@ describe('MessageService', function () {
         expect($message->type)->toBe(MessageType::Announcement);
         expect($message->content)->toBeString();
         expect($message->content)->not->toBeEmpty();
-        expect($message->buttons)->toHaveCount(3); // yes, no, view progress
+        expect($message->buttons)->toHaveCount(4); // yes, no, track progress, view details
     });
 
     it('generates settlement reminder message', function () {
