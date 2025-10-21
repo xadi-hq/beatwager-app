@@ -158,19 +158,11 @@ const submit = async () => {
                         >
                             <option value="" disabled>Select a group</option>
                             <option v-for="group in groups" :key="group.id" :value="group.id">
-                                {{ group.name }} ({{ group.donor_points }} {{ group.currency_name }})
+                                {{ group.name }} (your balance: {{ group.donor_points }} {{ group.currency_name }})
                             </option>
                         </select>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                             Choose which group's points to send
-                        </p>
-                    </div>
-
-                    <!-- Donor Balance (shown after group selection) -->
-                    <div v-if="selectedGroup" class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <p class="text-sm text-blue-800 dark:text-blue-200">
-                            💰 Your Balance in <strong>{{ selectedGroup.name }}</strong>:
-                            <strong>{{ donorPoints }} {{ selectedGroup.currency_name }}</strong>
                         </p>
                     </div>
 
@@ -214,7 +206,7 @@ const submit = async () => {
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         />
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                            Available: {{ donorPoints }} {{ selectedGroup?.currency_name }}
+                            Available balance: {{ donorPoints }} {{ selectedGroup?.currency_name }}
                         </p>
                     </div>
 
