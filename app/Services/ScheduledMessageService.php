@@ -52,6 +52,8 @@ class ScheduledMessageService
             'is_recurring' => $data['is_recurring'] ?? false,
             'recurrence_type' => $data['recurrence_type'] ?? null,
             'is_active' => $data['is_active'] ?? true,
+            'is_drop_event' => $data['is_drop_event'] ?? false,
+            'drop_amount' => $data['drop_amount'] ?? null,
         ]);
 
         Log::channel('operational')->info('scheduled_message.created', [
@@ -78,6 +80,8 @@ class ScheduledMessageService
             'is_recurring' => $data['is_recurring'] ?? $message->is_recurring,
             'recurrence_type' => $data['recurrence_type'] ?? $message->recurrence_type,
             'is_active' => $data['is_active'] ?? $message->is_active,
+            'is_drop_event' => $data['is_drop_event'] ?? $message->is_drop_event,
+            'drop_amount' => $data['drop_amount'] ?? $message->drop_amount,
         ]);
 
         Log::channel('operational')->info('scheduled_message.updated', [

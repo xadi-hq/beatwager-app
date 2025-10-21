@@ -99,6 +99,13 @@ class EventRsvpCallbackHandler extends AbstractCallbackHandler
         }
 
         try {
+            // Check for existing RSVP to detect changes
+            $existingRsvp = GroupEventRsvp::where('event_id', $event->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            $previousResponse = $existingRsvp?->response;
+
             // Create or update RSVP
             $rsvp = GroupEventRsvp::updateOrCreate(
                 [
@@ -124,8 +131,8 @@ class EventRsvpCallbackHandler extends AbstractCallbackHandler
                 showAlert: false
             );
 
-            // Dispatch event for RSVP announcement
-            EventRsvpUpdated::dispatch($event, $user, $response);
+            // Dispatch event for RSVP announcement with previous response
+            EventRsvpUpdated::dispatch($event, $user, $response, $previousResponse);
 
         } catch (\Exception $e) {
             Log::error('Error handling event RSVP', [
