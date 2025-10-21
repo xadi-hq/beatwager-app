@@ -297,7 +297,7 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
                             type="checkbox"
                             class="rounded border-neutral-300 dark:border-neutral-600"
                         />
-                        Recurring message
+                        🔃 Recurring message
                     </label>
                 </div>
 
@@ -318,14 +318,14 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
                 </div>
 
                 <!-- Drop Event -->
-                <div v-if="form.message_type !== 'birthday'" class="border-t border-neutral-200 dark:border-neutral-600 pt-3">
+                <div v-if="form.message_type !== 'birthday'" class="pt-2">
                     <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300 mb-2">
                         <input
                             v-model="form.is_drop_event"
                             type="checkbox"
                             class="rounded border-neutral-300 dark:border-neutral-600"
                         />
-                        <span class="font-medium">🎁 Attach point drop</span>
+                        🎁 Attach point drop
                     </label>
                     <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
                         Distribute points to all group members when this message is sent
