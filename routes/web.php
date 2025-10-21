@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DonationController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupSettingsController;
@@ -83,4 +84,8 @@ Route::middleware(['signed.auth'])->group(function () {
     Route::put('/groups/{group}/messages/{scheduledMessage}', [ScheduledMessageController::class, 'update'])->name('messages.update');
     Route::post('/groups/{group}/messages/{scheduledMessage}/toggle', [ScheduledMessageController::class, 'toggleActive'])->name('messages.toggle');
     Route::delete('/groups/{group}/messages/{scheduledMessage}', [ScheduledMessageController::class, 'destroy'])->name('messages.destroy');
+
+    // Donation routes
+    Route::get('/donations/create', [DonationController::class, 'create'])->name('donations.create');
+    Route::post('/donations', [DonationController::class, 'store'])->name('donations.store');
 });
