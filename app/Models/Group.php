@@ -38,6 +38,8 @@ class Group extends Model
         'settings',
         'current_season_id',
         'season_ends_at',
+        'surprise_drops_enabled',
+        'season_milestones_triggered',
     ];
 
     protected function casts(): array
@@ -56,6 +58,8 @@ class Group extends Model
             'llm_api_key' => 'encrypted',
             'settings' => 'array',
             'season_ends_at' => 'datetime',
+            'surprise_drops_enabled' => 'boolean',
+            'season_milestones_triggered' => 'array',
         ];
     }
 

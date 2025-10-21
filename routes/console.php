@@ -3,6 +3,7 @@
 use App\Jobs\ApplyPointDecay;
 use App\Jobs\SendEngagementPrompts;
 use App\Jobs\SendEventAttendancePrompts;
+use App\Jobs\SendSeasonMilestoneDrops;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -55,6 +56,12 @@ Schedule::command('seasons:check')
 // Send scheduled messages (holidays, birthdays, custom dates)
 Schedule::command('messages:send-scheduled')
     ->dailyAt('08:00')  // 8am - good time for special occasion messages
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Check for season milestone drops (50%, 75%, 90% progress)
+Schedule::job(new SendSeasonMilestoneDrops())
+    ->dailyAt('12:00')  // Noon - good time for surprise drops
     ->withoutOverlapping()
     ->onOneServer();
 
