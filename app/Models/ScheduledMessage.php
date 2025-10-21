@@ -24,6 +24,8 @@ class ScheduledMessage extends Model
         'recurrence_type',
         'is_active',
         'last_sent_at',
+        'is_drop_event',
+        'drop_amount',
     ];
 
     protected $casts = [
@@ -31,6 +33,8 @@ class ScheduledMessage extends Model
         'is_recurring' => 'boolean',
         'is_active' => 'boolean',
         'last_sent_at' => 'datetime',
+        'is_drop_event' => 'boolean',
+        'drop_amount' => 'integer',
     ];
 
     /**
@@ -104,5 +108,40 @@ class ScheduledMessage extends Model
             'yearly' => $now->copy()->month($base->month)->day($base->day)->startOfDay(),
             default => null,
         };
+    }
+
+    /**
+     * Distribute point drop to all group members
+     */
+    public function distributeDropToGroup(): int
+    {
+        if (!$this->is_drop_event || $this->drop_amount === null || $this->drop_amount <= 0) {
+            return 0;
+        }
+
+        $group = $this->group;
+        $recipientsCount = 0;
+
+        foreach ($group->users as $user) {
+            // Adjust user's points in this group
+            $user->adjustPoints($group, $this->drop_amount);
+
+            // Create audit event
+            \App\Models\AuditEvent::create([
+                'event_type' => 'drop.received',
+                'group_id' => $group->id,
+                'user_id' => $user->id,
+                'metadata' => [
+                    'amount' => $this->drop_amount,
+                    'source' => 'scheduled_message',
+                    'message_id' => $this->id,
+                    'message_title' => $this->title,
+                ],
+            ]);
+
+            $recipientsCount++;
+        }
+
+        return $recipientsCount;
     }
 }

@@ -71,15 +71,28 @@ class SendScheduledMessages extends Command
                 // Send to group
                 $group->sendMessage($message);
 
+                // Distribute points if this is a drop event
+                $dropRecipients = 0;
+                if ($scheduledMessage->is_drop_event) {
+                    $dropRecipients = $scheduledMessage->distributeDropToGroup();
+                }
+
                 // Mark as sent
                 $scheduledMessageService->markAsSent($scheduledMessage);
 
-                $this->info("    ✅ Sent successfully");
+                $successMessage = $dropRecipients > 0
+                    ? "✅ Sent successfully + distributed {$scheduledMessage->drop_amount} points to {$dropRecipients} member(s)"
+                    : "✅ Sent successfully";
+
+                $this->info("    {$successMessage}");
 
                 Log::channel('operational')->info('scheduled_message.sent_success', [
                     'group_id' => $group->id,
                     'message_id' => $scheduledMessage->id,
                     'title' => $scheduledMessage->title,
+                    'is_drop_event' => $scheduledMessage->is_drop_event,
+                    'drop_amount' => $scheduledMessage->drop_amount,
+                    'drop_recipients' => $dropRecipients,
                 ]);
 
             } catch (\Exception $e) {

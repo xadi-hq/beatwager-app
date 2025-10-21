@@ -43,6 +43,8 @@ class ScheduledMessageController extends Controller
                 'is_recurring' => $msg->is_recurring,
                 'recurrence_type' => $msg->recurrence_type,
                 'is_active' => $msg->is_active,
+                'is_drop_event' => $msg->is_drop_event,
+                'drop_amount' => $msg->drop_amount,
                 'last_sent_at' => $msg->last_sent_at?->toIso8601String(),
                 'next_occurrence' => $msg->getNextOccurrence()?->toDateString(),
             ]),
@@ -77,6 +79,8 @@ class ScheduledMessageController extends Controller
             'is_recurring' => $scheduledMessage->is_recurring,
             'recurrence_type' => $scheduledMessage->recurrence_type,
             'is_active' => $scheduledMessage->is_active,
+            'is_drop_event' => $scheduledMessage->is_drop_event,
+            'drop_amount' => $scheduledMessage->drop_amount,
             'last_sent_at' => $scheduledMessage->last_sent_at?->toIso8601String(),
         ]);
     }
@@ -116,6 +120,8 @@ class ScheduledMessageController extends Controller
             'is_recurring' => 'boolean',
             'recurrence_type' => 'nullable|in:daily,weekly,monthly,yearly',
             'is_active' => 'boolean',
+            'is_drop_event' => 'boolean',
+            'drop_amount' => 'nullable|integer|min:1',
         ]);
 
         $message = $this->scheduledMessageService->create($group, $validated);
@@ -165,6 +171,8 @@ class ScheduledMessageController extends Controller
             'is_recurring' => 'sometimes|boolean',
             'recurrence_type' => 'nullable|in:daily,weekly,monthly,yearly',
             'is_active' => 'sometimes|boolean',
+            'is_drop_event' => 'sometimes|boolean',
+            'drop_amount' => 'nullable|integer|min:1',
         ]);
 
         $message = $this->scheduledMessageService->update($scheduledMessage, $validated);

@@ -11,6 +11,8 @@ interface ScheduledMessage {
     is_recurring: boolean;
     recurrence_type: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
     is_active: boolean;
+    is_drop_event: boolean;
+    drop_amount: number | null;
     last_sent_at: string | null;
     next_occurrence: string | null;
 }
@@ -54,6 +56,8 @@ const form = ref({
     scheduled_date: '',
     is_recurring: false,
     recurrence_type: null as 'yearly' | 'monthly' | 'weekly' | null,
+    is_drop_event: false,
+    drop_amount: null as number | null,
 });
 
 // Load messages
@@ -145,6 +149,8 @@ const addMessage = async () => {
             scheduled_date: '',
             is_recurring: false,
             recurrence_type: null,
+            is_drop_event: false,
+            drop_amount: null,
         };
         showAddForm.value = false;
 
@@ -311,6 +317,38 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
                     </select>
                 </div>
 
+                <!-- Drop Event -->
+                <div v-if="form.message_type !== 'birthday'" class="border-t border-neutral-200 dark:border-neutral-600 pt-3">
+                    <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+                        <input
+                            v-model="form.is_drop_event"
+                            type="checkbox"
+                            class="rounded border-neutral-300 dark:border-neutral-600"
+                        />
+                        <span class="font-medium">🎁 Attach point drop</span>
+                    </label>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+                        Distribute points to all group members when this message is sent
+                    </p>
+
+                    <!-- Drop Amount -->
+                    <div v-if="form.is_drop_event">
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                            Drop Amount
+                        </label>
+                        <input
+                            v-model.number="form.drop_amount"
+                            type="number"
+                            min="1"
+                            placeholder="e.g., 100"
+                            class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                        />
+                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            Each member will receive this amount of points
+                        </p>
+                    </div>
+                </div>
+
                 <!-- Submit Button -->
                 <button
                     @click="addMessage"
@@ -343,6 +381,12 @@ const minDate = computed(() => new Date().toISOString().split('T')[0]);
                             <h4 class="font-semibold text-neutral-900 dark:text-white">
                                 {{ message.title }}
                             </h4>
+                            <span
+                                v-if="message.is_drop_event && message.drop_amount"
+                                class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded font-medium"
+                            >
+                                🎁 {{ message.drop_amount }} pts
+                            </span>
                             <span
                                 v-if="!message.is_active"
                                 class="text-xs bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded"
