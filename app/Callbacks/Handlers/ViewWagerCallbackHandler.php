@@ -45,7 +45,7 @@ class ViewWagerCallbackHandler extends AbstractCallbackHandler
         try {
             // Generate signed URL with encrypted user ID
             $signedUrl = URL::temporarySignedRoute(
-                'wagers.show',
+                'wager.show',
                 now()->addDays(30),
                 [
                     'wager' => $wagerId,

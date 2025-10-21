@@ -505,7 +505,23 @@ class MessageService
             group: $event->group
         );
 
+        // Log RSVP message generation for debugging
+        \Log::info('RSVP Message Generation', [
+            'message_key' => $messageKey,
+            'response' => $response,
+            'previous_response' => $previousResponse,
+            'user_name' => $user->name,
+            'event_name' => $event->name,
+            'intent' => $meta['intent'],
+            'tone_hints' => $meta['tone_hints'] ?? [],
+        ]);
+
         $content = $this->contentGenerator->generate($ctx, $event->group);
+
+        \Log::info('RSVP Message Generated Content', [
+            'message_key' => $messageKey,
+            'content' => $content,
+        ]);
 
         return new Message(
             content: $content,

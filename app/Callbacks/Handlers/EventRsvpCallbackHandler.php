@@ -106,6 +106,16 @@ class EventRsvpCallbackHandler extends AbstractCallbackHandler
 
             $previousResponse = $existingRsvp?->response;
 
+            Log::info('RSVP Callback Processing', [
+                'event_id' => $event->id,
+                'event_name' => $event->name,
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'new_response' => $response,
+                'previous_response' => $previousResponse,
+                'had_existing_rsvp' => $existingRsvp !== null,
+            ]);
+
             // Create or update RSVP
             $rsvp = GroupEventRsvp::updateOrCreate(
                 [
@@ -130,6 +140,9 @@ class EventRsvpCallbackHandler extends AbstractCallbackHandler
                 $messages[$response],
                 showAlert: false
             );
+
+            // Refresh the event to ensure listener gets latest data
+            $event->refresh();
 
             // Dispatch event for RSVP announcement with previous response
             EventRsvpUpdated::dispatch($event, $user, $response, $previousResponse);

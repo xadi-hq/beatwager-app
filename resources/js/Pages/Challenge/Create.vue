@@ -300,7 +300,7 @@ const submit = () => {
                                 </div>
                             </div>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                Optional deadline for someone to accept the challenge
+                                Deadline for someone to accept the challenge
                             </p>
                             <FormError :error="form.errors.acceptance_deadline" />
                         </div>
