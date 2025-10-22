@@ -22,6 +22,7 @@ class GroupSeason extends Model
         'final_leaderboard',
         'stats',
         'highlights',
+        'prize_structure',
     ];
 
     protected function casts(): array
@@ -33,6 +34,7 @@ class GroupSeason extends Model
             'final_leaderboard' => 'array',
             'stats' => 'array',
             'highlights' => 'array',
+            'prize_structure' => 'array',
         ];
     }
 

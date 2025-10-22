@@ -25,11 +25,14 @@ class GroupEvent extends Model
         'rsvp_deadline',
         'auto_prompt_hours_after',
         'status',
+        'cancelled_at',
+        'cancelled_by_user_id',
     ];
 
     protected $casts = [
         'event_date' => 'datetime',
         'rsvp_deadline' => 'datetime',
+        'cancelled_at' => 'datetime',
         'auto_prompt_hours_after' => 'integer',
         'attendance_bonus' => 'integer',
     ];
@@ -42,6 +45,11 @@ class GroupEvent extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by_user_id');
     }
 
     public function rsvps(): HasMany

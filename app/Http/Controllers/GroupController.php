@@ -88,6 +88,7 @@ class GroupController extends Controller
                     'started_at' => $season->started_at->toIso8601String(),
                     'is_active' => $season->is_active,
                     'days_elapsed' => max(1, (int) $season->started_at->diffInDays(now())),
+                    'prize_structure' => $season->prize_structure,
                 ];
             }
         }

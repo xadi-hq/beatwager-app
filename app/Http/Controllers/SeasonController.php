@@ -79,11 +79,15 @@ class SeasonController extends Controller
 
         $validated = $request->validate([
             'season_ends_at' => 'nullable|date|after:now',
+            'prize_structure' => 'nullable|array',
+            'prize_structure.*.description' => 'required|string|max:255',
+            'prize_structure.*.position' => 'required|string|in:winner,runner_up,loser,most_active,most_social,most_servant,most_generous,most_improved',
         ]);
 
         $endsAt = isset($validated['season_ends_at']) ? \Carbon\Carbon::parse($validated['season_ends_at']) : null;
+        $prizeStructure = $validated['prize_structure'] ?? null;
 
-        $season = $this->seasonService->createSeason($group, $endsAt);
+        $season = $this->seasonService->createSeason($group, $endsAt, $prizeStructure);
 
         // Send announcement to group (optional - could be done via event)
         // For now, keeping it simple without announcement on creation

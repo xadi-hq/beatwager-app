@@ -18,11 +18,12 @@ class SeasonService
      *
      * @param Group $group
      * @param \Carbon\Carbon|null $endsAt Optional season end date
+     * @param array|null $prizeStructure Optional prize configuration
      * @return GroupSeason
      */
-    public function createSeason(Group $group, ?\Carbon\Carbon $endsAt = null): GroupSeason
+    public function createSeason(Group $group, ?\Carbon\Carbon $endsAt = null, ?array $prizeStructure = null): GroupSeason
     {
-        return DB::transaction(function () use ($group, $endsAt) {
+        return DB::transaction(function () use ($group, $endsAt, $prizeStructure) {
             // Deactivate current season if exists
             if ($group->currentSeason) {
                 $group->currentSeason->update(['is_active' => false]);
@@ -37,6 +38,7 @@ class SeasonService
                 'season_number' => $nextSeasonNumber,
                 'started_at' => now(),
                 'is_active' => true,
+                'prize_structure' => $prizeStructure,
             ]);
 
             // Update group references
@@ -60,6 +62,8 @@ class SeasonService
                 'season_id' => $season->id,
                 'season_number' => $season->season_number,
                 'ends_at' => $endsAt?->toDateTimeString(),
+                'has_prizes' => !empty($prizeStructure),
+                'prize_count' => $prizeStructure ? count($prizeStructure) : 0,
             ]);
 
             return $season->fresh();

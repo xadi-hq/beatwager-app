@@ -191,4 +191,38 @@ class EventService
     {
         $event->update(['status' => 'expired']);
     }
+
+    /**
+     * Cancel an event
+     *
+     * @throws \Exception if event cannot be cancelled
+     */
+    public function cancelEvent(GroupEvent $event, User $user): GroupEvent
+    {
+        if ($event->created_by_user_id !== $user->id) {
+            throw new \Exception('Only the creator can cancel the event');
+        }
+
+        if ($event->status !== 'upcoming') {
+            throw new \Exception('Only upcoming events can be cancelled');
+        }
+
+        // Check if event already started
+        if ($event->event_date->isPast()) {
+            throw new \Exception('Cannot cancel an event that has already started');
+        }
+
+        return DB::transaction(function () use ($event, $user) {
+            $event->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+                'cancelled_by_user_id' => $user->id,
+            ]);
+
+            // Dispatch event cancelled notification
+            \App\Events\EventCancelled::dispatch($event);
+
+            return $event->load(['group', 'creator', 'cancelledBy']);
+        });
+    }
 }

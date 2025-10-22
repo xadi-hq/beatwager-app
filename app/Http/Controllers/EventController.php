@@ -128,6 +128,8 @@ class EventController extends Controller
             ];
         }
 
+        $user = Auth::user();
+
         return Inertia::render('Events/Show', [
             'event' => [
                 'id' => $event->id,
@@ -140,11 +142,14 @@ class EventController extends Controller
                 'rsvp_enabled' => $event->rsvp_deadline !== null,
                 'rsvp_deadline' => $event->rsvp_deadline?->toIso8601String(),
                 'currency' => $event->group->points_currency_name ?? 'points',
+                'created_by_user_id' => $event->created_by_user_id,
+                'cancelled_at' => $event->cancelled_at?->toIso8601String(),
             ],
             'group' => [
                 'id' => $event->group->id,
                 'name' => $event->group->name ?? $event->group->platform_chat_title,
             ],
+            'isCreator' => $user && $event->created_by_user_id === $user->id,
             'rsvps' => $rsvpCounts,
             'attendance' => $attendance,
             'groupMembers' => $groupMembers,
@@ -268,6 +273,31 @@ class EventController extends Controller
         }
 
         return $group;
+    }
+
+    /**
+     * Cancel an event
+     */
+    public function cancel(Request $request, GroupEvent $event)
+    {
+        $user = Auth::user();
+
+        try {
+            $cancelledEvent = $this->eventService->cancelEvent($event, $user);
+
+            return back()->with([
+                'success' => 'Event cancelled successfully.',
+                'event' => [
+                    'id' => $cancelledEvent->id,
+                    'status' => $cancelledEvent->status,
+                    'cancelled_at' => $cancelledEvent->cancelled_at->toIso8601String(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
 }

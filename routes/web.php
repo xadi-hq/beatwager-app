@@ -54,6 +54,7 @@ Route::middleware(['signed.auth'])->group(function () {
     Route::get('/events/{event}/attendance', [EventController::class, 'attendance'])->name('events.attendance');
     Route::post('/events/{event}/attendance', [EventController::class, 'recordAttendance'])->name('events.recordAttendance');
     Route::post('/events/{event}/rsvp', [EventController::class, 'rsvp'])->name('events.rsvp');
+    Route::post('/events/{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
 
     // Challenge routes
     Route::get('/challenges/create', [ChallengeController::class, 'create'])->name('challenges.create');

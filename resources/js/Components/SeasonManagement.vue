@@ -9,6 +9,12 @@ interface CurrentSeason {
     started_at: string;
     is_active: boolean;
     days_elapsed: number;
+    prize_structure?: Prize[];
+}
+
+interface Prize {
+    description: string;
+    position: string;
 }
 
 const props = defineProps<{
@@ -25,6 +31,45 @@ const emit = defineEmits<{
 const isLoading = ref(false);
 const showEndDateInput = ref(false);
 const endDate = ref('');
+
+// Prize management
+const prizes = ref<Prize[]>([]);
+
+const availablePositions = [
+    { value: 'winner', label: 'Winner (1st place)' },
+    { value: 'runner_up', label: 'Runner-up (2nd place)' },
+    { value: 'loser', label: 'Loser (Last place)' },
+    { value: 'most_active', label: 'Most Active (Most wagers)' },
+    { value: 'most_social', label: 'Most Social (Most events attended)' },
+    { value: 'most_servant', label: 'Most Servant (Most challenges completed)' },
+    { value: 'most_generous', label: 'Most Generous (Most donations)' },
+    { value: 'most_improved', label: 'Most Improved (Biggest point gain)' },
+];
+
+// Get positions that are still available (not selected)
+const usedPositions = computed(() => prizes.value.map(p => p.position));
+const availablePositionOptions = computed(() =>
+    availablePositions.filter(p => !usedPositions.value.includes(p.value))
+);
+
+const canAddPrize = computed(() => availablePositionOptions.value.length > 0);
+
+const addPrize = () => {
+    if (!canAddPrize.value) return;
+
+    prizes.value.push({
+        description: '',
+        position: availablePositionOptions.value[0].value
+    });
+};
+
+const removePrize = (index: number) => {
+    prizes.value.splice(index, 1);
+};
+
+const getPositionLabel = (value: string) => {
+    return availablePositions.find(p => p.value === value)?.label || value;
+};
 
 // Format date for display
 const formatDate = (isoString: string) => {
@@ -56,10 +101,16 @@ const startSeason = async () => {
     isLoading.value = true;
 
     try {
-        const payload: { season_ends_at?: string } = {};
+        const payload: { season_ends_at?: string; prize_structure?: Prize[] } = {};
 
         if (showEndDateInput.value && endDate.value) {
             payload.season_ends_at = endDate.value;
+        }
+
+        // Only include prizes with descriptions
+        const validPrizes = prizes.value.filter(p => p.description.trim() !== '');
+        if (validPrizes.length > 0) {
+            payload.prize_structure = validPrizes;
         }
 
         await axios.post(`/groups/${props.groupId}/seasons`, payload);
@@ -126,6 +177,22 @@ const endSeason = async () => {
                 </div>
             </div>
 
+            <!-- Prize Display (if prizes exist) -->
+            <div v-if="currentSeason.prize_structure && currentSeason.prize_structure.length > 0" class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <h4 class="text-sm font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
+                    🏆 Season Prizes
+                </h4>
+                <ul class="space-y-1 text-sm">
+                    <li
+                        v-for="(prize, index) in currentSeason.prize_structure"
+                        :key="index"
+                        class="text-yellow-800 dark:text-yellow-200"
+                    >
+                        <strong>{{ getPositionLabel(prize.position) }}:</strong> {{ prize.description }}
+                    </li>
+                </ul>
+            </div>
+
             <!-- End Season Button -->
             <button
                 @click="endSeason"
@@ -168,6 +235,71 @@ const endSeason = async () => {
                         Leave blank for indefinite season (manual end only)
                     </p>
                 </div>
+            </div>
+
+            <!-- Prize Configuration (Optional) -->
+            <div class="mb-4">
+                <h4 class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+                    🏆 Prize Configuration (Optional)
+                </h4>
+
+                <!-- Existing Prizes -->
+                <div v-if="prizes.length > 0" class="space-y-3 mb-3">
+                    <div
+                        v-for="(prize, index) in prizes"
+                        :key="index"
+                        class="flex gap-2 items-start"
+                    >
+                        <input
+                            v-model="prize.description"
+                            type="text"
+                            placeholder="Prize description (e.g., Free dinner, Trophy)"
+                            class="flex-1 px-3 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                        />
+                        <select
+                            v-model="prize.position"
+                            class="px-3 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                        >
+                            <!-- Keep currently selected option -->
+                            <option :value="prize.position">
+                                {{ getPositionLabel(prize.position) }}
+                            </option>
+                            <!-- Show other available options -->
+                            <option
+                                v-for="pos in availablePositionOptions"
+                                :key="pos.value"
+                                :value="pos.value"
+                            >
+                                {{ pos.label }}
+                            </option>
+                        </select>
+                        <button
+                            @click="removePrize(index)"
+                            type="button"
+                            class="px-3 py-2 text-sm bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg transition-colors"
+                            title="Remove prize"
+                        >
+                            ×
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add Prize Button -->
+                <button
+                    v-if="canAddPrize"
+                    @click="addPrize"
+                    type="button"
+                    class="w-full px-4 py-2 text-sm bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg border border-green-200 dark:border-green-800 transition-colors"
+                >
+                    + Add Prize
+                </button>
+
+                <p v-if="prizes.length === 0" class="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+                    Add prizes to reward season winners! Examples: "Free dinner", "Trophy", "Wears hat of shame"
+                </p>
+                <p v-else-if="!canAddPrize" class="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+                    All prize positions assigned! Remove a prize to add a different one.
+                </p>
             </div>
 
             <!-- Start Season Button -->

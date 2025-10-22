@@ -96,6 +96,8 @@ const scheduleBirthday = async (member: BirthdaySuggestion) => {
             scheduled_date: member.birthday,
             is_recurring: true,
             recurrence_type: 'yearly',
+            is_drop_event: true,
+            drop_amount: 50,
         });
 
         // Reload both lists

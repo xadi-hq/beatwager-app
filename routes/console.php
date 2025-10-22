@@ -70,3 +70,9 @@ Schedule::command('cleanup:expired-items')
     ->dailyAt('02:00')  // 2am - low traffic time for cleanup
     ->withoutOverlapping()
     ->onOneServer();
+
+// Reconcile point balances (detect drift between cache and transaction ledger)
+Schedule::command('points:reconcile')
+    ->weeklyOn(1, '03:00')  // Every Monday at 3am
+    ->withoutOverlapping()
+    ->onOneServer();

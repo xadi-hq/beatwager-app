@@ -1,412 +1,336 @@
 # BeatWager TODO
 
-**Last Updated:** October 20, 2025
-**Current Phase:** Phase 2 - Engagement & Advanced Features
-**Status:** Core features complete, LLM integration complete, Seasons implemented, Scheduled messages complete
+**Last Updated:** October 22, 2025
+**Status:** Core features complete, LLM integration complete, Seasons implemented, Point reconciliation active, Event cancellation live, Prize system ready
 
----
+## 🔥 HIGH PRIORITY: Ready to Implement
 
-## HIGH PRIORITY: Core Commands & Message Infrastructure
+### 1. Message Tracking Integration (Phase 2)
+**Status**: Infrastructure complete, needs integration
+**Time**: 2-4 hours
+**Dependency**: Existing `MessageTrackingService`
 
-### 0. Implement /leaderboard Command ✅ COMPLETE (Oct 20, 2025)
-- ✅ **Current status**: Fully implemented
-- ✅ Implement actual leaderboard display
-  - Show top 10 players in group by points
-  - Include win rate (W-L record with percentage)
-  - Format with emojis (🥇 🥈 🥉 for top 3)
-  - Link to full leaderboard on web with short URLs
-  - Custom currency support
-- ⏳ Weekly automated leaderboard posts (Monday mornings) (FUTURE)
-  - Ties into `SendWeeklyRecap` job (Section 4)
-  - Use same LLM personality for engagement
-- ⏳ Generate personalized LLM commentary about standings (FUTURE - enhancement)
-
-### 0b. Message Tracking & Anti-Spam System ✅ COMPLETE (Oct 20, 2025)
-- ✅ Create `sent_messages` table migration
-  - Fields: id, group_id, message_type, context_id (wager_id, event_id, etc.), sent_at, metadata
-  - Message types: 'wager.announcement', 'engagement.prompt', 'birthday.reminder', 'weekly.recap', etc.
-  - Purpose: Track what messages were sent to prevent spam/duplicates
-- ✅ Create `MessageTrackingService`
-  - `canSendMessage(Group $group, string $messageType, array $rules): bool`
-  - Rules: max_per_day, cooldown_hours, per_context_limit
-  - Example: Only 1 engagement prompt per wager per 24h
-- ⏳ Integrate into all message-sending services (READY - Phase 2)
-  - Check before sending engagement prompts, birthday reminders, etc.
-  - Log successful sends to `sent_messages`
-- ✅ **Bonus**: Use as LLM context for "last week we..."
-  - Query recent messages for context injection
+- ✅ `sent_messages` table exists
+- ✅ `MessageTrackingService` with anti-spam rules
+- ⏳ **TODO**: Integrate `canSendMessage()` into all messaging services:
+  - Engagement prompts (SendEngagementPrompts)
+  - Birthday reminders (SendBirthdayReminders - when created)
+  - Weekly recaps (SendWeeklyRecap - when created)
+  - Season milestone drops
+  - Log all sends to `sent_messages`
+- ⏳ **TODO**: Add LLM context using `getRecentHistory()`
   - "Remember the Marathon bet from last Tuesday?"
-  - `getRecentHistory()` method implemented
 
-### 0c. Message Chunking & Delays (Joke Delivery)
-- ⏳ Add delay capability to MessengerAdapter
-  - `sendMessageWithDelay(OutgoingMessage $message, int $delaySeconds): void`
-  - Use queued jobs for delayed delivery
-- ⏳ Add support for message sequences
-  - `sendMessageSequence(array $messages, int $delayBetween): void`
-  - Example: "Know what's green and doesn't fly?" ...10sec... "A grass!"
-- ⏳ LLM can request delays via special syntax
-  - Parse `[DELAY:10]` markers in LLM responses
-  - Split into multiple messages with delays
+### 2. Notification Preferences System
+**Status**: Partial - needs completion
+**Time**: 3-5 hours
 
-### 0d. External API Integration (GIFs & Jokes)
-- ⏳ Add Giphy API integration for GIF search
-  - Create `GiphyService` with `search(string $query): string` (returns GIF URL)
-  - LLM can request GIFs via tool/function calling
-  - Example: LLM generates "celebration.gif" → Giphy finds relevant GIF
-- ⏳ Add JokeAPI integration
-  - Create `JokeService` with `getRandom(string $category): string`
-  - LLM can fetch jokes for engagement messages
-  - Categories: programming, dad jokes, puns, etc.
-- ⏳ Make APIs available to LLM via tool/function calling
-  - Add to LLM context as available tools
-  - "You can search for GIFs using giphy_search(query) and get jokes using get_joke(category)"
+**What exists:**
+- ✅ `messages:send-scheduled` command (daily 8am)
+- ✅ Birthday day-of messages working
+- ✅ Point decay warnings active
 
----
-
-## HIGH PRIORITY: LLM Integration & Engagement
-
-### 1. Badge System (US-009)
-- ⏳ Create `badges` table migration
-  - Fields: id, user_id, group_id, badge_type, earned_at, season_id
-  - Badge types: 'oracle', 'degen', 'shark', 'loyalist', 'referee', 'ghost'
-- ⏳ Create `Badge` model with relationships
-- ⏳ Create `BadgeService` for calculation logic
-  - `calculateBadges(Group $group)` - run weekly via scheduled job
-  - Criteria for each badge type (see IMPLEMENTATION_PLAN.md)
-- ⏳ Create `AssignBadges` scheduled job (weekly)
-- ⏳ Add badge announcement messages (use LLM for personality)
-- ⏳ Display badges in leaderboard and user profiles
-- ⏳ Store badge events in `audit_events` for grudge context
-
-### 2. Grudge Memory System (US-006) ✅ COMPLETE (Oct 20, 2025)
-- ✅ Create `GrudgeService` for recent history
-  - `getRecentHistory(User $user1, User $user2, Group $group): array`
-  - Query last 5 wagers between two users
-  - Format context for LLM ("Sarah has beaten John 3 times in a row")
-- ✅ Integrate grudge context into settlement messages
-  - Pass grudge history to LLM via `MessageContext`
-  - LLM generates dramatic commentary based on history
-  - Automatically injected for 1v1 wagers in `MessageService::settlementResult()`
-- ✅ Store wager outcomes in `audit_events` for faster queries
-  - Already implemented in `WagerService::createAuditEvents()`
-  - Uses `AuditEventService::wagerWon()` for 1v1 matches
-
-### 3. Notification Jobs (Respect Preferences)
-- ⏳ Create `SendBirthdayReminders` job (daily check)
+**TODO:**
+- ⏳ Create `SendBirthdayReminders` job (-7 days advance warning)
   - Check `notification_preferences.birthday_reminders`
-  - Send only to groups with preference enabled
-  - **-7 days reminder**: "When are WE celebrating your upcoming 40th birthday John?" (opt-in per group)
-  - Day-of message at 8am: Current implementation complete
-- ⏳ Update decay warning job to respect preferences
-  - Check `notification_preferences.wager_reminders`
-- ⏳ Create `SendWeeklyRecap` job (weekly summary - Monday mornings)
-  - Check `notification_preferences.weekly_summaries`
-  - Generate engaging summary with LLM if configured
-  - Stats: most wins, biggest pot, most active member, current point totals
-  - **Personalized engagement**: Mention lowest ranking ("Come on John, this is your week!")
-  - **Competitive motivation**: Mention leader ("Who's going to prevent Jane from becoming untouchable?")
-  - Show planned season end date (if any season is active)
+  - "When are WE celebrating your upcoming 40th birthday John?"
 
-### 4. Code Quality & Organization
-- ⏳ **Centralize Telegram Callback Responses** (Optional improvement)
-  - Create `/lang/en/system.php` for callback acknowledgments and error messages
-  - Move hardcoded `answerCallbackQuery()` strings from TelegramWebhookController
-  - Keep separate from `messages.php` (LLM messages) vs `system.php` (instant feedback)
-  - Benefits: Easier i18n support, consistent error messages, centralized maintenance
-  - Categories:
-    - Wager responses: 'not_found', 'no_longer_open', 'deadline_passed', 'already_joined', 'placed_success'
-    - Event responses: 'not_found', 'no_longer_active', 'rsvp_deadline_passed', 'invalid_format'
-    - Error responses: 'insufficient_points', 'generic_error'
-  - Note: These stay hardcoded (no LLM) - they're Telegram API requirements for instant feedback
+### 3. Prize System LLM Integration
+**Status**: Backend complete, needs LLM message integration
+**Time**: 1-2 hours
+**Completed**: October 22, 2025
+
+**What's done:**
+- ✅ `prize_structure` JSON column added to `group_seasons` [GroupSeason.php:25](../app/Models/GroupSeason.php#L25)
+- ✅ Prize Configuration UI in season settings [SeasonManagement.vue:224](../resources/js/Components/SeasonManagement.vue#L224)
+- ✅ 8 prize positions: Winner, Runner-up, Loser, Most Active, Most Social, Most Servant, Most Generous, Most Improved
+- ✅ Dynamic row management (add/remove prizes)
+- ✅ Backend validation [SeasonController.php:82](../app/Http/Controllers/SeasonController.php#L82)
+- ✅ Display prizes in active season card [SeasonManagement.vue:181](../resources/js/Components/SeasonManagement.vue#L181)
+
+**TODO:**
+- ⏳ Display prizes in season start LLM messages (MessageService integration)
+- ⏳ Display prizes in season end LLM messages (MessageService integration)
+- ⏳ Calculate and announce prize winners at season end
 
 ---
 
-## MEDIUM PRIORITY: Engagement Features
+## 🔍 INVESTIGATE & CLARIFY
 
-### 5. Custom Prize System (Seasons Focus)
-- ⏳ Add `prize_structure` JSON column to `group_seasons` table
-  - **Note**: Prizes primarily for seasons (winner/runner-up/loser of season)
-  - Can optionally extend to individual high-stakes wagers
-  - Examples: "Season loser buys drinks", "Winner gets trophy/embarrassing photo privileges"
-- ⏳ Create Prize Configuration UI in season settings
-  - Allow admins to set custom prizes for season placements
-  - Examples: 1st place: bragging rights, 2nd: honorable mention, Last: buys round
-- ⏳ Display prizes in season start/recap announcements
-  - Include prize context in LLM-generated season messages
-  - "Remember: Last place buys drinks at next meetup!"
-- ⏳ Prize reminders in season end messages
-  - Mention earned prizes when season concludes
-  - Optional: Track prize fulfillment status
+### Engagement Prompts Enhancement
+**Current**: Basic system working (hourly stale wager checks)
+**Question**: Are these future enhancements needed now?
 
-### 6. Engagement Follow-up Prompts (Context-Aware) ✅ COMPLETE (Oct 20, 2025)
-- ✅ Create `SendEngagementPrompts` job (hourly check for stale wagers)
-  - Detect open wagers with 0-1 participants after 24 hours
-  - Generate LLM-powered encouragement: "Come on guys, no one's betting yet?"
-  - Respect group `notification_preferences.engagement_prompts`
-  - Integrated with `MessageTrackingService` for anti-spam (24h cooldown)
-  - Scheduled hourly in `routes/console.php`
-- ⏳ Target specific users based on activity patterns (FUTURE)
-  - "John, you usually join these kinds of wagers!"
-  - "Sarah hasn't placed a wager in 5 days - what's up?"
-- ⏳ Vary messaging based on wager characteristics (FUTURE - LLM can already do this)
-  - Small stakes: "Low risk, high fun - who's in?"
-  - High stakes: "This is a big one, folks!"
-  - Deadline approaching: "Only 2 hours left to join!"
+- ✅ Current: LLM encouragement for 0-1 participant wagers after 24h
+- ⏳ Future: Target specific users by activity patterns?
+- ⏳ Future: Vary by wager characteristics (LLM can already do this)?
 
-### 7. Revenge Bet System (US-012)
-- ⏳ Create `OfferRevengeBet` job (triggered after big losses)
-  - Detect losses >100 points
-  - Create auto-generated revenge bet opportunity
-  - Send targeted message to loser with LLM personality
-- ⏳ Add "Rematch" quick action to settled wager page
-  - One-click to create reverse wager
-  - Same stakes, opposite outcome
+### Code Quality: Centralize Telegram Callbacks
+**Status**: Optional refactor
+**Time**: 2 hours
+**Question**: Worth doing now for i18n prep?
 
-### 8. Long-tail Bet Reminders (US-014)
-- ⏳ Create `RemindLongWagers` job (weekly check for wagers >30 days out)
-  - Send reminder about upcoming long-dated wagers
-  - "Don't forget: Marathon bet settles in 45 days!"
-- ⏳ Special UI treatment for long wagers (badge/indicator)
+- ⏳ Create `/lang/en/system.php` for callback strings
+- ⏳ Move hardcoded `answerCallbackQuery()` from TelegramWebhookController
+- **Benefits**: i18n ready, consistent errors
 
----
+### Event Testing Coverage
+**Current**: 40+ unit tests exist
+**Question**: What integration/E2E gaps are critical?
 
-## ✅ RECENTLY COMPLETED
+**Exists:**
+- ✅ EventService unit tests (RSVP, attendance, bonuses)
+- ✅ Model tests (GroupEvent, GroupEventRsvp, GroupEventAttendance)
 
-### Display Commands (Oct 20, 2025)
-- ✅ `/wagers` command - Show top 3 open wagers in group
-- ✅ `/challenges` command - Show top 3 open challenges in group
-- ✅ `/events` command - Show top 3 upcoming events in group
-- All three commands include participant counts, deadlines, and link to view all
+**Needs investigation:**
+- ⏳ Integration tests: web → telegram notification flow?
+- ⏳ E2E tests: full lifecycle (create → RSVP → attend → bonus)?
 
----
+### No-Show Penalties
+**Status**: Not started
+**Time**: 6-8 hours
+**Question**: Priority for v1 launch? Can handle manually in DB for now
 
-## Current Work: Phase 2 Final Polish
-### Testing - Events System
-- ⏳ EventService unit tests (RSVP, attendance, bonus distribution)
-- ⏳ Integration tests for RSVP flow
-- ⏳ Integration tests for attendance recording flow
-- ⏳ E2E tests for complete event lifecycle
-
-### Testing - General
-- ⏳ Increase test coverage from 38% to 60%
-- ⏳ Unit tests for all command/callback handlers
-- ⏳ Authentication middleware edge case tests
-- ⏳ Integration tests for critical flows
-
-### Telegram Messaging - Events
-- ⏳ Attendance prompt messages (auto-sent after event via scheduled job)
-
-### UI/UX Polish
-- ⏳ Frontend error message improvements
-- ⏳ Loading states on all async operations
-- ⏳ Success/error toast messages
-- ⏳ Confirmation dialogs for destructive actions
-- ⏳ Skeleton loaders for data fetching
-
-### Edge Cases
-- ⏳ User leaves group mid-wager (need to handle)
-- ⏳ Network errors during critical operations (retry logic needed)
-- ⏳ LLM API failures (graceful fallback to templates)
-
-### Mobile Responsive Design
-- ⏳ Test all pages on mobile devices
-- ⏳ Touch-friendly button sizes
-- ⏳ Mobile navigation menu
-- ⏳ Responsive table layouts
-
----
-
-## Phase 2.1: Advanced Event Features (Future)
-
-### No-Show Penalties (Optional per group)
-- ⏳ RSVP "Going" but don't check in → configurable penalty
-- ⏳ Miss consecutive events → decay multiplier
+- ⏳ RSVP "Going" but no check-in → configurable penalty
+- ⏳ Consecutive misses → decay multiplier
 - ⏳ Grace period/excuse mechanism
 
-### Challenge System
-- ⏳ Dispute mechanism for attendance claims
-- ⏳ Voting system for challenges
-- ⏳ Penalties for incorrect reporting
-- ⏳ Auto-expiry for unrecorded events (48 hours)
+### Challenge/Dispute System
+**Status**: Not started
+**Time**: 8-10 hours
+**Question**: Can handle manually for now?
 
-### Event Leaderboard
-- ⏳ Track "most social" member metrics
-- ⏳ Attendance percentage tracking
-- ⏳ Longest streak display
+- ⏳ Dispute attendance claims
+- ⏳ Voting system for challenges
+- ⏳ Auto-expiry for unrecorded events (48h)
+
+### Event Attendance Streaks
+**Status**: Not started
+**Time**: 3-4 hours
+**Question**: Nice-to-have or critical engagement feature?
+
+- ⏳ Track consecutive attendance
+- ⏳ Apply multiplier (e.g., 3rd consecutive = 1.2x bonus)
+- ⏳ Display streaks in profile
+- ⏳ Announce streaks in group
+
+### Smart Notifications Audit
+**Time**: 2 hours (audit only)
+**Question**: What exists vs what's missing?
+
+**Review what exists:**
+- Engagement prompts (stale wagers)
+- Decay warnings (day 12)
+- Birthday messages
+- Season milestone drops
+- Event attendance prompts
+
+**Identify gaps:**
+- Post-loss encouragement?
+- Pre-deadline urgency?
+- Low balance warnings?
+- Inactive friend nudges?
+
+### Personal Analytics Modal
+**Status**: Not started
+**Time**: 4-5 hours
+**Question**: Triggered from Win Rate card on Me.vue?
+
+- ⏳ Win rate over time chart
+- ⏳ Earnings history graph
+- ⏳ Favorite wager types
+- ⏳ Point balance history
+- ⏳ Streaks and achievements
 
 ---
 
-## Refactoring & Architecture Improvements (MEDIUM PRIORITY)
+## 🔵 LOW PRIORITY: Future Enhancements
 
-### Platform-Agnostic Refactoring
-- ⏳ Move telegram columns from users table to messenger_services table
-  - Create `messenger_services` table (user_id, platform, platform_user_id, username, first_name, etc.)
-  - Migrate existing telegram_* columns from users table
-  - Update User model relationships
-  - Update authentication flow to use messenger_services
+### Message Chunking & Delays
+- ⏳ Add delay capability to MessengerAdapter
+- ⏳ Message sequences with delays
+- ⏳ LLM `[DELAY:10]` syntax support
 
+### External APIs (GIFs & Jokes)
+- ⏳ Giphy API integration
+- ⏳ JokeAPI integration
+- ⏳ Make available to LLM via function calling
+
+### Badge System
+- ⏳ `badges` table migration
+- ⏳ BadgeService calculation logic
+- ⏳ Types: oracle, degen, shark, loyalist, referee, ghost
+- ⏳ Display in leaderboard and profiles
+
+### Revenge Bet System
+- ⏳ `OfferRevengeBet` job (losses >100pts)
+- ⏳ "Rematch" quick action on settled wager page
+
+### Long-tail Bet Reminders
+- ⏳ `RemindLongWagers` job (wagers >30 days out)
+- ⏳ Special UI treatment
+
+### UI/UX Polish
+- ⏳ Error message improvements
+- ⏳ Loading states
+- ⏳ Toast messages
+- ⏳ Confirmation dialogs
+- ⏳ Skeleton loaders
+- ⏳ Mobile responsive improvements
+
+### Edge Cases
+- ⏳ User leaves group mid-wager
+- ⏳ Network retry logic
+- ⏳ LLM fallback to templates
+
+---
+
+## 🏗️ REFACTORING (When Needed)
+
+### Platform-Agnostic Architecture
+- ⏳ Move telegram columns to `messenger_services` table
 - ⏳ Make groups platform agnostic
-  - Replace telegram_* columns with generic platform columns
-  - Add `platform` enum column (telegram, slack, discord)
-  - Rename: `telegram_chat_id` → `platform_chat_id`
-  - Rename: `telegram_chat_title` → `platform_chat_title`
-  - Rename: `telegram_chat_type` → `platform_chat_type`
-
-- ⏳ Implement `MessagingPlatform` interface (see IMPLEMENTATION_PLAN.md)
-  - Create interface with sendMessage, editMessage, deleteMessage methods
-  - Implement `TelegramPlatform` class
-  - Refactor `TelegramWebhookController` to use abstraction
-  - Future: `DiscordPlatform`, `SlackPlatform`, `WhatsAppPlatform`
+- ⏳ Implement `MessagingPlatform` interface
 
 ### PHP 8.3 Enums
-- ⏳ Create Enums in ./app/Enums/
-  - `WagerType` enum (binary, multiple_choice, numeric, date)
-  - `WagerStatus` enum (open, settled, disputed, cancelled)
-  - `WagerEntryResult` enum (pending, won, lost, tied)
-  - `Platform` enum (telegram, slack, discord)
-  - `TransactionType` enum (wager_join, wager_win, wager_refund, decay, weekly_bonus, etc.)
-  - `UserRole` enum (participant, creator, admin)
-
+- ⏳ Create: WagerType, WagerStatus, WagerEntryResult, Platform, TransactionType, UserRole
 - ⏳ Update models to use Enums
-  - Wager model: use WagerType, WagerStatus
-  - WagerEntry model: use WagerEntryResult
-  - Transaction model: use TransactionType
-  - User-Group pivot: use UserRole
-
-### Database Migration Cleanup
-- ⏳ Consolidate Schema::table() migrations
-  - Review all migrations in database/migrations/
-  - Merge changes into original Schema::create() migrations
-  - Test with `php artisan migrate:fresh`
-  - Delete redundant Schema::table() migration files
 
 ---
 
-## Week 9-10: Security, Performance & Soft Launch
+## 🔒 SECURITY & PERFORMANCE (Pre-Launch)
 
 ### Security Audit
 - ⏳ CSRF protection verification
-- ⏳ SQL injection prevention check
-- ⏳ XSS protection verification
-- ⏳ One-time token validation security review
-- ⏳ Secure environment variable handling
-- ⏳ LLM API key encryption validation
+- ⏳ SQL injection prevention
+- ⏳ XSS protection
+- ⏳ One-time token security review
+- ⏳ Environment variable handling
+- ⏳ LLM API key encryption
 
 ### Performance Optimization
-- ⏳ N+1 query prevention (eager loading review)
-- ⏳ Redis caching for frequent reads
-- ⏳ Queue all non-critical notifications
-- ⏳ Asset optimization (minification, compression)
-- ⏳ CDN setup for static assets
-- ⏳ LLM response caching optimization
-
-### CI/CD Pipeline
-- ⏳ GitHub Actions workflow for CI (tests, linting, type checking)
-- ⏳ GitHub Actions workflow for deployment
-- ⏳ Automated database migrations in deployment
-- ⏳ Rollback mechanism for failed deployments
-- ⏳ Zero-downtime deployment strategy
-
-### Production Deployment
-- ⏳ Set up production server (VPS or cloud)
-- ⏳ Configure PostgreSQL (managed service recommended)
-- ⏳ Configure Redis
-- ⏳ Set up queue workers with Supervisor
-- ⏳ SSL certificate setup
-- ⏳ Domain configuration
-- ⏳ Load balancer configuration
+- ⏳ N+1 query prevention
+- ⏳ Redis caching
+- ⏳ Queue non-critical notifications
+- ⏳ Asset optimization
+- ⏳ CDN setup
+- ⏳ LLM response caching
 
 ### Monitoring & Logging
-- ⏳ Error tracking (Sentry or similar)
-- ⏳ Performance monitoring (response times)
-- ⏳ Telegram webhook failure alerts
-- ⏳ Deployment status notifications
-- ⏳ Database performance monitoring
+- ⏳ Error tracking (Sentry)
+- ⏳ Performance monitoring
+- ⏳ Webhook failure alerts
+- ⏳ Database monitoring
 - ⏳ Queue job monitoring
-- ⏳ LLM usage and cost monitoring
-- ⏳ Operational log analysis dashboard
+- ⏳ LLM usage/cost monitoring
+
+---
+
+## 🚀 DEPLOYMENT (When Ready)
+
+### CI/CD Pipeline
+- ⏳ GitHub Actions (tests, linting, type checking)
+- ⏳ Automated deployment
+- ⏳ Database migrations
+- ⏳ Rollback mechanism
+- ⏳ Zero-downtime strategy
+
+### Production Setup
+- ⏳ Server provisioning (VPS/cloud)
+- ⏳ Managed PostgreSQL
+- ⏳ Redis configuration
+- ⏳ Queue workers (Supervisor)
+- ⏳ SSL certificate
+- ⏳ Domain + load balancer
 
 ### Soft Launch
-- ⏳ Onboard 1-2 test friend groups
-- ⏳ Monitor usage for first 2 weeks
-- ⏳ Gather feedback via surveys/interviews
-- ⏳ Fix critical bugs from feedback
-- ⏳ Iterate on UX based on user behavior
-- ⏳ Monitor LLM usage and costs
+- ⏳ Onboard 1-2 test groups
+- ⏳ Monitor for 2 weeks
+- ⏳ Gather feedback
+- ⏳ Fix critical bugs
+- ⏳ Iterate on UX
 
 ---
 
-## Known Issues & Technical Debt
+## 📦 FEATURE BACKLOG (Phase 2+)
 
-### Medium Priority
-- ⏳ User leaves group mid-wager - No handling for this edge case yet
-- ⏳ Network retry logic - Need retry mechanism for failed Telegram API calls
-- ⏳ Frontend error boundaries - Better error handling in Vue components
-- ⏳ LLM fallback testing - Ensure graceful degradation when LLM fails
+### Wager Types
+- ⏳ Numeric wagers (closest guess wins)
+- ⏳ String wagers (open-ended text)
+- ⏳ Wager templates
+- ⏳ Event-specific wagers
 
-### Low Priority
-- ⏳ LLM cache invalidation - Better cache key strategy for dynamic content
+### Engagement
+- ⏳ Wager participation streaks
+- ⏳ Group challenges
+- ⏳ Monthly participation goals
 
----
-
-## Feature Backlog (Future Phases)
-
-### Open Answer Wagers (Deferred - Documented for Roadmap)
-- ⏳ **Numeric Wagers** - Guess a number (e.g., "How many points will the Lakers score?")
-  - Closest guess wins
-  - Tie-breaking rules needed
-  - UI for numeric input validation
-
-- ⏳ **String Wagers** - Open-ended text answers (e.g., "Who will win the election?")
-  - Creator defines valid answers via web form
-  - Multi-select settlement (multiple correct answers possible)
-  - Case-insensitive matching
-  - UI for answer management
-
-### Wager Features
-- ⏳ Wager Templates - Pre-built templates for common wager types
-- ⏳ Event-Specific Wagers - Meta-wagers about events
-
-### Engagement Features
-- ⏳ Wager Streaks - Consecutive participation rewards
-- ⏳ Group Challenges - Monthly participation goals
-- ⏳ Attendance Streaks - Consecutive event attendance bonuses
-
-### Smart Notifications
-- ⏳ Context-Aware Prompts (post-loss, pre-deadline, low balance, inactive friends)
-- ⏳ All powered by LLM for personality
-
-### Advanced Features (Phase 3)
-- ⏳ Multi-Platform Support - Slack, Discord, WhatsApp integrations
-- ⏳ Personal Analytics - Win rate, earnings over time, favorite wager types
-- ⏳ Group Analytics - Most active members, trending topics, seasonal patterns
-- ⏳ Cross-Group Seasons - Optional inter-group competition
-- ⏳ User-Generated Templates - Share wager templates between groups
-- ⏳ Mobile Native Apps - If web mobile UX proves insufficient
-- ⏳ Automated Outcome Detection - Sports APIs for automatic settlement
-- ⏳ Voice/Video Integration - LLM-powered voice messages for announcements
+### Advanced (Phase 3)
+- ⏳ Multi-platform (Slack, Discord, WhatsApp)
+- ⏳ Group analytics dashboard
+- ⏳ Cross-group seasons
+- ⏳ User-generated templates
+- ⏳ Mobile native apps
+- ⏳ Automated outcome detection (sports APIs)
+- ⏳ Voice/video LLM integration
 
 ---
 
-## Implementation Reference
+## 📝 NOTES
 
-For detailed implementation guidance, see:
-- `./docs/BEATWAGER_IMPLEMENTATION_PLAN.md` - Architecture details, code examples
-- `./app/Services/LLMService.php` - LLM service implementation
-- `./app/Services/LogService.php` - Operational logging
-- `./lang/en/messages.php` - Message metadata for LLM
-- `./claudedocs/improvement-implementation-plan.md` - Code quality improvement plan
-- `./claudedocs/implementation-progress-summary.md` - Current refactoring progress
+- Run tests before commits: `make test`
+- Point reconciliation: Review logs after 2-4 weeks (mid-November 2025)
+- See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) for patterns
+- See [point-reconciliation.md](./point-reconciliation.md) for monitoring details
+- Code quality: 4 of 5 phases complete (80%) - tracked in `./claudedocs/`
 
 ---
 
-## Notes
+## 📊 SESSION SUMMARY - October 22, 2025
 
-- Always run tests before committing: `make test`
-- Document any new edge cases discovered in this file
-- Update completion dates as tasks finish
-- Keep TODO.md as single source of truth for current work
-- Monitor LLM usage and costs in production
-- See IMPLEMENTATION_PLAN.md for architecture patterns and code examples
-- Code quality improvements tracked in `./claudedocs/` - 4 of 5 phases complete (80%)
+**Work Session Duration**: ~5.5 hours
+**Features Completed**: 3 major systems
+**Lines of Code Added**: ~800+
+**Migrations Created**: 2
+**Files Modified**: 15+
+
+### Completed Today
+
+1. **Point Reconciliation System** (1.5h)
+   - Weekly monitoring command with dry-run, fix, and threshold modes
+   - Zero discrepancies found in initial run across 35 groups
+   - Comprehensive logging and alerting system
+
+2. **Event Cancellation** (1.5h)
+   - Full-stack implementation (DB → Service → Controller → UI)
+   - Creator-only with validation (upcoming events, not started)
+   - Confirmation modal + toast notifications
+   - Mobile and desktop responsive
+
+3. **Prize System** (2.5h)
+   - Database schema with 8 prize position types
+   - Dynamic UI for prize configuration (add/remove rows)
+   - Backend validation and storage
+   - Display in active season cards
+   - Ready for LLM message integration
+
+### Testing Commands
+
+```bash
+# Point Reconciliation
+docker exec beatwager-app php artisan points:reconcile
+docker exec beatwager-app php artisan points:reconcile --dry-run
+docker exec beatwager-app php artisan points:reconcile --threshold=50
+
+# Build Assets
+npm run build
+
+# Run Tests
+docker exec beatwager-app php artisan test
+```
+
+### Next Session Priorities
+
+1. Prize System LLM Integration (1-2h) - Display prizes in season messages
+2. Message Tracking Integration (2-4h) - Wire up canSendMessage() checks
+3. Birthday -7 Day Reminder (1-2h) - Advance birthday notifications
