@@ -82,42 +82,28 @@ class TelegramMessenger implements MessengerInterface
             return null;
         }
 
-        // Group buttons by rows based on wager buttons vs view progress
-        // First buttons are wager options (chunk by 3 for multiple choice, or 2 for binary)
-        // Last button is usually View Progress (full width)
-        
+        // Normalize buttons to handle both flat arrays and pre-organized rows
         $rows = [];
-        $currentRow = [];
-        $lastButtonIndex = count($buttons) - 1;
-        
-        foreach ($buttons as $index => $button) {
-            $telegramButton = match ($button->action) {
-                ButtonAction::Callback => ['text' => $button->label, 'callback_data' => $button->value],
-                ButtonAction::Url => ['text' => $button->label, 'url' => $button->value],
-            };
 
-            // If this is the last button and it's a View Progress or URL button, put it on its own row
-            if ($index === $lastButtonIndex &&
-                ($button->action === ButtonAction::Url || str_contains($button->value, 'view:'))) {
-                if (!empty($currentRow)) {
-                    $rows[] = $currentRow;
-                    $currentRow = []; // Clear to prevent duplicate addition
+        foreach ($buttons as $item) {
+            // If item is an array, it's already a row of buttons
+            if (is_array($item) && !empty($item) && $item[0] instanceof Button) {
+                $row = [];
+                foreach ($item as $button) {
+                    $row[] = match ($button->action) {
+                        ButtonAction::Callback => ['text' => $button->label, 'callback_data' => $button->value],
+                        ButtonAction::Url => ['text' => $button->label, 'url' => $button->value],
+                    };
                 }
-                $rows[] = [$telegramButton];
-            } else {
-                $currentRow[] = $telegramButton;
-                
-                // For wager buttons, chunk by 3 for multiple choice
-                if (count($currentRow) === 3) {
-                    $rows[] = $currentRow;
-                    $currentRow = [];
-                }
+                $rows[] = $row;
             }
-        }
-
-        // Add any remaining buttons
-        if (!empty($currentRow)) {
-            $rows[] = $currentRow;
+            // Otherwise it's a single Button object (legacy flat array)
+            elseif ($item instanceof Button) {
+                $rows[] = [match ($item->action) {
+                    ButtonAction::Callback => ['text' => $item->label, 'callback_data' => $item->value],
+                    ButtonAction::Url => ['text' => $item->label, 'url' => $item->value],
+                }];
+            }
         }
 
         return new InlineKeyboardMarkup($rows);
