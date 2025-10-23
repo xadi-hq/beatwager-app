@@ -124,6 +124,10 @@ PROMPT;
             unset($dataForPrompt['llm_instructions']);
         }
 
+        // Extract and remove is_group_chat from data (it's contextual, not content)
+        $isGroupChat = $dataForPrompt['is_group_chat'] ?? null;
+        unset($dataForPrompt['is_group_chat']);
+
         // Flatten data for prompt
         $dataStr = json_encode($dataForPrompt, JSON_PRETTY_PRINT);
 
@@ -132,6 +136,14 @@ PROMPT;
         $styleGuidance = $maxWords > 100
             ? 'Be comprehensive and detailed'
             : 'Be direct and punchy';
+
+        // Build audience context hint
+        $audienceHint = '';
+        if ($isGroupChat !== null) {
+            $audienceHint = $isGroupChat
+                ? "\n\nAudience: Group chat (use plural pronouns: 'you all', 'everyone', 'guys', etc.)"
+                : "\n\nAudience: Direct message / 1-on-1 (use singular pronouns: 'you', avoid plural)";
+        }
 
         // Build engagement triggers hint if present
         $triggersHint = '';
@@ -151,7 +163,7 @@ Tone hints: {$this->formatList($toneHints)}
 Required fields to include: {$this->formatList($ctx->requiredFields)}
 
 Data:
-{$dataStr}{$triggersHint}{$customInstructions}
+{$dataStr}{$audienceHint}{$triggersHint}{$customInstructions}
 
 Rules:
 - Include ALL required fields in natural language
@@ -159,6 +171,7 @@ Rules:
 - Use {$emojiGuidance}
 - Match the tone hints
 - {$styleGuidance}
+- Use appropriate pronouns based on audience (singular for DMs, plural for groups)
 - If engagement triggers are present, use them to add personality and create FOMO
 - If additional instructions are provided, follow them carefully
 

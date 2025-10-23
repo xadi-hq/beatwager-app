@@ -62,6 +62,7 @@ class HelpCommandHandler extends AbstractCommandHandler
         $helpMessage .= "*Available Commands:*\n\n";
         $helpMessage .= "• `/newwager` - Create a new wager in a group\n";
         $helpMessage .= "• `/wagers` - View recent open wagers in this group\n";
+        $helpMessage .= "• `/settle` - View and settle items past their deadline\n";
         $helpMessage .= "• `/newevent` - Create a group event with attendance tracking\n";
         $helpMessage .= "• `/events` - View recent open events in this group\n";
         $helpMessage .= "• `/newchallenge` - Create a 1-on-1 challenge\n";
@@ -73,7 +74,7 @@ class HelpCommandHandler extends AbstractCommandHandler
         $helpMessage .= "*How it works:*\n";
         $helpMessage .= "1️⃣ Create a wager with `/newwager`\n";
         $helpMessage .= "2️⃣ Friends join with their predictions\n";
-        $helpMessage .= "3️⃣ When the event happens, settle the wager\n";
+        $helpMessage .= "3️⃣ When the event happens, settle with `/settle`\n";
         $helpMessage .= "4️⃣ Winners split the pot proportionally!\n\n";
         $helpMessage .= "*Events:*\n";
         $helpMessage .= "📅 Use `/newevent` to organize meetups with attendance bonuses\n";

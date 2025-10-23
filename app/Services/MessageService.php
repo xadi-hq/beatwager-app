@@ -205,6 +205,75 @@ class MessageService
     }
 
     /**
+     * Create settlement reminder message with interactive buttons
+     * Sent to group chats with direct settlement options
+     */
+    public function settlementReminderWithButtons(Wager $wager, bool $isGroupChat = true): Message
+    {
+        $meta = __('messages.wager.reminder');
+
+        $ctx = new MessageContext(
+            key: 'wager.reminder',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'title' => $wager->title,
+                'is_group_chat' => $isGroupChat, // Pass context for singular/plural
+            ],
+            group: $wager->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $wager->group);
+
+        // Build wager-specific settlement buttons
+        $buttons = $this->buildSettlementButtons($wager);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Reminder,
+            variables: [],
+            buttons: $buttons,
+            context: $wager
+        );
+    }
+
+    /**
+     * Build settlement buttons based on wager type
+     */
+    private function buildSettlementButtons(Wager $wager): array
+    {
+        $buttons = match ($wager->type) {
+            'binary' => [
+                [
+                    new Button(
+                        label: '✅ Yes',
+                        action: ButtonAction::Callback,
+                        value: "settle_wager:{$wager->id}:yes"
+                    ),
+                    new Button(
+                        label: '❌ No',
+                        action: ButtonAction::Callback,
+                        value: "settle_wager:{$wager->id}:no"
+                    ),
+                ],
+            ],
+            'multiple_choice' => array_chunk(
+                collect($wager->options)
+                    ->map(fn($opt) => new Button(
+                        label: $opt,
+                        action: ButtonAction::Callback,
+                        value: "settle_wager:{$wager->id}:" . strtolower($opt)
+                    ))
+                    ->toArray(),
+                3 // Max 3 per row
+            ),
+            default => [],
+        };
+
+        return $buttons;
+    }
+
+    /**
      * Create view progress DM message
      */
     public function viewProgressDM(Wager $wager, string $shortUrl): Message

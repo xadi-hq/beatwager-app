@@ -42,6 +42,7 @@ class SendSettlementReminders extends Command
                       ->where('betting_closes_at', '<', now());
                 });
             })
+            ->whereHas('entries') // Only remind for wagers with entries
             ->get();
 
         if ($unsettledWagers->isEmpty()) {
@@ -54,42 +55,14 @@ class SendSettlementReminders extends Command
         /** @var \App\Models\Wager $wager */
         foreach ($unsettledWagers as $wager) {
             try {
-                // Get creator's Telegram service
-                /** @var \App\Models\User $creator */
-                $creator = $wager->creator;
-                $telegramService = $creator->getTelegramService();
+                $group = $wager->group;
 
-                if (!$telegramService) {
-                    $this->warn("Creator {$creator->name} has no Telegram service linked. Skipping.");
-                    continue;
-                }
+                // Generate reminder message with settlement buttons
+                $message = $messageService->settlementReminderWithButtons($wager, isGroupChat: true);
 
-                // Generate signed URL for the wager (platform-agnostic format)
-                $signedUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
-                    'wager.show',
-                    now()->addDays(30),
-                    [
-                        'wager' => $wager->id,
-                        'u' => encrypt('telegram:' . $telegramService->platform_user_id)
-                    ]
-                );
-
-                // Create short URL
-                $shortCode = ShortUrl::generateUniqueCode(6);
-                ShortUrl::create([
-                    'code' => $shortCode,
-                    'target_url' => $signedUrl,
-                    'expires_at' => now()->addDays(30),
-                ]);
-
-                $shortUrl = url('/l/' . $shortCode);
-
-                // Generate reminder message
-                $message = $messageService->settlementReminder($wager, $shortUrl);
-
-                // Send to creator's DM (use platform_user_id)
-                $messenger->send($message, $telegramService->platform_user_id);
-                $this->info("Sent reminder to {$creator->name} for wager: {$wager->title}");
+                // Send to group chat (not DM!)
+                $messenger->send($message, $group->platform_chat_id);
+                $this->info("Sent reminder to group '{$group->name}' for wager: {$wager->title}");
             } catch (\Exception $e) {
                 $this->error("Failed to send reminder for wager {$wager->id}: {$e->getMessage()}");
                 \Log::error('Failed to send settlement reminder', [
