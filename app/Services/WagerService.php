@@ -529,9 +529,17 @@ class WagerService
     }
 
     /**
-     * Settle top N ranking wager
-     * Outcome value is the actual ranking (array) set by settler
-     * Winners are those with exact match
+     * Settle top N ranking wager with position-based scoring
+     *
+     * Scoring: Each correct position = (100 / N)% of total score
+     * Example for top-3: Position 1 correct = 33%, Position 2 correct = 33%, etc.
+     *
+     * Winner determination (threshold-based):
+     * - If highest score = 100%: Only perfect scores win
+     * - If highest score >= 67%: Anyone with 67%+ wins (2+ positions for top-3)
+     * - If highest score >= 34%: Anyone with 34%+ wins (1+ position for top-3)
+     * - If highest score < 34%: Only highest scorers win
+     * - If nobody scores > 0%: Refund all stakes
      */
     private function settleRankingWager(Wager $wager, Collection $entries, string|array $outcome): void
     {
@@ -546,26 +554,75 @@ class WagerService
             return;
         }
 
-        // Find exact matches
-        $winners = collect();
+        $totalPositions = count($actualRanking);
+        $scores = collect();
+
+        // Calculate position-based score for each entry
         foreach ($entries as $entry) {
             $userRanking = is_string($entry->answer_value)
                 ? json_decode($entry->answer_value, true)
                 : $entry->answer_value;
 
-            if (is_array($userRanking) && $userRanking === $actualRanking) {
-                $winners->push($entry);
+            if (!is_array($userRanking)) {
+                $scores->put($entry->id, 0);
+                continue;
             }
+
+            // Count correct positions
+            $correctPositions = 0;
+            for ($i = 0; $i < min(count($userRanking), $totalPositions); $i++) {
+                if (isset($actualRanking[$i]) && $userRanking[$i] === $actualRanking[$i]) {
+                    $correctPositions++;
+                }
+            }
+
+            // Calculate score as percentage (0-100)
+            $scorePercent = ($correctPositions / $totalPositions) * 100;
+            $scores->put($entry->id, $scorePercent);
         }
 
-        if ($winners->isEmpty()) {
-            // No winners - refund everyone
+        // Determine winner threshold based on highest score
+        $highestScore = $scores->max();
+
+        if ($highestScore < 1) {
+            // Nobody got even close - refund everyone
             foreach ($entries as $entry) {
                 $this->refundEntry($entry);
             }
             return;
         }
 
+        // Set threshold: if someone got 100%, only 100% wins
+        // Otherwise, top tier wins (67%+, 34%+, or any score > 0)
+        if ($highestScore >= 100) {
+            $threshold = 100;
+        } elseif ($highestScore >= 67) {
+            $threshold = 67;
+        } elseif ($highestScore >= 34) {
+            $threshold = 34;
+        } else {
+            // Highest score is below 34% - only the highest scorers win
+            $threshold = $highestScore;
+        }
+
+        // Find winners at or above threshold
+        $winners = collect();
+        foreach ($entries as $entry) {
+            $score = $scores->get($entry->id);
+            if ($score >= $threshold) {
+                $winners->push($entry);
+            }
+        }
+
+        if ($winners->isEmpty()) {
+            // Shouldn't happen, but safety fallback
+            foreach ($entries as $entry) {
+                $this->refundEntry($entry);
+            }
+            return;
+        }
+
+        // Distribute pot among winners proportionally to their wagers
         $totalPot = $wager->total_points_wagered;
         $winnersTotal = $winners->sum('points_wagered');
 
@@ -574,6 +631,7 @@ class WagerService
             $this->awardWinner($entry, $winnings);
         }
 
+        // Record losses for non-winners
         $losers = $entries->whereNotIn('id', $winners->pluck('id'));
         foreach ($losers as $entry) {
             $this->recordLoss($entry);
