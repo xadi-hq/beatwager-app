@@ -148,9 +148,9 @@ const submitSettlement = () => {
     // Clear previous toasts
     showToast.value = false;
 
-    // For short_answer type, outcome_value should be the array of winning entry IDs
-    if (props.wager.type === 'short_answer' && settlementForm.winning_entries) {
-        settlementForm.outcome_value = settlementForm.winning_entries;
+    // For short_answer type, outcome_value should be the array of winning entry IDs (even if empty)
+    if (props.wager.type === 'short_answer') {
+        settlementForm.outcome_value = settlementForm.winning_entries || [];
     }
 
     settlementForm.post(`/wager/${props.wager.id}/settle`, {

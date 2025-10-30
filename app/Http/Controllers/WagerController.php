@@ -255,7 +255,7 @@ class WagerController extends Controller
     {
         $validated = $request->validate([
             'token' => 'required|string',
-            'outcome_value' => 'required', // Can be string or array depending on wager type
+            'outcome_value' => 'present', // Can be string or array (including empty array) depending on wager type
             'settlement_note' => 'nullable|string|max:500',
         ]);
 
@@ -396,7 +396,7 @@ class WagerController extends Controller
     {
         $validated = $request->validate([
             'user_id' => 'required|uuid',
-            'outcome_value' => 'required', // Can be string or array depending on wager type
+            'outcome_value' => 'present', // Can be string or array (including empty array) depending on wager type
             'settlement_note' => 'nullable|string|max:500',
         ]);
 
