@@ -245,6 +245,13 @@ class WagerService
 
     private function validateShortAnswer(Wager $wager, string|array $answer): void
     {
+        // For settlement: array of entry IDs (can be empty if nobody won)
+        if (is_array($answer)) {
+            // This is settlement context - array of winning entry IDs
+            return;
+        }
+
+        // For joining: must be a non-empty string
         if (!is_string($answer)) {
             throw new InvalidAnswerException('Short answer must be a string');
         }
