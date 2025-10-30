@@ -95,15 +95,35 @@ const getMedal = (index: number, entry: any) => {
 
 // Format answer display based on wager type
 const formatAnswer = (answer: string | string[], wagerType: string): string => {
+    // Handle empty arrays (nobody won scenario)
+    if (Array.isArray(answer) && answer.length === 0) {
+        return 'No correct answers';
+    }
+
     // Handle ranking arrays (stored as JSON strings)
     if (wagerType === 'top_n_ranking') {
         try {
             const ranking = typeof answer === 'string' ? JSON.parse(answer) : answer;
             if (Array.isArray(ranking)) {
+                if (ranking.length === 0) {
+                    return 'No correct answers';
+                }
                 return ranking.map((item, index) => `${index + 1}. ${item}`).join(', ');
             }
         } catch (e) {
             // If parsing fails, return as-is
+        }
+    }
+
+    // Handle short_answer arrays (stored as JSON strings for settlement outcome)
+    if (wagerType === 'short_answer') {
+        try {
+            const parsed = typeof answer === 'string' ? JSON.parse(answer) : answer;
+            if (Array.isArray(parsed) && parsed.length === 0) {
+                return 'No correct answers';
+            }
+        } catch (e) {
+            // If parsing fails, continue to regular display
         }
     }
 
@@ -121,7 +141,7 @@ const formatAnswer = (answer: string | string[], wagerType: string): string => {
         }
     }
 
-    // For all other types (numeric, short_answer, binary, multiple_choice), return as-is
+    // For all other types (numeric, binary, multiple_choice), return as-is
     return typeof answer === 'string' ? answer : String(answer);
 };
 
