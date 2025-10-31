@@ -22,9 +22,10 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // Trust proxies (for ngrok)
         $middleware->trustProxies(at: '*');
 
-        // Register signed URL auth middleware alias (platform-agnostic)
+        // Register middleware aliases
         $middleware->alias([
             'signed.auth' => \App\Http\Middleware\AuthenticateFromSignedUrl::class,
+            'group.member' => \App\Http\Middleware\EnsureUserInGroup::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

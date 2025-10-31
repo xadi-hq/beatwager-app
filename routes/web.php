@@ -35,46 +35,84 @@ Route::middleware(['signed.auth'])->group(function () {
 
     // Wager creation routes
     Route::get('/wager/create', [WagerController::class, 'create'])->name('wager.create');
-    Route::post('/wager/store', [WagerController::class, 'store'])->name('wager.store');
+    Route::post('/wager/store', [WagerController::class, 'store'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('wager.store');
     Route::get('/wager/success/{wager}', [WagerController::class, 'success'])->name('wager.success');
 
     // Wager join routes (complex input types)
-    Route::get('/wager/{wager}/join', [WagerController::class, 'showJoinForm'])->name('wager.join');
-    Route::post('/wager/{wager}/join', [WagerController::class, 'submitJoin'])->name('wager.join.submit');
+    Route::get('/wager/{wager}/join', [WagerController::class, 'showJoinForm'])
+        ->middleware('group.member')
+        ->name('wager.join');
+    Route::post('/wager/{wager}/join', [WagerController::class, 'submitJoin'])
+        ->middleware(['throttle:20,1', 'group.member'])
+        ->name('wager.join.submit');
     Route::get('/wager/join/success/{entry}', [WagerController::class, 'joinSuccess'])->name('wager.join.success');
 
     // Wager settlement routes
     Route::get('/wager/settle', [WagerController::class, 'showSettlementForm'])->name('wager.settle');
-    Route::post('/wager/settle', [WagerController::class, 'settle'])->name('wager.settle.submit');
+    Route::post('/wager/settle', [WagerController::class, 'settle'])
+        ->middleware('throttle:10,1')
+        ->name('wager.settle.submit');
     Route::get('/wager/settle/success/{wager}', [WagerController::class, 'settlementSuccess'])->name('wager.settle.success');
 
     // Wager landing page (view progress)
-    Route::get('/wager/{wager}', [WagerController::class, 'show'])->name('wager.show');
-    Route::post('/wager/{wager}/settle', [WagerController::class, 'settleFromShow'])->name('wager.settle.fromshow');
+    Route::get('/wager/{wager}', [WagerController::class, 'show'])
+        ->middleware('group.member')
+        ->name('wager.show');
+    Route::post('/wager/{wager}/settle', [WagerController::class, 'settleFromShow'])
+        ->middleware('throttle:10,1')
+        ->name('wager.settle.fromshow');
 
     // Event routes
     Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
-    Route::post('/events/store', [EventController::class, 'store'])->name('events.store');
-    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
-    Route::get('/events/{event}/attendance', [EventController::class, 'attendance'])->name('events.attendance');
-    Route::post('/events/{event}/attendance', [EventController::class, 'recordAttendance'])->name('events.recordAttendance');
+    Route::post('/events/store', [EventController::class, 'store'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('events.store');
+    Route::get('/events/{event}', [EventController::class, 'show'])
+        ->middleware('group.member')
+        ->name('events.show');
+    Route::get('/events/{event}/attendance', [EventController::class, 'attendance'])
+        ->middleware('group.member')
+        ->name('events.attendance');
+    Route::post('/events/{event}/attendance', [EventController::class, 'recordAttendance'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('events.recordAttendance');
     Route::post('/events/{event}/rsvp', [EventController::class, 'rsvp'])->name('events.rsvp');
     Route::post('/events/{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
 
     // Challenge routes
     Route::get('/challenges/create', [ChallengeController::class, 'create'])->name('challenges.create');
-    Route::post('/challenges/store', [ChallengeController::class, 'store'])->name('challenges.store');
+    Route::post('/challenges/store', [ChallengeController::class, 'store'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('challenges.store');
     Route::get('/challenges/success/{challenge}', [ChallengeController::class, 'success'])->name('challenge.success');
-    Route::get('/challenges/{challenge}', [ChallengeController::class, 'show'])->name('challenges.show');
-    Route::post('/challenges/{challenge}/accept', [ChallengeController::class, 'accept'])->name('challenges.accept');
-    Route::post('/challenges/{challenge}/submit', [ChallengeController::class, 'submit'])->name('challenges.submit');
-    Route::post('/challenges/{challenge}/approve', [ChallengeController::class, 'approve'])->name('challenges.approve');
-    Route::post('/challenges/{challenge}/reject', [ChallengeController::class, 'reject'])->name('challenges.reject');
-    Route::post('/challenges/{challenge}/cancel', [ChallengeController::class, 'cancel'])->name('challenges.cancel');
+    Route::get('/challenges/{challenge}', [ChallengeController::class, 'show'])
+        ->middleware('group.member')
+        ->name('challenges.show');
+    Route::post('/challenges/{challenge}/accept', [ChallengeController::class, 'accept'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('challenges.accept');
+    Route::post('/challenges/{challenge}/submit', [ChallengeController::class, 'submit'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('challenges.submit');
+    Route::post('/challenges/{challenge}/approve', [ChallengeController::class, 'approve'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('challenges.approve');
+    Route::post('/challenges/{challenge}/reject', [ChallengeController::class, 'reject'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('challenges.reject');
+    Route::post('/challenges/{challenge}/cancel', [ChallengeController::class, 'cancel'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('challenges.cancel');
 
     // Group routes
-    Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
-    Route::post('/groups/{group}/settings', [GroupSettingsController::class, 'update'])->name('groups.settings.update');
+    Route::get('/groups/{group}', [GroupController::class, 'show'])
+        ->middleware('group.member')
+        ->name('groups.show');
+    Route::post('/groups/{group}/settings', [GroupSettingsController::class, 'update'])
+        ->middleware(['throttle:5,1', 'group.member'])
+        ->name('groups.settings.update');
 
     // Season management routes
     Route::get('/groups/{group}/seasons', [SeasonController::class, 'index'])->name('seasons.index');
