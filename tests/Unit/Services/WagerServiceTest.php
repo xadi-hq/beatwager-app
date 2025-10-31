@@ -1003,7 +1003,7 @@ class WagerServiceTest extends TestCase
                 'n' => 3,
             ],
             'stake_amount' => 100,
-            'total_points_wagered' => 200,
+            'total_points_wagered' => 0, // Will be incremented by placeWager
             'status' => 'open',
         ]);
 
@@ -1014,15 +1014,23 @@ class WagerServiceTest extends TestCase
         $entry1 = $this->service->placeWager($wager, $users[0], ['Team A', 'Team B', 'Team C'], 100);
         $entry2 = $this->service->placeWager($wager, $users[1], ['Team B', 'Team A', 'Team C'], 100);
 
-        // Expect both to be refunded since no one got the correct ranking
-        $this->pointService->shouldReceive('refundPoints')
-            ->twice()
+        // User 2 gets 1 position correct (position 1: 'Team A'), scoring 33.33%
+        // This is the highest score, so User 2 wins the entire pot
+        // Pot = 0 (initial) + 100 (user1) + 100 (user2) = 200 total
+        $this->pointService->shouldReceive('awardPoints')
+            ->once()
+            ->with(Mockery::type(User::class), Mockery::type(Group::class), 200, 'wager_won', Mockery::type(WagerEntry::class));
+
+        // User 1 loses, so recordLoss is called
+        $this->pointService->shouldReceive('recordLoss')
+            ->once()
             ->with(Mockery::type(User::class), Mockery::type(Group::class), 100, Mockery::type(WagerEntry::class));
 
-        // Settle with a ranking that no one picked
+        // Settle with ranking: ['Team C', 'Team A', 'Team B']
+        // User 2's answer ['Team B', 'Team A', 'Team C'] matches position 1
         $this->service->settleWager($wager, ['Team C', 'Team A', 'Team B']);
 
         $this->assertFalse($entry1->fresh()->is_winner);
-        $this->assertFalse($entry2->fresh()->is_winner);
+        $this->assertTrue($entry2->fresh()->is_winner);
     }
 }
