@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Toast from '@/Components/Toast.vue';
@@ -26,6 +26,19 @@ const props = defineProps<{
     }>;
 }>();
 
+// Default betting closes at to now + 6 hours
+const getDefaultBettingClosesAt = () => {
+    const now = new Date();
+    now.setHours(now.getHours() + 6);
+    // Format as datetime-local input format: YYYY-MM-DDTHH:mm
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 const form = useForm({
     title: '',
     description: '',
@@ -33,7 +46,7 @@ const form = useForm({
     type: 'binary' as 'binary' | 'multiple_choice' | 'numeric' | 'date' | 'short_answer' | 'top_n_ranking',
     group_id: props.defaultGroup?.id || '',
     stake_amount: 100,
-    betting_closes_at: '',
+    betting_closes_at: getDefaultBettingClosesAt(),
     expected_settlement_at: '',
     options: ['', ''],
     max_length: 100,

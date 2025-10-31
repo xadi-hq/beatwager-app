@@ -100,7 +100,7 @@ const formatAnswer = (answer: string | string[], wagerType: string): string => {
         return 'No correct answers';
     }
 
-    // Handle ranking arrays (stored as JSON strings)
+    // Handle ranking arrays (stored as JSON strings) - return raw for non-outcome display
     if (wagerType === 'top_n_ranking') {
         try {
             const ranking = typeof answer === 'string' ? JSON.parse(answer) : answer;
@@ -143,6 +143,21 @@ const formatAnswer = (answer: string | string[], wagerType: string): string => {
 
     // For all other types (numeric, binary, multiple_choice), return as-is
     return typeof answer === 'string' ? answer : String(answer);
+};
+
+// Parse answer as array for rendering (for top_n_ranking)
+const parseAnswerAsArray = (answer: string | string[], wagerType: string): string[] | null => {
+    if (wagerType !== 'top_n_ranking') return null;
+    
+    try {
+        const ranking = typeof answer === 'string' ? JSON.parse(answer) : answer;
+        if (Array.isArray(ranking)) {
+            return ranking;
+        }
+    } catch (e) {
+        // If parsing fails, return null
+    }
+    return null;
 };
 
 const settlementForm = useForm<{
@@ -289,10 +304,8 @@ const submitSettlement = () => {
                             <tr>
                                 <th class="text-left py-2 text-neutral-700 dark:text-neutral-200">User</th>
                                 <th v-if="isPastDeadline" class="text-left py-2 text-neutral-700 dark:text-neutral-200">Answer</th>
-                                <th class="text-right py-2 text-neutral-700 dark:text-neutral-200">Balance</th>
-                                <th class="text-right py-2 text-neutral-700 dark:text-neutral-200">Wagered</th>
-                                <th v-if="wager.status === 'settled'" class="text-right py-2 text-neutral-700 dark:text-neutral-200">Won</th>
-                                <th v-if="wager.status === 'settled'" class="text-right py-2 text-neutral-700 dark:text-neutral-200">New Balance</th>
+                                <th v-if="wager.status !== 'settled'" class="text-right py-2 text-neutral-700 dark:text-neutral-200">Wagered</th>
+                                <th v-if="wager.status === 'settled'" class="text-right py-2 text-neutral-700 dark:text-neutral-200">Balance Change</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -301,20 +314,26 @@ const submitSettlement = () => {
                                     {{ getMedal(index, entry) }}{{ entry.user_name }}
                                 </td>
                                 <td v-if="isPastDeadline" class="py-2 font-medium" :class="entry.is_winner ? 'text-green-600 dark:text-green-400' : 'text-neutral-600 dark:text-neutral-400'">
-                                    {{ formatAnswer(entry.answer_value, wager.type) }}
+                                    <ol v-if="parseAnswerAsArray(entry.answer_value, wager.type)" class="list-decimal list-inside space-y-0.5">
+                                        <li v-for="(item, idx) in parseAnswerAsArray(entry.answer_value, wager.type)" :key="idx">
+                                            {{ item }}
+                                        </li>
+                                    </ol>
+                                    <span v-else>{{ formatAnswer(entry.answer_value, wager.type) }}</span>
                                 </td>
-                                <td class="text-right py-2 text-neutral-600 dark:text-neutral-400 text-sm">
-                                    {{ entry.user_balance }}
-                                </td>
-                                <td class="text-right py-2 text-neutral-900 dark:text-neutral-100">
+                                <!-- Show wagered amount for unsettled wagers -->
+                                <td v-if="wager.status !== 'settled'" class="text-right py-2 text-neutral-900 dark:text-neutral-100">
                                     {{ entry.points_wagered }}
                                 </td>
-                                <td v-if="wager.status === 'settled'" class="text-right py-2 font-bold" :class="entry.points_won ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-                                    <span v-if="entry.points_won">+{{ entry.points_won }}</span>
-                                    <span v-else>-{{ entry.points_wagered }}</span>
-                                </td>
-                                <td v-if="wager.status === 'settled'" class="text-right py-2 text-neutral-900 dark:text-neutral-100 font-semibold">
-                                    {{ entry.user_balance + (entry.points_won || -entry.points_wagered) }}
+                                <!-- Show balance flow for settled wagers -->
+                                <td v-if="wager.status === 'settled'" class="text-right py-2 font-medium">
+                                    <span class="text-neutral-600 dark:text-neutral-400">{{ entry.user_balance }}</span>
+                                    <span class="text-neutral-400 dark:text-neutral-500 mx-1">→</span>
+                                    <span class="text-neutral-900 dark:text-neutral-100 font-semibold">{{ entry.user_balance + (entry.points_won || -entry.points_wagered) }}</span>
+                                    <span class="ml-2 font-bold" :class="entry.points_won ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                        <span v-if="entry.points_won">(+{{ entry.points_won }})</span>
+                                        <span v-else>(-{{ entry.points_wagered }})</span>
+                                    </span>
                                 </td>
                             </tr>
                         </tbody>
@@ -669,7 +688,12 @@ const submitSettlement = () => {
                                         {{ getMedal(index, entry) }}{{ entry.user_name }}
                                     </td>
                                     <td v-if="isPastDeadline" class="py-2 font-medium" :class="entry.is_winner ? 'text-green-600 dark:text-green-400' : 'text-neutral-600 dark:text-neutral-400'">
-                                        {{ formatAnswer(entry.answer_value, wager.type) }}
+                                        <ol v-if="parseAnswerAsArray(entry.answer_value, wager.type)" class="list-decimal list-inside space-y-0.5">
+                                            <li v-for="(item, idx) in parseAnswerAsArray(entry.answer_value, wager.type)" :key="idx">
+                                                {{ item }}
+                                            </li>
+                                        </ol>
+                                        <span v-else>{{ formatAnswer(entry.answer_value, wager.type) }}</span>
                                     </td>
                                     <!-- Show wagered amount for unsettled wagers -->
                                     <td v-if="wager.status !== 'settled'" class="text-right py-2 text-neutral-900 dark:text-neutral-100">
