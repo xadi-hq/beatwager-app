@@ -117,6 +117,8 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
       - QUEUE_CONNECTION=redis
       - CACHE_DRIVER=redis
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
@@ -126,6 +128,12 @@ services:
         condition: service_started
     networks:
       - beatwager-network
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "artisan queue:work"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Laravel scheduler
   scheduler:
