@@ -621,6 +621,38 @@ class MessageService
     }
 
     /**
+     * Create event cancelled announcement message
+     */
+    public function eventCancelled(\App\Models\GroupEvent $event): Message
+    {
+        $meta = __('messages.event.cancelled');
+        $currency = $event->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'event.cancelled',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'event_name' => $event->name,
+                'event_date' => $event->event_date->format('M j, Y g:i A'),
+                'cancelled_by' => $event->creator->name ?? 'Someone',
+            ],
+            group: $event->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $event->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $event,
+            currencyName: $currency
+        );
+    }
+
+    /**
      * Create challenge announcement message
      */
     public function challengeAnnouncement(\App\Models\Challenge $challenge): Message
@@ -677,6 +709,227 @@ class MessageService
             type: MessageType::Announcement,
             variables: [], // Already interpolated by LLM
             buttons: $buttons,
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create challenge accepted announcement message
+     */
+    public function challengeAccepted(\App\Models\Challenge $challenge, \App\Models\User $acceptor): Message
+    {
+        $meta = __('messages.challenge.accepted');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'challenge.accepted',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $acceptor->name,
+                'challenge_title' => $challenge->description,
+                'reward' => $challenge->getAbsoluteAmount(),
+                'currency' => $currency,
+                'deadline_at' => $challenge->completion_deadline->format('M j, Y g:i A'),
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create challenge submitted announcement message
+     */
+    public function challengeSubmitted(\App\Models\Challenge $challenge, \App\Models\User $submitter): Message
+    {
+        $meta = __('messages.challenge.submitted');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'challenge.submitted',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $submitter->name,
+                'challenge_title' => $challenge->description,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create challenge approved announcement message
+     */
+    public function challengeApproved(\App\Models\Challenge $challenge, \App\Models\User $approver): Message
+    {
+        $meta = __('messages.challenge.approved');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'challenge.approved',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $challenge->acceptor->name ?? 'Someone',
+                'challenge_title' => $challenge->description,
+                'reward' => $challenge->getAbsoluteAmount(),
+                'currency' => $currency,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create challenge rejected announcement message
+     */
+    public function challengeRejected(\App\Models\Challenge $challenge, \App\Models\User $rejector): Message
+    {
+        $meta = __('messages.challenge.rejected');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'challenge.rejected',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $challenge->acceptor->name ?? 'Someone',
+                'challenge_title' => $challenge->description,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create challenge cancelled announcement message
+     */
+    public function challengeCancelled(\App\Models\Challenge $challenge, \App\Models\User $cancelledBy): Message
+    {
+        $meta = __('messages.challenge.cancelled');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'challenge.cancelled',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'challenge_title' => $challenge->description,
+                'cancelled_by' => $cancelledBy->name,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create challenge expired announcement message
+     */
+    public function challengeExpired(\App\Models\Challenge $challenge): Message
+    {
+        $meta = __('messages.challenge.expired');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'challenge.expired',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'challenge_title' => $challenge->description,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create challenge deadline missed announcement message
+     */
+    public function challengeDeadlineMissed(\App\Models\Challenge $challenge): Message
+    {
+        $meta = __('messages.challenge.deadline_missed');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'challenge.deadline_missed',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $challenge->acceptor->name ?? 'Someone',
+                'challenge_title' => $challenge->description,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
             context: $challenge,
             currencyName: $currency
         );

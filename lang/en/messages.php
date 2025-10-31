@@ -118,6 +118,14 @@ return [
             'tone_hints' => ['disappointed', 'dramatic', 'betrayal'],
             'max_words' => 25,
         ],
+
+        'cancelled' => [
+            'intent' => 'Announce event cancellation',
+            'required_fields' => ['event_name'],
+            'fallback_template' => "🚫 {event_name} has been cancelled.",
+            'tone_hints' => ['informative', 'disappointing', 'matter-of-fact'],
+            'max_words' => 20,
+        ],
     ],
 
     'summary' => [
@@ -293,6 +301,54 @@ return [
             'required_fields' => ['challenge_title', 'deadline_at'],
             'fallback_template' => "⏰ Challenge Reminder\n\nChallenge: {challenge_title}\nDeadline: {deadline_at}\n\nTime is running out! Click below to view details:",
             'tone_hints' => ['urgent', 'motivating'],
+            'max_words' => 25,
+        ],
+
+        'accepted' => [
+            'intent' => 'Announce a user accepting a challenge to create excitement',
+            'required_fields' => ['user_name', 'challenge_title'],
+            'fallback_template' => "💪 {user_name} accepted the challenge \"{challenge_title}\"! Let's see what they've got!",
+            'tone_hints' => ['exciting', 'supportive', 'competitive'],
+            'max_words' => 25,
+        ],
+
+        'approved' => [
+            'intent' => 'Celebrate approved challenge with reward',
+            'required_fields' => ['user_name', 'challenge_title', 'reward', 'currency'],
+            'fallback_template' => "✅ {user_name} crushed \"{challenge_title}\" and earned {reward} {currency}! 🏆",
+            'tone_hints' => ['celebratory', 'congratulatory', 'triumphant'],
+            'max_words' => 30,
+        ],
+
+        'rejected' => [
+            'intent' => 'Acknowledge rejected challenge submission with encouragement',
+            'required_fields' => ['user_name', 'challenge_title'],
+            'fallback_template' => "❌ {user_name}'s work on \"{challenge_title}\" didn't meet the mark this time. Keep pushing! 💪",
+            'tone_hints' => ['supportive', 'encouraging', 'honest'],
+            'max_words' => 30,
+        ],
+
+        'cancelled' => [
+            'intent' => 'Announce challenge cancellation',
+            'required_fields' => ['challenge_title'],
+            'fallback_template' => "🚫 Challenge \"{challenge_title}\" has been cancelled.",
+            'tone_hints' => ['neutral', 'informative'],
+            'max_words' => 20,
+        ],
+
+        'expired' => [
+            'intent' => 'Announce challenge expired without being accepted',
+            'required_fields' => ['challenge_title'],
+            'fallback_template' => "⏰ Challenge \"{challenge_title}\" expired - nobody stepped up in time!",
+            'tone_hints' => ['missed_opportunity', 'playful_guilt'],
+            'max_words' => 20,
+        ],
+
+        'deadline_missed' => [
+            'intent' => 'Announce accepted challenge deadline was missed',
+            'required_fields' => ['user_name', 'challenge_title'],
+            'fallback_template' => "⏱️ {user_name} ran out of time on \"{challenge_title}\" - better luck next time!",
+            'tone_hints' => ['disappointed', 'sympathetic', 'encouraging'],
             'max_words' => 25,
         ],
     ],

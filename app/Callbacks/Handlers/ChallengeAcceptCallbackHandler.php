@@ -95,8 +95,8 @@ class ChallengeAcceptCallbackHandler extends AbstractCallbackHandler
                 showAlert: false
             );
 
-            // TODO: Dispatch event for challenge accepted announcement
-            // \App\Events\ChallengeAccepted::dispatch($acceptedChallenge, $user);
+            // Event is already dispatched in ChallengeService::acceptChallenge()
+            // No need to dispatch again here
 
         } catch (\Exception $e) {
             Log::error('Error accepting challenge', [

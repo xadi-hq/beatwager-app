@@ -93,7 +93,7 @@ class ChallengeService
             ]);
 
             // Dispatch challenge accepted event
-            // TODO: Add event dispatch when events are implemented
+            \App\Events\ChallengeAccepted::dispatch($challenge, $acceptor);
 
             return $challenge->load(['group', 'creator', 'acceptor']);
         });
@@ -123,7 +123,7 @@ class ChallengeService
         ]);
 
         // Dispatch challenge submitted event
-        // TODO: Add event dispatch when events are implemented
+        \App\Events\ChallengeSubmitted::dispatch($challenge, $user);
 
         return $challenge->load(['group', 'creator', 'acceptor']);
     }
@@ -160,7 +160,7 @@ class ChallengeService
             ]);
 
             // Dispatch challenge approved event
-            // TODO: Add event dispatch when events are implemented
+            \App\Events\ChallengeApproved::dispatch($challenge, $approver);
 
             return $challenge->load(['group', 'creator', 'acceptor', 'verifiedBy']);
         });
@@ -186,7 +186,7 @@ class ChallengeService
             throw new \Exception('Challenge is not awaiting review');
         }
 
-        return DB::transaction(function () use ($challenge, $reason) {
+        return DB::transaction(function () use ($challenge, $reason, $rejecter) {
             // Release hold back to payer
             $this->releaseHold($challenge);
 
@@ -198,7 +198,7 @@ class ChallengeService
             ]);
 
             // Dispatch challenge rejected event
-            // TODO: Add event dispatch when events are implemented
+            \App\Events\ChallengeRejected::dispatch($challenge, $rejecter);
 
             return $challenge->load(['group', 'creator', 'acceptor']);
         });
@@ -226,7 +226,7 @@ class ChallengeService
         ]);
 
         // Dispatch challenge cancelled event
-        // TODO: Add event dispatch when events are implemented
+        \App\Events\ChallengeCancelled::dispatch($challenge, $creator);
 
         return $challenge->load(['group', 'creator', 'cancelledBy']);
     }
@@ -250,7 +250,7 @@ class ChallengeService
             ]);
 
             // Dispatch challenge expired event
-            // TODO: Add event dispatch when events are implemented
+            \App\Events\ChallengeExpired::dispatch($challenge);
 
             $count++;
         }
@@ -282,7 +282,7 @@ class ChallengeService
                 ]);
 
                 // Dispatch challenge deadline missed event
-                // TODO: Add event dispatch when events are implemented
+                \App\Events\ChallengeDeadlineMissed::dispatch($challenge);
             });
 
             $count++;
