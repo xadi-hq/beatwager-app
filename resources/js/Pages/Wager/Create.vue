@@ -48,12 +48,20 @@ const form = useForm({
     stake_amount: 100,
     betting_closes_at: getDefaultBettingClosesAt(),
     expected_settlement_at: '',
+    // Binary labels
+    label_option_a: 'Yes',
+    label_option_b: 'No',
+    threshold_value: null as number | null,
+    threshold_date: null as string | null,
+    // Multiple choice & ranking
     options: ['', ''],
     max_length: 100,
     n: 3,
+    // Numeric
     numeric_min: null as number | null,
     numeric_max: null as number | null,
     numeric_winner_type: 'closest' as 'closest' | 'exact',
+    // Date
     date_min: null as string | null,
     date_max: null as string | null,
     date_winner_type: 'closest' as 'closest' | 'exact',
@@ -198,6 +206,83 @@ const submit = () => {
                             class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                         />
                         <FormError :error="form.errors.title" />
+                    </div>
+
+                    <!-- Binary Type: Custom Labels and Thresholds -->
+                    <div v-if="form.type === 'binary'" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                    Option A Label
+                                </label>
+                                <input
+                                    v-model="form.label_option_a"
+                                    type="text"
+                                    placeholder="Yes"
+                                    maxlength="50"
+                                    class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                />
+                                <FormError :error="form.errors.label_option_a" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                    Option B Label
+                                </label>
+                                <input
+                                    v-model="form.label_option_b"
+                                    type="text"
+                                    placeholder="No"
+                                    maxlength="50"
+                                    class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                />
+                                <FormError :error="form.errors.label_option_b" />
+                            </div>
+                        </div>
+                        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                            💡 Examples: "Before/After", "Above/Below", "Over/Under", or keep "Yes/No"
+                        </p>
+
+                        <!-- Optional Thresholds for Auto-Settlement -->
+                        <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4 mt-4">
+                            <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+                                Auto-Settlement (Optional)
+                            </p>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
+                                Set a numeric threshold or date for automatic settlement based on external data
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                        Numeric Threshold (optional)
+                                    </label>
+                                    <input
+                                        v-model.number="form.threshold_value"
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="e.g., 2.5 (for over/under)"
+                                        class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                    />
+                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                        e.g., for "Over/Under 2.5 goals"
+                                    </p>
+                                    <FormError :error="form.errors.threshold_value" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                        Date Threshold (optional)
+                                    </label>
+                                    <input
+                                        v-model="form.threshold_date"
+                                        type="date"
+                                        class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                                    />
+                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                        e.g., for "Before/After Jan 1, 2025"
+                                    </p>
+                                    <FormError :error="form.errors.threshold_date" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Options for Multiple Choice -->
