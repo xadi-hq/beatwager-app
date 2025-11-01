@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Toast from '@/Components/Toast.vue';
@@ -43,7 +43,7 @@ const form = useForm({
     title: '',
     description: '',
     resolution_criteria: '',
-    type: 'binary' as 'binary' | 'multiple_choice' | 'numeric' | 'date' | 'short_answer' | 'top_n_ranking',
+    type: 'binary_yes_no' as 'binary_yes_no' | 'binary_over_under' | 'binary_before_after' | 'binary_custom' | 'multiple_choice' | 'numeric' | 'date' | 'short_answer' | 'top_n_ranking',
     group_id: props.defaultGroup?.id || '',
     stake_amount: 100,
     betting_closes_at: getDefaultBettingClosesAt(),
@@ -68,7 +68,10 @@ const form = useForm({
 });
 
 const wagerTypes = [
-    { value: 'binary', label: 'Yes/No Question' },
+    { value: 'binary_yes_no', label: 'Yes/No Question' },
+    { value: 'binary_over_under', label: 'Over/Under (with numeric threshold)' },
+    { value: 'binary_before_after', label: 'Before/After (with date threshold)' },
+    { value: 'binary_custom', label: 'Custom Binary' },
     { value: 'multiple_choice', label: 'Multiple Choice (e.g., 1/x/2 for soccer)' },
     { value: 'numeric', label: 'Numeric Guess (e.g., "How many goals?")' },
     { value: 'date', label: 'Date Prediction (e.g., "When will X happen?")' },
@@ -99,6 +102,28 @@ const addOption = () => {
 const removeOption = (index: number) => {
     form.options.splice(index, 1);
 };
+
+// Auto-populate labels and reset thresholds when binary type changes
+watch(() => form.type, (newType: string) => {
+    if (newType === 'binary_yes_no') {
+        form.label_option_a = 'Yes';
+        form.label_option_b = 'No';
+        form.threshold_value = null;
+        form.threshold_date = null;
+    } else if (newType === 'binary_over_under') {
+        form.label_option_a = 'Over';
+        form.label_option_b = 'Under';
+        form.threshold_date = null;
+    } else if (newType === 'binary_before_after') {
+        form.label_option_a = 'Before';
+        form.label_option_b = 'After';
+        form.threshold_value = null;
+    } else if (newType === 'binary_custom') {
+        // Keep whatever user has set, but clear thresholds
+        form.threshold_value = null;
+        form.threshold_date = null;
+    }
+});
 
 // Toast notification state
 const showToast = ref(false);
@@ -208,17 +233,77 @@ const submit = () => {
                         <FormError :error="form.errors.title" />
                     </div>
 
-                    <!-- Binary Type: Custom Labels and Thresholds -->
-                    <div v-if="form.type === 'binary'" class="space-y-4">
+                    <!-- Binary Type: Yes/No -->
+                    <div v-if="form.type === 'binary_yes_no'" class="space-y-4">
+                        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                Simple Yes/No question. Bets will be on "Yes" or "No".
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Binary Type: Over/Under -->
+                    <div v-if="form.type === 'binary_over_under'" class="space-y-4">
+                        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                Over/Under question. Bets will be on "Over" or "Under" the threshold.
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Numeric Threshold *
+                            </label>
+                            <input
+                                v-model.number="form.threshold_value"
+                                type="number"
+                                step="0.01"
+                                required
+                                placeholder="e.g., 2.5 (for over/under 2.5 goals)"
+                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                            />
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                The threshold value for automatic settlement (e.g., 2.5 goals, 100 points)
+                            </p>
+                            <FormError :error="form.errors.threshold_value" />
+                        </div>
+                    </div>
+
+                    <!-- Binary Type: Before/After -->
+                    <div v-if="form.type === 'binary_before_after'" class="space-y-4">
+                        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                Before/After question. Bets will be on "Before" or "After" the threshold date.
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Date Threshold *
+                            </label>
+                            <input
+                                v-model="form.threshold_date"
+                                type="date"
+                                required
+                                class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                            />
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                The threshold date for automatic settlement (e.g., Jan 1, 2025)
+                            </p>
+                            <FormError :error="form.errors.threshold_date" />
+                        </div>
+                    </div>
+
+                    <!-- Binary Type: Custom -->
+                    <div v-if="form.type === 'binary_custom'" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                    Option A Label
+                                    Option A Label *
                                 </label>
                                 <input
                                     v-model="form.label_option_a"
                                     type="text"
-                                    placeholder="Yes"
+                                    required
+                                    placeholder="e.g., Male, Sober, Home Win"
                                     maxlength="50"
                                     class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                                 />
@@ -226,12 +311,13 @@ const submit = () => {
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                    Option B Label
+                                    Option B Label *
                                 </label>
                                 <input
                                     v-model="form.label_option_b"
                                     type="text"
-                                    placeholder="No"
+                                    required
+                                    placeholder="e.g., Female, Drunk, Away Win"
                                     maxlength="50"
                                     class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                                 />
@@ -239,50 +325,8 @@ const submit = () => {
                             </div>
                         </div>
                         <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                            💡 Examples: "Before/After", "Above/Below", "Over/Under", or keep "Yes/No"
+                            💡 Create your own custom binary options (e.g., "Male/Female", "Sober/Drunk", "Ajax/PSV")
                         </p>
-
-                        <!-- Optional Thresholds for Auto-Settlement -->
-                        <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4 mt-4">
-                            <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-                                Auto-Settlement (Optional)
-                            </p>
-                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
-                                Set a numeric threshold or date for automatic settlement based on external data
-                            </p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                        Numeric Threshold (optional)
-                                    </label>
-                                    <input
-                                        v-model.number="form.threshold_value"
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="e.g., 2.5 (for over/under)"
-                                        class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
-                                    />
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                        e.g., for "Over/Under 2.5 goals"
-                                    </p>
-                                    <FormError :error="form.errors.threshold_value" />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                        Date Threshold (optional)
-                                    </label>
-                                    <input
-                                        v-model="form.threshold_date"
-                                        type="date"
-                                        class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
-                                    />
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                        e.g., for "Before/After Jan 1, 2025"
-                                    </p>
-                                    <FormError :error="form.errors.threshold_date" />
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Options for Multiple Choice -->

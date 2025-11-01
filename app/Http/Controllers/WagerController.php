@@ -76,17 +76,17 @@ class WagerController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'resolution_criteria' => 'nullable|string',
-            'type' => 'required|in:binary,multiple_choice,numeric,date,short_answer,top_n_ranking',
+            'type' => 'required|in:binary_yes_no,binary_over_under,binary_before_after,binary_custom,multiple_choice,numeric,date,short_answer,top_n_ranking',
             'group_id' => 'required|uuid|exists:groups,id',
             'stake_amount' => 'required|integer|min:1',
             'betting_closes_at' => 'required|date|after:now',
             'expected_settlement_at' => 'nullable|date|after:betting_closes_at',
 
             // Binary flexible labels
-            'label_option_a' => 'nullable|string|max:50',
-            'label_option_b' => 'nullable|string|max:50',
-            'threshold_value' => 'nullable|numeric',
-            'threshold_date' => 'nullable|date',
+            'label_option_a' => 'required_if:type,binary_custom|nullable|string|max:50',
+            'label_option_b' => 'required_if:type,binary_custom|nullable|string|max:50',
+            'threshold_value' => 'required_if:type,binary_over_under|nullable|numeric',
+            'threshold_date' => 'required_if:type,binary_before_after|nullable|date',
 
             // Type-specific fields
             'options' => 'required_if:type,multiple_choice,top_n_ranking|array|min:2',
@@ -101,6 +101,11 @@ class WagerController extends Controller
             'max_length' => 'nullable|integer|min:10|max:500',
             'n' => 'required_if:type,top_n_ranking|integer|min:2',
         ]);
+
+        // Normalize binary subtypes to 'binary' for storage
+        if (in_array($validated['type'], ['binary_yes_no', 'binary_over_under', 'binary_before_after', 'binary_custom'])) {
+            $validated['type'] = 'binary';
+        }
 
         // User is already authenticated by middleware
         $user = Auth::user();
