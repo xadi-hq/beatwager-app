@@ -209,13 +209,22 @@ class Challenge extends Model
     public function scopeActive($query)
     {
         return $query->where(function ($q) {
+            // Accepted or completed challenges are always active
             $q->whereIn('status', ['accepted', 'completed'])
+              // Open 1-on-1 challenges with valid acceptance deadline
               ->orWhere(function ($subQ) {
                   $subQ->where('status', 'open')
+                       ->where('type', ChallengeType::USER_CHALLENGE->value)
                        ->where(function ($deadlineQ) {
                            $deadlineQ->where('acceptance_deadline', '>=', now())
                                     ->orWhereNotNull('acceptor_id');
                        });
+              })
+              // Open SuperChallenges that haven't reached completion deadline
+              ->orWhere(function ($superQ) {
+                  $superQ->where('status', 'open')
+                         ->where('type', ChallengeType::SUPER_CHALLENGE->value)
+                         ->where('completion_deadline', '>=', now());
               });
         });
     }
