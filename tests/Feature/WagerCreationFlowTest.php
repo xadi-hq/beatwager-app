@@ -40,7 +40,7 @@ describe('Binary Wager Creation', function () {
         $response = $this->post('/wager/store', [
             'title' => 'Will it rain tomorrow?',
             'description' => 'Weather bet',
-            'type' => 'binary',
+            'type' => 'binary_yes_no',  // Changed from 'binary' to valid subtype
             'group_id' => $group->id,
             'stake_amount' => 100,
             'betting_closes_at' => now()->addDays(1)->toIso8601String(),

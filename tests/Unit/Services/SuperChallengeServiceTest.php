@@ -115,6 +115,8 @@ class SuperChallengeServiceTest extends TestCase
             nudge: $nudge,
             description: 'Run 5km',
             deadlineInDays: 7,
+            prizePerPerson: 100,
+            maxParticipants: 5,
             evidenceGuidance: 'Post a screenshot from your running app'
         );
 
@@ -238,7 +240,9 @@ class SuperChallengeServiceTest extends TestCase
         $this->creator->refresh();
         $creatorPointsAfter = $this->creator->groupMembership($this->group->id)->points;
 
-        $this->assertEquals($creatorPointsBefore + 50, $creatorPointsAfter);
+        // Dynamic formula: (150 - prize_per_person) + base_bonus
+        // With prize_per_person = 100: (150 - 100) + 50 = 100
+        $this->assertEquals($creatorPointsBefore + 100, $creatorPointsAfter);
     }
 
     /** @test */
@@ -432,12 +436,13 @@ class SuperChallengeServiceTest extends TestCase
         $challenge = $this->service->createSuperChallenge(
             nudge: $nudge,
             description: 'Test Challenge',
-            deadlineInDays: 7
+            deadlineInDays: 7,
+            prizePerPerson: 100,
+            maxParticipants: 5
         );
 
-        // Prize should be 2-5% of 15,000 (300-750) divided by 50 and rounded
-        // Then capped at 50-150 range
-        $this->assertGreaterThanOrEqual(50, $challenge->prize_per_person);
+        // Prize should match what we specified
+        $this->assertEquals(100, $challenge->prize_per_person);
         $this->assertLessThanOrEqual(150, $challenge->prize_per_person);
     }
 
@@ -452,14 +457,17 @@ class SuperChallengeServiceTest extends TestCase
         $challenge = $this->service->createSuperChallenge(
             nudge: $nudge,
             description: 'Test Challenge',
-            deadlineInDays: 7
+            deadlineInDays: 7,
+            prizePerPerson: 150,
+            maxParticipants: 10
         );
 
-        // Max total prize is 1000
-        // If prize_per_person is 150, max_participants should be 6 (150 × 6 = 900)
-        // If prize_per_person is 50, max_participants should be 10 (capped)
+        // Max participants and prize are what we specified
+        $this->assertEquals(10, $challenge->max_participants);
+        $this->assertEquals(150, $challenge->prize_per_person);
+
+        // Total prize is controlled by user selections (within validation ranges)
         $totalPrize = $challenge->prize_per_person * $challenge->max_participants;
-        $this->assertLessThanOrEqual(1000, $totalPrize);
-        $this->assertLessThanOrEqual(10, $challenge->max_participants);
+        $this->assertEquals(1500, $totalPrize);  // 150 × 10 = 1500
     }
 }

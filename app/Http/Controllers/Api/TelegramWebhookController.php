@@ -103,6 +103,7 @@ class TelegramWebhookController extends Controller
     {
         $text = $message->getText();
         $chatId = $message->getChat()->getId();
+        $chat = $message->getChat();
 
         Log::info('Message received', [
             'chat_id' => $chatId,
@@ -110,8 +111,16 @@ class TelegramWebhookController extends Controller
             'from' => $message->getFrom()->getId(),
         ]);
 
-        // Track group activity (if feature enabled)
-        $this->trackGroupActivity($chatId);
+        // Handle member status updates (user joined/left group)
+        if ($this->isMemberStatusUpdate($message)) {
+            $this->handleMemberStatusUpdate($message);
+            return;
+        }
+
+        // Track group activity and auto-register user (if feature enabled and group message)
+        if ($this->isGroupMessage($chat)) {
+            $this->trackGroupActivity($chatId, $message);
+        }
 
         // Ignore non-text messages (photos, stickers, documents, etc.)
         if ($text === null) {
@@ -167,12 +176,169 @@ class TelegramWebhookController extends Controller
     }
 
     /**
-     * Track group activity for inactive group detection
+     * Check if message is from a group (not private chat)
+     */
+    private function isGroupMessage(\TelegramBot\Api\Types\Chat $chat): bool
+    {
+        return in_array($chat->getType(), ['group', 'supergroup']);
+    }
+
+    /**
+     * Check if message is a member status update (join/leave)
+     */
+    private function isMemberStatusUpdate(\TelegramBot\Api\Types\Message $message): bool
+    {
+        return $message->getNewChatMembers() !== null
+            || $message->getLeftChatMember() !== null;
+    }
+
+    /**
+     * Handle member status updates (user joined/left group)
+     */
+    private function handleMemberStatusUpdate(\TelegramBot\Api\Types\Message $message): void
+    {
+        $chatId = $message->getChat()->getId();
+
+        // Find group by chat ID
+        $group = \App\Models\Group::where('platform_chat_id', (string)$chatId)
+            ->where('platform', 'telegram')
+            ->first();
+
+        if (!$group) {
+            return; // Not a tracked group
+        }
+
+        // Handle new members
+        if ($newMembers = $message->getNewChatMembers()) {
+            foreach ($newMembers as $newMember) {
+                // Skip if it's the bot itself
+                if ($newMember->isBot()) {
+                    continue;
+                }
+
+                $this->addUserToGroup($group, $newMember);
+            }
+        }
+
+        // Handle member left
+        if ($leftMember = $message->getLeftChatMember()) {
+            // Skip if it's the bot itself
+            if (!$leftMember->isBot()) {
+                $this->removeUserFromGroup($group, $leftMember);
+            }
+        }
+    }
+
+    /**
+     * Add user to group in database
+     */
+    private function addUserToGroup(\App\Models\Group $group, \TelegramBot\Api\Types\User $telegramUser): void
+    {
+        // Find or create user
+        $user = UserMessengerService::findOrCreate(
+            platform: 'telegram',
+            platformUserId: (string)$telegramUser->getId(),
+            userData: [
+                'username' => $telegramUser->getUsername(),
+                'first_name' => $telegramUser->getFirstName(),
+                'last_name' => $telegramUser->getLastName(),
+            ]
+        );
+
+        // Check if user is already in group
+        if ($group->users()->where('user_id', $user->id)->exists()) {
+            Log::info('User already in group', [
+                'user_id' => $user->id,
+                'group_id' => $group->id,
+            ]);
+            return;
+        }
+
+        // Check rejoin cooldown (prevents gaming system by leaving/rejoining for fresh points)
+        $rejoinKey = "group_rejoin:{$group->id}:{$user->id}";
+        $previousPoints = \Illuminate\Support\Facades\Cache::get($rejoinKey);
+
+        if ($previousPoints !== null) {
+            // User rejoined within 72 hours - restore previous points
+            $pointsToAssign = $previousPoints;
+            Log::info('User rejoined within cooldown period - restoring previous points', [
+                'user_id' => $user->id,
+                'group_id' => $group->id,
+                'restored_points' => $pointsToAssign,
+            ]);
+        } else {
+            // First time joining or cooldown expired - assign starting balance
+            $pointsToAssign = $group->starting_balance ?? 1000;
+        }
+
+        // Add user to group
+        $group->users()->attach($user->id, [
+            'id' => \Illuminate\Support\Str::uuid(),
+            'points' => $pointsToAssign,
+            'role' => 'participant',
+            'last_activity_at' => now(),
+        ]);
+
+        Log::info('User added to group', [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'group_id' => $group->id,
+            'group_name' => $group->name ?? $group->platform_chat_title,
+            'points_assigned' => $pointsToAssign,
+        ]);
+    }
+
+    /**
+     * Remove user from group in database
+     */
+    private function removeUserFromGroup(\App\Models\Group $group, \TelegramBot\Api\Types\User $telegramUser): void
+    {
+        // Find user via MessengerService
+        $messengerService = \App\Models\MessengerService::findByPlatform('telegram', (string)$telegramUser->getId());
+
+        if (!$messengerService) {
+            return; // User not in our system
+        }
+
+        $user = $messengerService->user;
+
+        // Get user's current points before removal
+        $userInGroup = $group->users()->where('user_id', $user->id)->first();
+
+        if ($userInGroup) {
+            // Cache points for 72 hours to prevent gaming system by rejoining
+            $rejoinKey = "group_rejoin:{$group->id}:{$user->id}";
+            $points = $userInGroup->pivot->points;
+            \Illuminate\Support\Facades\Cache::put($rejoinKey, $points, now()->addHours(72));
+
+            Log::info('User points cached for rejoin protection', [
+                'user_id' => $user->id,
+                'group_id' => $group->id,
+                'cached_points' => $points,
+                'expires_at' => now()->addHours(72)->toDateTimeString(),
+            ]);
+        }
+
+        // Remove from group
+        $group->users()->detach($user->id);
+
+        Log::info('User removed from group', [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'group_id' => $group->id,
+            'group_name' => $group->name ?? $group->platform_chat_title,
+        ]);
+    }
+
+    /**
+     * Track group activity for inactive group detection and auto-register users
      *
      * Uses Redis throttling to update DB only once per day per group.
      * This prevents excessive DB writes while maintaining accuracy for 14-day threshold.
+     *
+     * Also ensures user is registered in DB and attached to group.
      */
-    private function trackGroupActivity(int $chatId): void
+    private function trackGroupActivity(int $chatId, \TelegramBot\Api\Types\Message $message): void
     {
         // Feature flag check - exit early if disabled
         if (!config('features.activity_tracking', false)) {
@@ -188,7 +354,42 @@ class TelegramWebhookController extends Controller
             return; // Not a tracked group
         }
 
-        // Redis throttling: only update once per day per group
+        // Auto-register user from message
+        $from = $message->getFrom();
+        if ($from && !$from->isBot()) {
+            $user = UserMessengerService::findOrCreate(
+                platform: 'telegram',
+                platformUserId: (string)$from->getId(),
+                userData: [
+                    'username' => $from->getUsername(),
+                    'first_name' => $from->getFirstName(),
+                    'last_name' => $from->getLastName(),
+                ]
+            );
+
+            // Ensure user is attached to group
+            if (!$group->users()->where('user_id', $user->id)->exists()) {
+                $group->users()->attach($user->id, [
+                    'id' => \Illuminate\Support\Str::uuid(),
+                    'points' => $group->starting_balance ?? 1000,
+                    'role' => 'participant',
+                    'last_activity_at' => now(),
+                ]);
+
+                Log::info('User auto-registered to group from message', [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'group_id' => $group->id,
+                ]);
+            } else {
+                // Update last_activity_at for existing member
+                $group->users()->updateExistingPivot($user->id, [
+                    'last_activity_at' => now(),
+                ]);
+            }
+        }
+
+        // Redis throttling: only update group activity once per day
         $today = now()->toDateString();
         $cacheKey = "group_activity:{$group->id}:{$today}";
 

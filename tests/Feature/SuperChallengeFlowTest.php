@@ -74,6 +74,8 @@ class SuperChallengeFlowTest extends TestCase
             nudge: $nudge,
             description: 'Meditate for 10 minutes',
             deadlineInDays: 7,
+            prizePerPerson: 100,
+            maxParticipants: 5,
             evidenceGuidance: 'Post a photo or describe your experience'
         );
 
@@ -88,6 +90,8 @@ class SuperChallengeFlowTest extends TestCase
         $this->assertNotNull($this->group->last_superchallenge_at);
 
         // STEP 3: Participants accept the challenge
+        $creatorPointsBefore = $this->creator->groupMembership($this->group->id)->points;
+
         $participant1Entry = $this->service->acceptChallenge($challenge, $this->participant1);
         $participant2Entry = $this->service->acceptChallenge($challenge, $this->participant2);
 
@@ -95,13 +99,12 @@ class SuperChallengeFlowTest extends TestCase
         $this->assertNotNull($participant2Entry->accepted_at);
         $this->assertEquals(2, $challenge->participants()->count());
 
-        // STEP 4: Award acceptance bonus to creator (first acceptance)
-        $creatorPointsBefore = $this->creator->groupMembership($this->group->id)->points;
-        $this->service->awardAcceptanceBonus($challenge);
-
+        // STEP 4: Verify acceptance bonus was awarded automatically to creator (on first acceptance)
         $this->creator->refresh();
         $creatorPointsAfter = $this->creator->groupMembership($this->group->id)->points;
-        $this->assertEquals($creatorPointsBefore + 50, $creatorPointsAfter);
+        // Dynamic formula: (150 - prize_per_person) + base_bonus
+        // With prize_per_person = 100: (150 - 100) + 50 = 100
+        $this->assertEquals($creatorPointsBefore + 100, $creatorPointsAfter);
 
         // STEP 5: Participants claim completion
         $participant1Entry = $this->service->claimCompletion($challenge, $this->participant1);
@@ -160,6 +163,8 @@ class SuperChallengeFlowTest extends TestCase
             nudge: $nudge,
             description: 'Run 5km under 30 minutes',
             deadlineInDays: 7,
+            prizePerPerson: 100,
+            maxParticipants: 5,
             evidenceGuidance: 'Screenshot from running app showing time and distance'
         );
 
@@ -197,7 +202,9 @@ class SuperChallengeFlowTest extends TestCase
         $challenge = $this->service->createSuperChallenge(
             nudge: $nudge,
             description: 'Read a book',
-            deadlineInDays: 14
+            deadlineInDays: 14,
+            prizePerPerson: 100,
+            maxParticipants: 5
         );
 
         // Participant accepts
@@ -260,7 +267,9 @@ class SuperChallengeFlowTest extends TestCase
         $challenge = $this->service->createSuperChallenge(
             nudge: $nudge,
             description: 'Test Challenge',
-            deadlineInDays: 7
+            deadlineInDays: 7,
+            prizePerPerson: 100,
+            maxParticipants: 2  // Test with only 2 participants to test the limit
         );
 
         // Manually set max to 1 for testing
@@ -287,7 +296,9 @@ class SuperChallengeFlowTest extends TestCase
         $challenge = $this->service->createSuperChallenge(
             nudge: $nudge,
             description: 'Test Challenge',
-            deadlineInDays: 7
+            deadlineInDays: 7,
+            prizePerPerson: 100,
+            maxParticipants: 5
         );
 
         $this->expectException(\InvalidArgumentException::class);
@@ -307,7 +318,9 @@ class SuperChallengeFlowTest extends TestCase
         $challenge = $this->service->createSuperChallenge(
             nudge: $nudge,
             description: 'Test Challenge',
-            deadlineInDays: 7
+            deadlineInDays: 7,
+            prizePerPerson: 100,
+            maxParticipants: 5
         );
 
         // First acceptance
