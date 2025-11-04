@@ -46,11 +46,41 @@ class SendSuperChallengeCompletionClaimedNotification implements ShouldQueue
             return;
         }
 
+        // Get creator's Telegram service to send DM
+        $telegramService = $creator->getTelegramService();
+        if (!$telegramService) {
+            Log::warning('Creator has no Telegram service configured', [
+                'participant_id' => $participant->id,
+                'creator_id' => $creator->id,
+            ]);
+            return;
+        }
+
         // Generate DM to creator requesting validation
         $message = $this->messageService->superChallengeCompletionClaimed($participant);
 
-        // Send DM to creator
-        $creator->sendMessage($message);
+        // Get messenger adapter for sending DMs
+        $messengerBridge = \App\Services\MessengerFactory::for($group);
+        $adapter = $messengerBridge->getAdapter();
+
+        // Send DM to creator via their Telegram ID
+        try {
+            $adapter->sendDirectMessage(
+                $telegramService->platform_user_id,
+                \App\Messaging\DTOs\OutgoingMessage::withButtons(
+                    $group->getChatId(),
+                    $message->getFormattedContent(),
+                    $message->buttons
+                )
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to send completion claim notification to creator', [
+                'participant_id' => $participant->id,
+                'creator_id' => $creator->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
 
         Log::info('Sent SuperChallenge completion claim notification to creator', [
             'participant_id' => $participant->id,

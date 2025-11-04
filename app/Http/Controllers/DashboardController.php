@@ -233,23 +233,40 @@ class DashboardController extends Controller
         $pastProcessedEvents = $pastProcessedEvents->sortByDesc('event_date')->values();
         $pastUnprocessedEvents = $pastUnprocessedEvents->sortByDesc('event_date')->values();
 
-        // Load challenges (created by or accepted by user)
+        // Load challenges (created by, accepted by, or participating in)
         // Using active() scope to exclude expired challenges with no acceptor
         $userChallenges = Challenge::active()
             ->where(function($q) use ($user) {
+                // 1-on-1 challenges: created by or accepted by user
                 $q->where('creator_id', $user->id)
-                  ->orWhere('acceptor_id', $user->id);
+                  ->orWhere('acceptor_id', $user->id)
+                  // SuperChallenges: user is a participant
+                  ->orWhereHas('participants', function($q2) use ($user) {
+                      $q2->where('user_id', $user->id);
+                  })
+                  // Open SuperChallenges in user's groups (available to accept)
+                  ->orWhere(function($q3) use ($user) {
+                      $q3->where('type', \App\Enums\ChallengeType::SUPER_CHALLENGE)
+                         ->where('status', 'open')
+                         ->whereIn('group_id', function($q4) use ($user) {
+                             $q4->select('group_id')
+                                ->from('group_user')
+                                ->where('user_id', $user->id);
+                         });
+                  });
             })
-            ->with(['group', 'creator', 'acceptor'])
+            ->with(['group', 'creator', 'acceptor', 'participants.user'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function($c) use ($user) {
+                $isParticipant = $c->isSuperChallenge() && $c->participants->contains('user_id', $user->id);
+
                 return [
                     'id' => $c->id,
                     'description' => $c->description,
-                    'amount' => $c->amount,
+                    'amount' => $c->isSuperChallenge() ? $c->prize_per_person : $c->amount,
                     'type' => $c->type?->value,
-                    'status' => $c->status,
+                    'status' => $c->isSuperChallenge() ? ($isParticipant ? 'accepted' : 'open') : $c->status,
                     'completion_deadline' => $c->completion_deadline?->toIso8601String(),
                     'acceptance_deadline' => $c->acceptance_deadline?->toIso8601String(),
                     'accepted_at' => $c->accepted_at?->toIso8601String(),
@@ -257,7 +274,7 @@ class DashboardController extends Controller
                     'completed_at' => $c->completed_at?->toIso8601String(),
                     'failed_at' => $c->failed_at?->toIso8601String(),
                     'is_creator' => $c->creator_id === $user->id,
-                    'is_acceptor' => $c->acceptor_id === $user->id,
+                    'is_acceptor' => $c->acceptor_id === $user->id || $isParticipant,
                     'group' => [
                         'id' => $c->group->id,
                         'name' => $c->group->name ?? $c->group->platform_chat_title,

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('groups', function (Blueprint $table) {
             // SuperChallenge frequency configuration (use PHP enum, not DB enum)
             $table->string('superchallenge_frequency', 50)
-                ->default('monthly')
+                ->default('off')
                 ->after('is_active');
 
             // Track last SuperChallenge creation

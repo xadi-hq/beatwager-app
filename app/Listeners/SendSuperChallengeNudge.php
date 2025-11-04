@@ -45,11 +45,41 @@ class SendSuperChallengeNudge implements ShouldQueue
             return;
         }
 
+        // Get user's Telegram service to send DM
+        $telegramService = $user->getTelegramService();
+        if (!$telegramService) {
+            Log::warning('User has no Telegram service configured', [
+                'nudge_id' => $nudge->id,
+                'user_id' => $user->id,
+            ]);
+            return;
+        }
+
         // Generate DM message to nudged user
         $message = $this->messageService->superChallengeNudge($nudge);
 
-        // Send DM to the nudged user
-        $user->sendMessage($message);
+        // Get messenger adapter for sending DMs
+        $messengerBridge = \App\Services\MessengerFactory::for($group);
+        $adapter = $messengerBridge->getAdapter();
+
+        // Send DM to the nudged user via their Telegram ID
+        try {
+            $adapter->sendDirectMessage(
+                $telegramService->platform_user_id,
+                \App\Messaging\DTOs\OutgoingMessage::withButtons(
+                    $group->getChatId(),
+                    $message->getFormattedContent(),
+                    $message->buttons
+                )
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to send SuperChallenge nudge DM', [
+                'nudge_id' => $nudge->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
 
         Log::info('Sent SuperChallenge nudge DM', [
             'nudge_id' => $nudge->id,

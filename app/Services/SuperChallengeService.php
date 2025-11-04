@@ -41,6 +41,7 @@ class SuperChallengeService
     {
         // Get all potentially eligible groups by date/frequency
         $groups = Group::where('is_active', true)
+            ->where('superchallenge_frequency', '!=', 'off')
             ->where(function ($query) {
                 $query->whereNull('last_superchallenge_at')
                     ->orWhereRaw($this->getEligibilityQuery());
@@ -129,14 +130,13 @@ class SuperChallengeService
         SuperChallengeNudge $nudge,
         string $description,
         int $deadlineInDays,
+        int $prizePerPerson,
+        int $maxParticipants,
         ?string $evidenceGuidance = null
     ): Challenge {
-        return DB::transaction(function () use ($nudge, $description, $deadlineInDays, $evidenceGuidance) {
+        return DB::transaction(function () use ($nudge, $description, $deadlineInDays, $prizePerPerson, $maxParticipants, $evidenceGuidance) {
             $group = $nudge->group;
             $creator = $nudge->nudgedUser;
-
-            // Calculate prize per person and max participants
-            [$prizePerPerson, $maxParticipants] = $this->calculatePrizeStructure($group);
 
             $challenge = Challenge::create([
                 'id' => Str::uuid(),
@@ -191,8 +191,9 @@ class SuperChallengeService
         $maxTotalPrize = 1000;
         $maxParticipants = (int) floor($maxTotalPrize / $prizePerPerson);
 
-        // Cap at 10 participants
-        $maxParticipants = min(10, $maxParticipants);
+        // Cap at group size - 1 (excluding creator) or 10, whichever is smaller
+        $groupSize = $group->users()->count();
+        $maxParticipants = min(10, $maxParticipants, $groupSize - 1);
 
         return [$prizePerPerson, $maxParticipants];
     }
@@ -251,7 +252,9 @@ class SuperChallengeService
     }
 
     /**
-     * Award creator +50 point bonus for first acceptance
+     * Award creator dynamic bonus for first acceptance
+     * Formula: bonus = (150 - prize_per_person) + 50
+     * Example: If prize is 50, creator gets 150. If prize is 150, creator gets 50.
      */
     public function awardAcceptanceBonus(Challenge $challenge): void
     {
@@ -259,10 +262,15 @@ class SuperChallengeService
             return;
         }
 
+        // Dynamic bonus: lower prize = higher creator reward
+        $maxPrize = 150;
+        $baseBonus = 50;
+        $dynamicBonus = ($maxPrize - $challenge->prize_per_person) + $baseBonus;
+
         $this->pointService->awardPoints(
             $challenge->creator,
             $challenge->group,
-            50,
+            $dynamicBonus,
             TransactionType::SuperChallengeAcceptanceBonus->value,
             $challenge
         );

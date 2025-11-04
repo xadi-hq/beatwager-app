@@ -65,10 +65,12 @@ class AppServiceProvider extends ServiceProvider
             $registry = new \App\Callbacks\CallbackRegistry();
             $messenger = $app->make(\App\Messaging\MessengerAdapterInterface::class);
             $challengeService = $app->make(\App\Services\ChallengeService::class);
+            $superChallengeService = $app->make(\App\Services\SuperChallengeService::class);
             $wagerService = $app->make(\App\Services\WagerService::class);
 
             // Register all callback handlers
             $registry->register(new \App\Callbacks\Handlers\ChallengeAcceptCallbackHandler($messenger, $challengeService));
+            $registry->register(new \App\Callbacks\Handlers\SuperChallengeAcceptCallbackHandler($messenger, $superChallengeService));
             $registry->register(new \App\Callbacks\Handlers\ChallengeViewCallbackHandler($messenger));
             $registry->register(new \App\Callbacks\Handlers\TrackChallengeProgressCallbackHandler($messenger));
             $registry->register(new \App\Callbacks\Handlers\EventRsvpCallbackHandler($messenger));

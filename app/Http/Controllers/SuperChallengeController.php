@@ -62,18 +62,20 @@ class SuperChallengeController extends Controller
         $user = Auth::user();
         $group = $nudge->group;
 
-        // Calculate prize structure for display
-        [$prizePerPerson, $maxParticipants] = $this->calculatePrizePreview($group);
+        // Calculate prize structure and ranges for sliders
+        [$prizeRange, $participantRange, $creatorRewards] = $this->calculatePrizePreview($group);
 
         return Inertia::render('SuperChallenge/Create', [
             'user' => $user->only(['id', 'name']),
             'group' => [
                 'id' => $group->id,
                 'name' => $group->platform_chat_title ?: $group->name,
+                'member_count' => $group->users()->count(),
             ],
             'nudge_id' => $nudge->id,
-            'prize_per_person' => $prizePerPerson,
-            'max_participants' => $maxParticipants,
+            'prize_range' => $prizeRange,
+            'participant_range' => $participantRange,
+            'creator_rewards' => $creatorRewards,
             'static_examples' => $this->getStaticExamples(),
         ]);
     }
@@ -86,7 +88,9 @@ class SuperChallengeController extends Controller
         $validated = $request->validate([
             'nudge_id' => 'required|uuid|exists:super_challenge_nudges,id',
             'description' => 'required|string|max:200',
-            'deadline_days' => 'required|integer|in:3,7,14,30',
+            'deadline_days' => 'required|integer|in:7,14,30,60',
+            'prize_per_person' => 'required|integer|min:50|max:150',
+            'max_participants' => 'required|integer|min:1|max:10',
             'evidence_guidance' => 'nullable|string|max:500',
         ]);
 
@@ -102,15 +106,23 @@ class SuperChallengeController extends Controller
             abort(400, 'This nudge has already been responded to');
         }
 
+        // Additional validation: max_participants can't exceed group size - 1
+        $group = $nudge->group;
+        $maxAllowed = min(10, $group->users()->count() - 1);
+        if ($validated['max_participants'] > $maxAllowed) {
+            return back()->withErrors(['max_participants' => "Maximum {$maxAllowed} participants allowed for this group."]);
+        }
+
         $challenge = $this->superChallengeService->createSuperChallenge(
-            $nudge->group,
-            $user,
+            $nudge,
             $validated['description'],
             $validated['deadline_days'],
+            $validated['prize_per_person'],
+            $validated['max_participants'],
             $validated['evidence_guidance'] ?? null
         );
 
-        return Inertia::location(route('superchallenge.created', ['challenge' => $challenge->id]));
+        return redirect()->route('superchallenge.created', ['challenge' => $challenge->id]);
     }
 
     /**
@@ -315,20 +327,51 @@ class SuperChallengeController extends Controller
     }
 
     /**
-     * Calculate prize preview (same logic as service)
+     * Calculate prize preview and ranges for sliders
      */
     private function calculatePrizePreview($group): array
     {
-        $totalGroupPoints = $group->users()->sum('current_points');
+        $totalGroupPoints = $group->users()->sum('group_user.points');
         $percentage = rand(2, 5);
         $rawPrize = ($totalGroupPoints * $percentage) / 100;
-        $prizePerPerson = round($rawPrize / 50) * 50;
-        $prizePerPerson = max(50, min(150, (int) $prizePerPerson));
-        $maxTotalPrize = 1000;
-        $maxParticipants = (int) floor($maxTotalPrize / $prizePerPerson);
-        $maxParticipants = min(10, $maxParticipants);
+        $suggestedPrize = round($rawPrize / 50) * 50;
+        $suggestedPrize = max(50, min(150, (int) $suggestedPrize));
 
-        return [$prizePerPerson, $maxParticipants];
+        // Prize range: 50-150 points per person (in steps of 10)
+        $prizeRange = [
+            'min' => 50,
+            'max' => 150,
+            'step' => 10,
+            'suggested' => $suggestedPrize,
+        ];
+
+        // Max participants: 1 to min(groupSize - 1, 10)
+        $groupSize = $group->users()->count();
+        $maxPossibleParticipants = min(10, $groupSize - 1);
+
+        $participantRange = [
+            'min' => 1,
+            'max' => $maxPossibleParticipants,
+            'suggested' => min(5, $maxPossibleParticipants), // Suggest ~half or 5
+        ];
+
+        // Creator reward structure with dynamic bonus based on prize selection
+        // Formula: creatorBonus = (maxPrize - selectedPrize) + baseBonus
+        // This incentivizes creators to balance attracting participants vs their own reward
+        $creatorRewards = [
+            'base_acceptance_bonus' => 50,  // When ≥1 participant accepts
+            'per_validation_bonus' => 25,   // Per completion validated
+            'dynamic_bonus_formula' => [
+                'description' => 'Your bonus = (150 - selected_prize) + 50',
+                'examples' => [
+                    ['prize' => 50, 'bonus' => 150],  // (150-50)+50 = 150
+                    ['prize' => 100, 'bonus' => 100], // (150-100)+50 = 100
+                    ['prize' => 150, 'bonus' => 50],  // (150-150)+50 = 50
+                ],
+            ],
+        ];
+
+        return [$prizeRange, $participantRange, $creatorRewards];
     }
 
     /**
@@ -342,9 +385,9 @@ class SuperChallengeController extends Controller
                 'icon' => '🏃',
                 'examples' => [
                     'Run 5km in under 30 minutes',
-                    '10,000 steps daily for 7 days',
-                    'No alcohol for 7 days',
-                    'Meditate for 10 minutes daily for a week',
+                    '10,000 steps daily for 7 consecutive days',
+                    'No alcohol for 7 consecutive days',
+                    'Meditate for 10 minutes daily for 7 consecutive days',
                 ],
             ],
             [
@@ -353,17 +396,16 @@ class SuperChallengeController extends Controller
                 'examples' => [
                     'Read a non-fiction book',
                     'Complete an online course or tutorial',
-                    'Learn 50 words in a new language',
-                    'Write a blog post or journal entry daily for a week',
+                    'Write a blog post or journal entry daily for 7 consecutive days',
                 ],
             ],
             [
                 'category' => 'Creative',
                 'icon' => '🎨',
                 'examples' => [
-                    'Take a daily photo with different themes for a week',
+                    'Take a daily photo with different themes for 7 consecutive days',
                     'Create something with your hands (art, craft, woodwork)',
-                    'Write a short story or poem',
+                    'Write a handwritten short story or poem',
                 ],
             ],
             [
@@ -381,6 +423,7 @@ class SuperChallengeController extends Controller
                 'examples' => [
                     'Beat your high score in a game',
                     'Complete a challenging achievement',
+                    'Win a board game tournament',
                 ],
             ],
         ];

@@ -985,7 +985,7 @@ class MessageService
 
         return new Message(
             content: $content,
-            type: MessageType::DirectMessage,
+            type: MessageType::Info,
             variables: [],
             buttons: $buttons,
             context: $nudge,
@@ -1136,7 +1136,7 @@ class MessageService
 
         return new Message(
             content: $content,
-            type: MessageType::DirectMessage,
+            type: MessageType::Info,
             variables: [],
             buttons: $buttons,
             context: $participant,

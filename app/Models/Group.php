@@ -64,6 +64,7 @@ class Group extends Model
             'season_ends_at' => 'datetime',
             'surprise_drops_enabled' => 'boolean',
             'season_milestones_triggered' => 'array',
+            'last_superchallenge_at' => 'datetime',
         ];
     }
 

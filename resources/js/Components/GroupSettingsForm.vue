@@ -46,7 +46,7 @@ const generalForm = useForm({
     timezone: props.group.timezone,
     language: props.group.language || 'en',
     description: props.group.description || '',
-    superchallenge_frequency: props.group.superchallenge_frequency || 'monthly',
+    superchallenge_frequency: props.group.superchallenge_frequency || 'off',
 });
 
 // Notification preferences form
@@ -318,12 +318,13 @@ function submitBot() {
                                 class="w-full px-3 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 required
                             >
+                                <option value="off">Off - Disable SuperChallenges</option>
                                 <option value="weekly">Weekly - New challenge every 7 days</option>
                                 <option value="monthly">Monthly - New challenge every month</option>
                                 <option value="quarterly">Quarterly - New challenge every 3 months</option>
                             </select>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                                How often the system creates collaborative SuperChallenges for your group
+                                How often the system creates collaborative SuperChallenges for your group. Set to "Off" to disable.
                             </p>
                         </div>
 

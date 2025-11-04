@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
@@ -7,6 +7,28 @@ interface Example {
     category: string;
     icon: string;
     examples: string[];
+}
+
+interface PrizeRange {
+    min: number;
+    max: number;
+    step: number;
+    suggested: number;
+}
+
+interface ParticipantRange {
+    min: number;
+    max: number;
+    suggested: number;
+}
+
+interface CreatorRewards {
+    base_acceptance_bonus: number;
+    per_validation_bonus: number;
+    dynamic_bonus_formula: {
+        description: string;
+        examples: Array<{ prize: number; bonus: number }>;
+    };
 }
 
 const props = defineProps<{
@@ -17,10 +39,12 @@ const props = defineProps<{
     group: {
         id: string;
         name: string;
+        member_count: number;
     };
     nudge_id: string;
-    prize_per_person: number;
-    max_participants: number;
+    prize_range: PrizeRange;
+    participant_range: ParticipantRange;
+    creator_rewards: CreatorRewards;
     static_examples: Example[];
 }>();
 
@@ -28,11 +52,44 @@ const form = useForm({
     nudge_id: props.nudge_id,
     description: '',
     deadline_days: 7,
+    prize_per_person: props.prize_range.suggested,
+    max_participants: props.participant_range.suggested,
     evidence_guidance: '',
 });
 
+// Computed: Dynamic creator acceptance bonus
+const creatorAcceptanceBonus = computed(() => {
+    return (props.prize_range.max - form.prize_per_person) + props.creator_rewards.base_acceptance_bonus;
+});
+
+// Computed: Potential total if all participants complete
+const potentialTotalReward = computed(() => {
+    return creatorAcceptanceBonus.value + (form.max_participants * props.creator_rewards.per_validation_bonus);
+});
+
+// Computed: Total prize pool
+const totalPrizePool = computed(() => {
+    return form.prize_per_person * form.max_participants;
+});
+
+// Computed: Urgency label based on max participants
+const urgencyLabel = computed(() => {
+    if (form.max_participants === 0) return null;
+    if (form.max_participants === 1) return { text: 'Exclusive 1-on-1 challenge', icon: '👑' };
+    if (form.max_participants <= 3) return { text: 'Limited spots - High urgency', icon: '⚡' };
+    return { text: 'Open to many', icon: '🌟' };
+});
+
+// Use example
 const useExample = (example: string) => {
     form.description = example;
+};
+
+// Random example picker
+const pickRandomExample = () => {
+    const allExamples = props.static_examples.flatMap(cat => cat.examples);
+    const randomIndex = Math.floor(Math.random() * allExamples.length);
+    form.description = allExamples[randomIndex];
 };
 
 const submit = () => {
@@ -57,29 +114,27 @@ const submit = () => {
                     <p class="text-lg text-gray-600 dark:text-gray-300">
                         Create a SuperChallenge for <span class="font-semibold text-purple-600 dark:text-purple-400">{{ group.name }}</span>
                     </p>
-                    <div class="mt-4 inline-flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>{{ prize_per_person }} points per completer</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <span>Max {{ max_participants }} participants</span>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Form -->
-                <form @submit.prevent="submit" class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 space-y-6">
+                <form @submit.prevent="submit" class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 space-y-8">
                     <!-- Challenge Description -->
                     <div>
-                        <label for="description" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                            Challenge Description *
-                        </label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="description" class="block text-sm font-semibold text-gray-900 dark:text-white">
+                                Challenge Description *
+                            </label>
+                            <button
+                                type="button"
+                                @click="pickRandomExample"
+                                class="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium flex items-center gap-1"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Random Idea
+                            </button>
+                        </div>
                         <textarea
                             id="description"
                             v-model="form.description"
@@ -97,14 +152,136 @@ const submit = () => {
                         </div>
                     </div>
 
+                    <!-- Prize Per Person Slider -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                            Prize Per Person *
+                        </label>
+                        <div class="flex items-center gap-4">
+                            <input
+                                type="range"
+                                v-model.number="form.prize_per_person"
+                                :min="prize_range.min"
+                                :max="prize_range.max"
+                                :step="prize_range.step"
+                                class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-purple-600"
+                            />
+                            <div class="flex items-center justify-center min-w-[100px] px-4 py-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                                <span class="text-xl font-bold text-purple-600 dark:text-purple-400">{{ form.prize_per_person }}</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400 ml-1">pts</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span>{{ prize_range.min }} pts</span>
+                            <span>{{ prize_range.max }} pts</span>
+                        </div>
+                    </div>
+
+                    <!-- Max Participants Slider -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                            Max Participants *
+                        </label>
+                        <div class="flex items-center gap-4">
+                            <input
+                                type="range"
+                                v-model.number="form.max_participants"
+                                :min="participant_range.min"
+                                :max="participant_range.max"
+                                class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-indigo-600"
+                            />
+                            <div class="flex items-center justify-center min-w-[100px] px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                                <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400">{{ form.max_participants }}</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400 ml-1">{{ form.max_participants === 1 ? 'person' : 'people' }}</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span>{{ participant_range.min }}</span>
+                            <span>{{ participant_range.max }}</span>
+                        </div>
+                        <div v-if="urgencyLabel" class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-sm text-indigo-700 dark:text-indigo-300">
+                            <span>{{ urgencyLabel.icon }}</span>
+                            <span>{{ urgencyLabel.text }}</span>
+                        </div>
+                        <div v-if="form.errors.max_participants" class="mt-2 text-sm text-red-600 dark:text-red-400">
+                            {{ form.errors.max_participants }}
+                        </div>
+                    </div>
+
+                    <!-- Creator Rewards Preview -->
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <span class="text-2xl">💰</span>
+                            Reward Breakdown
+                        </h3>
+                        <div class="space-y-4">
+                            <!-- Their Bonus -->
+                            <div>
+                                <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                    Their Bonus (per completer)
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                    <div class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                        <span class="text-lg">👥</span>
+                                        <span v-if="form.max_participants > 0">
+                                            {{ form.max_participants }} × {{ form.prize_per_person }} pts
+                                        </span>
+                                        <span v-else>
+                                            0 × {{ form.prize_per_person }} pts
+                                        </span>
+                                    </div>
+                                    <span class="text-xl font-bold text-purple-600 dark:text-purple-400">{{ totalPrizePool }} pts</span>
+                                </div>
+                            </div>
+
+                            <!-- Your Bonuses -->
+                            <div>
+                                <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                    Your Bonuses
+                                </div>
+                                <div class="space-y-2">
+                                    <!-- Fixed Acceptance Bonus -->
+                                    <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                        <div class="text-sm text-gray-700 dark:text-gray-300">
+                                            <span class="font-medium">Fixed bonus</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">(when ≥1 joins)</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-lg font-bold text-green-600 dark:text-green-400">{{ creatorAcceptanceBonus }} pts</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">(150 - {{ form.prize_per_person }}) + 50</div>
+                                        </div>
+                                    </div>
+                                    <!-- Per Completion Bonus -->
+                                    <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                        <div class="text-sm text-gray-700 dark:text-gray-300">
+                                            <span class="font-medium">Per validation</span>
+                                        </div>
+                                        <div class="text-lg font-bold text-green-600 dark:text-green-400">{{ creator_rewards.per_validation_bonus }} pts</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total if All Complete -->
+                            <div v-if="form.max_participants > 0" class="pt-3 border-t border-green-200 dark:border-green-800">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">Your total if all {{ form.max_participants }} complete:</span>
+                                    <span class="text-2xl font-bold text-green-600 dark:text-green-400">{{ potentialTotalReward }} pts</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-xs text-gray-600 dark:text-gray-400 italic">
+                            💡 Their prize ↑ = Your fixed bonus ↓ (but more likely to attract participants!)
+                        </p>
+                    </div>
+
                     <!-- Deadline -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
                             Deadline *
                         </label>
                         <div class="grid grid-cols-4 gap-3">
                             <label
-                                v-for="days in [3, 7, 14, 30]"
+                                v-for="days in [7, 14, 30, 60]"
                                 :key="days"
                                 class="relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition"
                                 :class="form.deadline_days === days
@@ -119,7 +296,7 @@ const submit = () => {
                                 />
                                 <div class="text-center">
                                     <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ days }}</div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">day{{ days > 1 ? 's' : '' }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">days</div>
                                 </div>
                             </label>
                         </div>

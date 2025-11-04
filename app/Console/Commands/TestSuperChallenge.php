@@ -107,7 +107,7 @@ class TestSuperChallenge extends Command
                 'group_id' => $group->id,
                 'nudged_user_id' => $user->id,
                 'response' => \App\Enums\NudgeResponse::PENDING->value,
-                'sent_at' => now(),
+                'nudged_at' => now(),
             ]);
 
             // Fire the event to send the message
