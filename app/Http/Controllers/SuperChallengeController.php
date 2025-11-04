@@ -77,6 +77,7 @@ class SuperChallengeController extends Controller
             'participant_range' => $participantRange,
             'creator_rewards' => $creatorRewards,
             'static_examples' => $this->getStaticExamples(),
+            'currencyName' => $group->points_currency_name ?? 'points',
         ]);
     }
 

@@ -14,6 +14,7 @@ const props = defineProps<{
     defaultGroup: {
         id: string;
         name: string;
+        currency_name?: string;
     } | null;
     groups: Array<{
         id: string;
@@ -24,7 +25,11 @@ const props = defineProps<{
         name: string;
         points: number;
     }>;
+    currencyName: string;
 }>();
+
+// Use the currency name from props with fallback
+const displayCurrency = computed(() => props.currencyName || 'points');
 
 // Default betting closes at to now + 6 hours
 const getDefaultBettingClosesAt = () => {
@@ -557,7 +562,7 @@ const submit = () => {
                     <!-- Stake Amount -->
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                            Stake (points) *
+                            Stake ({{ displayCurrency }}) *
                         </label>
                         <input
                             v-model.number="form.stake_amount"

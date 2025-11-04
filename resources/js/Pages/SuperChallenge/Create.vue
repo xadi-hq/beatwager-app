@@ -46,7 +46,11 @@ const props = defineProps<{
     participant_range: ParticipantRange;
     creator_rewards: CreatorRewards;
     static_examples: Example[];
+    currencyName: string;
 }>();
+
+// Use the currency name from props with fallback
+const displayCurrency = computed(() => props.currencyName || 'points');
 
 const form = useForm({
     nudge_id: props.nudge_id,
@@ -101,8 +105,8 @@ const submit = () => {
     <AppLayout>
         <Head title="Create SuperChallenge" />
 
-        <div class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-3xl mx-auto">
+        <div class="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div>
                 <!-- Hero Section -->
                 <div class="text-center mb-8">
                     <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full mb-4">
@@ -168,12 +172,12 @@ const submit = () => {
                             />
                             <div class="flex items-center justify-center min-w-[100px] px-4 py-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
                                 <span class="text-xl font-bold text-purple-600 dark:text-purple-400">{{ form.prize_per_person }}</span>
-                                <span class="text-sm text-gray-600 dark:text-gray-400 ml-1">pts</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400 ml-1">{{ displayCurrency }}</span>
                             </div>
                         </div>
                         <div class="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            <span>{{ prize_range.min }} pts</span>
-                            <span>{{ prize_range.max }} pts</span>
+                            <span>{{ prize_range.min }} {{ displayCurrency }}</span>
+                            <span>{{ prize_range.max }} {{ displayCurrency }}</span>
                         </div>
                     </div>
 
@@ -224,13 +228,13 @@ const submit = () => {
                                     <div class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                                         <span class="text-lg">👥</span>
                                         <span v-if="form.max_participants > 0">
-                                            {{ form.max_participants }} × {{ form.prize_per_person }} pts
+                                            {{ form.max_participants }} × {{ form.prize_per_person }} {{ displayCurrency }}
                                         </span>
                                         <span v-else>
-                                            0 × {{ form.prize_per_person }} pts
+                                            0 × {{ form.prize_per_person }} {{ displayCurrency }}
                                         </span>
                                     </div>
-                                    <span class="text-xl font-bold text-purple-600 dark:text-purple-400">{{ totalPrizePool }} pts</span>
+                                    <span class="text-xl font-bold text-purple-600 dark:text-purple-400">{{ totalPrizePool }} {{ displayCurrency }}</span>
                                 </div>
                             </div>
 
@@ -247,7 +251,7 @@ const submit = () => {
                                             <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">(when ≥1 joins)</span>
                                         </div>
                                         <div class="text-right">
-                                            <div class="text-lg font-bold text-green-600 dark:text-green-400">{{ creatorAcceptanceBonus }} pts</div>
+                                            <div class="text-lg font-bold text-green-600 dark:text-green-400">{{ creatorAcceptanceBonus }} {{ displayCurrency }}</div>
                                             <div class="text-xs text-gray-500 dark:text-gray-400">(150 - {{ form.prize_per_person }}) + 50</div>
                                         </div>
                                     </div>
@@ -256,7 +260,7 @@ const submit = () => {
                                         <div class="text-sm text-gray-700 dark:text-gray-300">
                                             <span class="font-medium">Per validation</span>
                                         </div>
-                                        <div class="text-lg font-bold text-green-600 dark:text-green-400">{{ creator_rewards.per_validation_bonus }} pts</div>
+                                        <div class="text-lg font-bold text-green-600 dark:text-green-400">{{ creator_rewards.per_validation_bonus }} {{ displayCurrency }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -265,7 +269,7 @@ const submit = () => {
                             <div v-if="form.max_participants > 0" class="pt-3 border-t border-green-200 dark:border-green-800">
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm font-semibold text-gray-900 dark:text-white">Your total if all {{ form.max_participants }} complete:</span>
-                                    <span class="text-2xl font-bold text-green-600 dark:text-green-400">{{ potentialTotalReward }} pts</span>
+                                    <span class="text-2xl font-bold text-green-600 dark:text-green-400">{{ potentialTotalReward }} {{ displayCurrency }}</span>
                                 </div>
                             </div>
                         </div>

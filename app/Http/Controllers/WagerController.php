@@ -53,6 +53,7 @@ class WagerController extends Controller
         $defaultGroup = $group && ($group->platform !== 'telegram' || (int)$group->platform_chat_id < 0) ? [
             'id' => $group->id,
             'name' => $group->platform_chat_title ?: $group->name,
+            'currency_name' => $group->points_currency_name ?? 'points',
         ] : null;
 
         return Inertia::render('Wager/Create', [
@@ -64,6 +65,7 @@ class WagerController extends Controller
             'defaultGroup' => $defaultGroup,
             'groups' => $userGroups,
             'groupMembers' => $group ? $group->users()->select('users.id', 'users.name', 'group_user.points')->get()->map(fn($u) => ['name' => $u->name, 'points' => $u->pivot->points])->sortBy('points')->values() : [],
+            'currencyName' => $group ? ($group->points_currency_name ?? 'points') : 'points',
         ]);
     }
 
