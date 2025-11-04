@@ -49,7 +49,7 @@ class SuperChallengeAcceptCallbackHandler extends AbstractCallbackHandler
         }
 
         // Check if challenge is still open
-        if ($challenge->status !== \App\Enums\ChallengeStatus::ACTIVE) {
+        if ($challenge->status !== 'open') {
             $this->messenger->answerCallback(
                 $callback->callbackId,
                 '❌ This SuperChallenge is no longer available',
