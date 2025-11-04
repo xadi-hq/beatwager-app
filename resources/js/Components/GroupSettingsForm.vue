@@ -13,6 +13,7 @@ const props = defineProps<{
         points_currency_name: string;
         timezone: string;
         language?: string;
+        superchallenge_frequency?: string;
         notification_preferences: {
             birthday_reminders: boolean;
             event_reminders: boolean;
@@ -45,6 +46,7 @@ const generalForm = useForm({
     timezone: props.group.timezone,
     language: props.group.language || 'en',
     description: props.group.description || '',
+    superchallenge_frequency: props.group.superchallenge_frequency || 'monthly',
 });
 
 // Notification preferences form
@@ -305,6 +307,24 @@ function submitBot() {
                                 placeholder="A brief description of your group..."
                                 class="w-full px-3 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             ></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                SuperChallenge Frequency
+                            </label>
+                            <select
+                                v-model="generalForm.superchallenge_frequency"
+                                class="w-full px-3 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                required
+                            >
+                                <option value="weekly">Weekly - New challenge every 7 days</option>
+                                <option value="monthly">Monthly - New challenge every month</option>
+                                <option value="quarterly">Quarterly - New challenge every 3 months</option>
+                            </select>
+                            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                                How often the system creates collaborative SuperChallenges for your group
+                            </p>
                         </div>
 
                         <button

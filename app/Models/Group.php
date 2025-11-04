@@ -42,6 +42,8 @@ class Group extends Model
         'season_ends_at',
         'surprise_drops_enabled',
         'season_milestones_triggered',
+        'superchallenge_frequency',
+        'last_superchallenge_at',
     ];
 
     protected function casts(): array

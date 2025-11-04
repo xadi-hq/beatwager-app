@@ -12,6 +12,12 @@ use App\Events\ChallengeRejected;
 use App\Events\ChallengeSubmitted;
 use App\Events\EventCancelled;
 use App\Events\EventCreated;
+use App\Events\SuperChallengeAccepted;
+use App\Events\SuperChallengeAutoValidated;
+use App\Events\SuperChallengeCompletionClaimed;
+use App\Events\SuperChallengeCompletionValidated;
+use App\Events\SuperChallengeCreated;
+use App\Events\SuperChallengeNudgeSent;
 use App\Events\WagerCreated;
 use App\Events\WagerJoined;
 use App\Events\WagerSettled;
@@ -25,6 +31,12 @@ use App\Listeners\SendChallengeRejectedAnnouncement;
 use App\Listeners\SendChallengeSubmittedAnnouncement;
 use App\Listeners\SendEventAnnouncement;
 use App\Listeners\SendEventCancelledAnnouncement;
+use App\Listeners\SendSuperChallengeAcceptedNotification;
+use App\Listeners\SendSuperChallengeAnnouncement;
+use App\Listeners\SendSuperChallengeAutoValidatedNotification;
+use App\Listeners\SendSuperChallengeCompletionClaimedNotification;
+use App\Listeners\SendSuperChallengeNudge;
+use App\Listeners\SendSuperChallengeValidatedNotification;
 use App\Listeners\SendWagerAnnouncement;
 use App\Listeners\SendWagerJoinAnnouncement;
 use App\Listeners\SendWagerSettlement;
@@ -76,6 +88,24 @@ class EventServiceProvider extends ServiceProvider
         ],
         WagerSettled::class => [
             SendWagerSettlement::class,
+        ],
+        SuperChallengeNudgeSent::class => [
+            SendSuperChallengeNudge::class,
+        ],
+        SuperChallengeCreated::class => [
+            SendSuperChallengeAnnouncement::class,
+        ],
+        SuperChallengeAccepted::class => [
+            SendSuperChallengeAcceptedNotification::class,
+        ],
+        SuperChallengeCompletionClaimed::class => [
+            SendSuperChallengeCompletionClaimedNotification::class,
+        ],
+        SuperChallengeCompletionValidated::class => [
+            SendSuperChallengeValidatedNotification::class,
+        ],
+        SuperChallengeAutoValidated::class => [
+            SendSuperChallengeAutoValidatedNotification::class,
         ],
     ];
 

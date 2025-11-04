@@ -248,6 +248,7 @@ class DashboardController extends Controller
                     'id' => $c->id,
                     'description' => $c->description,
                     'amount' => $c->amount,
+                    'type' => $c->type?->value,
                     'status' => $c->status,
                     'completion_deadline' => $c->completion_deadline?->toIso8601String(),
                     'acceptance_deadline' => $c->acceptance_deadline?->toIso8601String(),

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ChallengeType;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Challenge extends Model
@@ -18,8 +20,12 @@ class Challenge extends Model
         'group_id',
         'creator_id',
         'acceptor_id',
+        'type',
         'description',
         'amount',
+        'prize_per_person',
+        'max_participants',
+        'evidence_guidance',
         'acceptance_deadline',
         'completion_deadline',
         'status',
@@ -40,7 +46,10 @@ class Challenge extends Model
     protected function casts(): array
     {
         return [
+            'type' => ChallengeType::class,
             'amount' => 'integer',
+            'prize_per_person' => 'integer',
+            'max_participants' => 'integer',
             'acceptance_deadline' => 'datetime',
             'completion_deadline' => 'datetime',
             'accepted_at' => 'datetime',
@@ -282,5 +291,65 @@ class Challenge extends Model
     public function transactions(): MorphMany
     {
         return $this->morphMany(Transaction::class, 'transactionable');
+    }
+
+    /**
+     * SuperChallenge relationships and methods
+     */
+
+    public function participants(): HasMany
+    {
+        return $this->hasMany(ChallengeParticipant::class);
+    }
+
+    public function isSuperChallenge(): bool
+    {
+        return $this->type === ChallengeType::SUPER_CHALLENGE;
+    }
+
+    public function isUserChallenge(): bool
+    {
+        return $this->type === ChallengeType::USER_CHALLENGE;
+    }
+
+    public function hasReachedMaxParticipants(): bool
+    {
+        if (!$this->isSuperChallenge() || $this->max_participants === null) {
+            return false;
+        }
+
+        return $this->participants()->count() >= $this->max_participants;
+    }
+
+    public function getValidatedParticipantsCount(): int
+    {
+        return $this->participants()
+            ->where('validation_status', 'validated')
+            ->count();
+    }
+
+    public function getTotalPrizeMinted(): int
+    {
+        return $this->getValidatedParticipantsCount() * ($this->prize_per_person ?? 0);
+    }
+
+    /**
+     * Scopes for SuperChallenges
+     */
+    public function scopeSuperChallenges($query)
+    {
+        return $query->where('type', ChallengeType::SUPER_CHALLENGE->value);
+    }
+
+    public function scopeUserChallenges($query)
+    {
+        return $query->where('type', ChallengeType::USER_CHALLENGE->value);
+    }
+
+    public function scopeActiveSuperChallenges($query)
+    {
+        return $query->superChallenges()
+            ->where('status', 'open')
+            ->where('completion_deadline', '>=', now());
     }
 }

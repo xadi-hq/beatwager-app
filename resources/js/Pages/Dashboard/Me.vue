@@ -437,7 +437,8 @@ function formatDate(dateStr: string): string {
                                         </div>
                                     </div>
                                     <div class="flex items-center justify-between">
-                                        <div class="text-sm text-neutral-700 dark:text-neutral-300">
+                                        <div class="text-sm text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
+                                            <span v-if="challenge.type === 'super_challenge'" class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded text-xs font-medium">⭐ SuperChallenge</span>
                                             <span v-if="challenge.is_creator" class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded text-xs">Creator</span>
                                             <span v-else class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded text-xs">Available to accept</span>
                                         </div>
@@ -466,7 +467,8 @@ function formatDate(dateStr: string): string {
                                         </div>
                                     </div>
                                     <div class="flex items-center justify-between">
-                                        <div class="text-sm text-neutral-700 dark:text-neutral-300">
+                                        <div class="text-sm text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
+                                            <span v-if="challenge.type === 'super_challenge'" class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded text-xs font-medium">⭐ SuperChallenge</span>
                                             <span v-if="challenge.is_creator" class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded text-xs">Creator</span>
                                             <span v-else class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded text-xs">Accepted by you</span>
                                             <span v-if="challenge.acceptor" class="ml-2 text-neutral-600 dark:text-neutral-400">Acceptor: {{ challenge.acceptor.name }}</span>
@@ -495,7 +497,8 @@ function formatDate(dateStr: string): string {
                                         </div>
                                     </div>
                                     <div class="flex items-center justify-between">
-                                        <div class="text-sm">
+                                        <div class="text-sm flex items-center gap-2">
+                                            <span v-if="challenge.type === 'super_challenge'" class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded text-xs font-medium">⭐ SuperChallenge</span>
                                             <span v-if="challenge.status === 'completed'" class="text-green-600 dark:text-green-400 font-medium">✅ Completed (+{{ Math.abs(challenge.amount) }} pts)</span>
                                             <span v-else class="text-red-600 dark:text-red-400">❌ Failed</span>
                                             <span v-if="challenge.acceptor" class="ml-2 text-neutral-600 dark:text-neutral-400">by {{ challenge.acceptor.name }}</span>

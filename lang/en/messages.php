@@ -353,6 +353,83 @@ return [
         ],
     ],
 
+    'superchallenge' => [
+        'nudge' => [
+            'intent' => 'Encourage randomly selected user to create a SuperChallenge for the group',
+            'required_fields' => ['group_name', 'frequency'],
+            'fallback_template' => "✨ You've been chosen to create a SuperChallenge for {group_name}!\n\nSuperChallenges are collaborative - everyone who completes it gets the full prize. They happen {frequency}.\n\nClick below to create one or pass:",
+            'tone_hints' => ['encouraging', 'exciting', 'opportunity'],
+            'personality_notes' => 'Make them feel special for being chosen. Emphasize the collaborative nature (not competitive).',
+            'max_words' => 40,
+        ],
+
+        'announced' => [
+            'intent' => 'Announce a new SuperChallenge to the group and rally participation',
+            'required_fields' => ['description', 'prize_per_person', 'max_participants', 'deadline_at', 'currency'],
+            'optional_fields' => ['current_participants', 'evidence_guidance'],
+            'fallback_template' => "🏆 New SuperChallenge!\n\n{description}\n\n💰 Prize: {prize_per_person} {currency} per person\n👥 Spots: {current_participants}/{max_participants}\n⏰ Deadline: {deadline_at}\n\nThis is collaborative - everyone who completes it wins! Click below to join:",
+            'tone_hints' => ['exciting', 'rallying', 'collaborative'],
+            'personality_notes' => 'Emphasize collaboration over competition. Make it sound achievable and fun. Use group personality.',
+            'examples' => [
+                'Fitness group: "💪 Time to get moving together! Who\'s ready to crush this?"',
+                'Friends group: "🎯 Let\'s make this happen as a crew!"',
+                'Professional: "🚀 Collaborative goal time - let\'s all level up together."',
+            ],
+            'max_words' => 45,
+        ],
+
+        'accepted' => [
+            'intent' => 'Celebrate user accepting the SuperChallenge and encourage others to join',
+            'required_fields' => ['user_name', 'description', 'current_participants', 'max_participants'],
+            'optional_fields' => ['prize_per_person', 'currency'],
+            'fallback_template' => "💪 {user_name} joined the SuperChallenge!\n\nChallenge: {description}\n\n👥 {current_participants}/{max_participants} spots filled\n\nWho's next?",
+            'tone_hints' => ['celebratory', 'FOMO', 'encouraging'],
+            'personality_notes' => 'Create excitement and slight urgency as spots fill up. Celebrate the joiner.',
+            'max_words' => 30,
+        ],
+
+        'completion_claimed' => [
+            'intent' => 'Notify creator that participant claims completion and needs validation',
+            'required_fields' => ['user_name', 'description', 'completed_at'],
+            'optional_fields' => ['prize_per_person', 'currency'],
+            'fallback_template' => "🎯 Completion to Validate\n\n{user_name} claims they completed:\n\"{description}\"\n\nCompleted at: {completed_at}\n\nCheck the evidence in the chat and click below to approve or reject.\n\nYou'll get +25 {currency} for validating!",
+            'tone_hints' => ['professional', 'clear', 'action_required'],
+            'personality_notes' => 'Be clear about what they need to do. Mention the validation bonus as incentive.',
+            'max_words' => 50,
+        ],
+
+        'validated_approved' => [
+            'intent' => 'Announce approved completion with celebration and point award',
+            'required_fields' => ['user_name', 'description', 'prize_per_person', 'currency'],
+            'fallback_template' => "✅ {user_name} completed the SuperChallenge!\n\n\"{description}\"\n\n💰 +{prize_per_person} {currency} awarded!\n\nGreat work! 🎉",
+            'tone_hints' => ['celebratory', 'rewarding', 'positive'],
+            'personality_notes' => 'Big celebration! They earned it. Adapt tone to group personality.',
+            'examples' => [
+                'Casual: "🔥 BOOM! {user_name} crushed it and earned {prize_per_person} points!"',
+                'Professional: "✅ Excellent work, {user_name}! Challenge completed. +{prize_per_person} points."',
+            ],
+            'max_words' => 35,
+        ],
+
+        'validated_rejected' => [
+            'intent' => 'Diplomatically announce rejected completion without being harsh',
+            'required_fields' => ['user_name', 'description'],
+            'fallback_template' => "⚠️ {user_name}'s completion for \"{description}\" wasn't approved.\n\nThe creator reviewed the evidence and it didn't meet the requirements. No points awarded.",
+            'tone_hints' => ['diplomatic', 'factual', 'constructive'],
+            'personality_notes' => 'Don\'t be harsh. State facts clearly. Suggest they can try again or discuss with creator.',
+            'max_words' => 35,
+        ],
+
+        'auto_validated' => [
+            'intent' => 'Announce auto-approval after 48h timeout with explanation',
+            'required_fields' => ['user_name', 'description', 'prize_per_person', 'currency', 'hours_waited'],
+            'fallback_template' => "⏰ Auto-Approved!\n\n{user_name} completed \"{description}\"\n\nThe creator didn't validate within {hours_waited} hours, so it was automatically approved.\n\n💰 +{prize_per_person} {currency} awarded!",
+            'tone_hints' => ['fair', 'systematic', 'positive'],
+            'personality_notes' => 'Explain the timeout clearly. Make it feel fair and systematic, not like creator failed.',
+            'max_words' => 40,
+        ],
+    ],
+
     'buttons' => [
         'yes' => '✅ Yes',
         'no' => '❌ No',

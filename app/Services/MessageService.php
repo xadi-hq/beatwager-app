@@ -936,6 +936,286 @@ class MessageService
     }
 
     /**
+     * Create SuperChallenge nudge DM (sent to randomly selected creator)
+     */
+    public function superChallengeNudge(\App\Models\SuperChallengeNudge $nudge): Message
+    {
+        $meta = __('messages.superchallenge.nudge');
+        $group = $nudge->group;
+        $currency = $group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'superchallenge.nudge',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'group_name' => $group->name,
+                'frequency' => $nudge->group->superchallenge_frequency?->value ?? 'monthly',
+            ],
+            group: $group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $group);
+
+        // Button to create the challenge (signed URL)
+        $createUrl = \URL::signedRoute('superchallenge.nudge.respond', [
+            'nudge' => $nudge->id,
+            'action' => 'accept',
+        ]);
+
+        $declineUrl = \URL::signedRoute('superchallenge.nudge.respond', [
+            'nudge' => $nudge->id,
+            'action' => 'decline',
+        ]);
+
+        $buttons = [
+            [
+                new Button(
+                    label: '✨ Create One',
+                    action: ButtonAction::Url,
+                    value: $createUrl
+                ),
+                new Button(
+                    label: '❌ Not Now',
+                    action: ButtonAction::Url,
+                    value: $declineUrl
+                ),
+            ],
+        ];
+
+        return new Message(
+            content: $content,
+            type: MessageType::DirectMessage,
+            variables: [],
+            buttons: $buttons,
+            context: $nudge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create SuperChallenge announcement (sent to group chat)
+     */
+    public function superChallengeAnnouncement(\App\Models\Challenge $challenge): Message
+    {
+        $meta = __('messages.superchallenge.announced');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'superchallenge.announced',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'description' => $challenge->description,
+                'prize_per_person' => $challenge->prize_per_person,
+                'max_participants' => $challenge->max_participants,
+                'current_participants' => $challenge->participants()->count(),
+                'currency' => $currency,
+                'deadline_at' => $challenge->completion_deadline->format('M j, Y g:i A'),
+                'evidence_guidance' => $challenge->evidence_guidance,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        // Button to accept the challenge
+        $buttons = [
+            [
+                new Button(
+                    label: '💪 Accept Challenge',
+                    action: ButtonAction::Callback,
+                    value: "superchallenge_accept:{$challenge->id}"
+                ),
+            ],
+            [
+                new Button(
+                    label: '📊 View Details',
+                    action: ButtonAction::Callback,
+                    value: "superchallenge_view:{$challenge->id}"
+                ),
+            ],
+        ];
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: $buttons,
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create SuperChallenge acceptance notification (sent to group chat)
+     */
+    public function superChallengeAccepted(\App\Models\ChallengeParticipant $participant): Message
+    {
+        $meta = __('messages.superchallenge.accepted');
+        $challenge = $participant->challenge;
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'superchallenge.accepted',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $participant->user->name,
+                'description' => $challenge->description,
+                'prize_per_person' => $challenge->prize_per_person,
+                'current_participants' => $challenge->participants()->count(),
+                'max_participants' => $challenge->max_participants,
+                'currency' => $currency,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create SuperChallenge completion claimed notification (DM to creator)
+     */
+    public function superChallengeCompletionClaimed(\App\Models\ChallengeParticipant $participant): Message
+    {
+        $meta = __('messages.superchallenge.completion_claimed');
+        $challenge = $participant->challenge;
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'superchallenge.completion_claimed',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $participant->user->name,
+                'description' => $challenge->description,
+                'prize_per_person' => $challenge->prize_per_person,
+                'currency' => $currency,
+                'completed_at' => $participant->completed_at->format('M j, Y g:i A'),
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        // Buttons for validation
+        $approveUrl = \URL::signedRoute('superchallenge.validate', [
+            'participant' => $participant->id,
+            'vote' => 'approve',
+        ]);
+
+        $rejectUrl = \URL::signedRoute('superchallenge.validate', [
+            'participant' => $participant->id,
+            'vote' => 'reject',
+        ]);
+
+        $buttons = [
+            [
+                new Button(
+                    label: '✅ Approve',
+                    action: ButtonAction::Url,
+                    value: $approveUrl
+                ),
+                new Button(
+                    label: '❌ Reject',
+                    action: ButtonAction::Url,
+                    value: $rejectUrl
+                ),
+            ],
+        ];
+
+        return new Message(
+            content: $content,
+            type: MessageType::DirectMessage,
+            variables: [],
+            buttons: $buttons,
+            context: $participant,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create SuperChallenge validation result (sent to group chat)
+     */
+    public function superChallengeValidated(\App\Models\ChallengeParticipant $participant, bool $approved): Message
+    {
+        $messageKey = $approved ? 'superchallenge.validated_approved' : 'superchallenge.validated_rejected';
+        $meta = __("messages.{$messageKey}");
+        $challenge = $participant->challenge;
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: $messageKey,
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $participant->user->name,
+                'description' => $challenge->description,
+                'prize_per_person' => $challenge->prize_per_person,
+                'currency' => $currency,
+                'approved' => $approved,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $participant,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create SuperChallenge auto-validation notification (sent to group chat)
+     */
+    public function superChallengeAutoValidated(\App\Models\ChallengeParticipant $participant): Message
+    {
+        $meta = __('messages.superchallenge.auto_validated');
+        $challenge = $participant->challenge;
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'superchallenge.auto_validated',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $participant->user->name,
+                'description' => $challenge->description,
+                'prize_per_person' => $challenge->prize_per_person,
+                'currency' => $currency,
+                'hours_waited' => 48,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $participant,
+            currencyName: $currency
+        );
+    }
+
+    /**
      * Create RSVP update announcement message
      */
     public function rsvpUpdated(\App\Models\GroupEvent $event, \App\Models\User $user, string $response, ?string $previousResponse = null): Message

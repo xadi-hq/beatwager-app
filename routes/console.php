@@ -1,6 +1,8 @@
 <?php
 
 use App\Jobs\ApplyPointDecay;
+use App\Jobs\ProcessSuperChallengeAutoApprovals;
+use App\Jobs\ProcessSuperChallengeEligibility;
 use App\Jobs\SendEngagementPrompts;
 use App\Jobs\SendEventAttendancePrompts;
 use App\Jobs\SendSeasonMilestoneDrops;
@@ -86,5 +88,17 @@ Schedule::command('cleanup:expired-items')
 // Reconcile point balances (detect drift between cache and transaction ledger)
 Schedule::command('points:reconcile')
     ->weeklyOn(1, '03:00')  // Every Monday at 3am
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Check for groups eligible for SuperChallenge creation (daily)
+Schedule::job(new ProcessSuperChallengeEligibility())
+    ->dailyAt('10:00')  // 10am - good time for initiating challenges
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Process SuperChallenge auto-approvals (48h timeout check)
+Schedule::job(new ProcessSuperChallengeAutoApprovals())
+    ->hourly()  // Check hourly for pending completions past 48h
     ->withoutOverlapping()
     ->onOneServer();

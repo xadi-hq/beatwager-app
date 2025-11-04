@@ -21,4 +21,7 @@ enum TransactionType: string
     case Drop = 'drop';
     case DonationSent = 'donation_sent';
     case DonationReceived = 'donation_received';
+    case SuperChallengeAcceptanceBonus = 'super_challenge_acceptance_bonus';
+    case SuperChallengePrize = 'super_challenge_prize';
+    case SuperChallengeValidationBonus = 'super_challenge_validation_bonus';
 }

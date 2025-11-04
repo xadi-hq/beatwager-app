@@ -52,6 +52,14 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    /**
+     * Get user's membership pivot for a specific group
+     */
+    public function groupMembership(string $groupId)
+    {
+        return $this->groups()->where('group_id', $groupId)->first()?->pivot;
+    }
+
     public function wagers(): HasMany
     {
         return $this->hasMany(Wager::class, 'creator_id');

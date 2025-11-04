@@ -9,6 +9,7 @@ use App\Http\Controllers\GroupSettingsController;
 use App\Http\Controllers\ScheduledMessageController;
 use App\Http\Controllers\SeasonController;
 use App\Http\Controllers\ShortUrlController;
+use App\Http\Controllers\SuperChallengeController;
 use App\Http\Controllers\WagerController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -105,6 +106,29 @@ Route::middleware(['signed.auth'])->group(function () {
     Route::post('/challenges/{challenge}/cancel', [ChallengeController::class, 'cancel'])
         ->middleware(['throttle:10,1', 'group.member'])
         ->name('challenges.cancel');
+
+    // SuperChallenge routes
+    Route::get('/superchallenge/nudge/{nudge}/respond', [SuperChallengeController::class, 'respondToNudge'])
+        ->name('superchallenge.nudge.respond');
+    Route::post('/superchallenge/create', [SuperChallengeController::class, 'create'])
+        ->middleware('throttle:5,1')
+        ->name('superchallenge.create');
+    Route::get('/superchallenge/created/{challenge}', [SuperChallengeController::class, 'created'])
+        ->name('superchallenge.created');
+    Route::get('/superchallenge/{challenge}/accept', [SuperChallengeController::class, 'accept'])
+        ->middleware('group.member')
+        ->name('superchallenge.accept');
+    Route::get('/superchallenge/accepted/{challenge}', [SuperChallengeController::class, 'accepted'])
+        ->name('superchallenge.accepted');
+    Route::match(['get', 'post'], '/superchallenge/{challenge}/complete', [SuperChallengeController::class, 'complete'])
+        ->middleware('group.member')
+        ->name('superchallenge.complete');
+    Route::get('/superchallenge/completed/{challenge}', [SuperChallengeController::class, 'completed'])
+        ->name('superchallenge.completed');
+    Route::get('/superchallenge/participant/{participant}/validate', [SuperChallengeController::class, 'validate'])
+        ->name('superchallenge.validate');
+    Route::get('/superchallenge/validated/{participant}', [SuperChallengeController::class, 'validated'])
+        ->name('superchallenge.validated');
 
     // Group routes
     Route::get('/groups/{group}', [GroupController::class, 'show'])
