@@ -38,6 +38,7 @@ class GroupSettingsController extends Controller
             'llm_provider' => 'sometimes|string|in:openai,anthropic,requesty',
             'llm_api_key' => 'sometimes|string|max:500|nullable',
             'allow_nsfw' => 'sometimes|boolean',
+            'superchallenge_frequency' => 'sometimes|string|in:off,weekly,monthly,quarterly',
         ]);
 
         // Preserve existing LLM API key if field is empty (user didn't provide new key)
