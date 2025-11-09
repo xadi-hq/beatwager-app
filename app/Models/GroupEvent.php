@@ -28,12 +28,16 @@ class GroupEvent extends Model
         'status',
         'cancelled_at',
         'cancelled_by_user_id',
+        'rsvp_reminder_sent_at',
+        'attendance_prompt_sent_at',
     ];
 
     protected $casts = [
         'event_date' => 'datetime',
         'rsvp_deadline' => 'datetime',
         'cancelled_at' => 'datetime',
+        'rsvp_reminder_sent_at' => 'datetime',
+        'attendance_prompt_sent_at' => 'datetime',
         'auto_prompt_hours_after' => 'integer',
         'attendance_bonus' => 'integer',
     ];
