@@ -348,7 +348,7 @@ function formatDate(dateStr: string): string {
                                         <div class="text-sm text-neutral-700 dark:text-neutral-300">
                                             <span v-if="wager.is_creator" class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded text-xs">Creator</span>
                                             <span v-else class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded text-xs">Your answer: {{ wager.user_answer }}</span>
-                                            <span class="ml-2 text-neutral-600 dark:text-neutral-400">{{ wager.user_points_wagered }} pts wagered</span>
+                                            <span class="ml-2 text-neutral-600 dark:text-neutral-400">{{ wager.user_points_wagered }} {{ wager.group.currency }} wagered</span>
                                         </div>
                                         <a :href="wager.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
                                     </div>
@@ -378,7 +378,7 @@ function formatDate(dateStr: string): string {
                                         <div class="text-sm text-neutral-700 dark:text-neutral-300">
                                             <span v-if="wager.is_creator" class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded text-xs">Creator</span>
                                             <span v-else class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded text-xs">Your answer: {{ wager.user_answer }}</span>
-                                            <span class="ml-2 text-neutral-600 dark:text-neutral-400">{{ wager.user_points_wagered }} pts wagered</span>
+                                            <span class="ml-2 text-neutral-600 dark:text-neutral-400">{{ wager.user_points_wagered }} {{ wager.group.currency }} wagered</span>
                                         </div>
                                         <a :href="wager.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
                                     </div>
@@ -405,8 +405,9 @@ function formatDate(dateStr: string): string {
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm">
-                                            <span v-if="wager.is_winner" class="text-green-600 dark:text-green-400 font-medium">Won {{ wager.payout_amount }} pts</span>
-                                            <span v-else class="text-red-600 dark:text-red-400">Lost {{ wager.user_points_wagered }} pts</span>
+                                            <span v-if="wager.result === 'refunded'" class="text-blue-600 dark:text-blue-400 font-medium">Refunded {{ wager.user_points_wagered }} {{ wager.group.currency }}</span>
+                                            <span v-else-if="wager.is_winner" class="text-green-600 dark:text-green-400 font-medium">Won {{ wager.payout_amount }} {{ wager.group.currency }}</span>
+                                            <span v-else class="text-red-600 dark:text-red-400">Lost {{ wager.user_points_wagered }} {{ wager.group.currency }}</span>
                                             <span class="ml-2 text-neutral-600 dark:text-neutral-400">Outcome: {{ wager.outcome_value }}</span>
                                         </div>
                                         <a :href="wager.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>

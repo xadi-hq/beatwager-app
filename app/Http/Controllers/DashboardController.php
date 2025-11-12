@@ -68,7 +68,11 @@ class DashboardController extends Controller
                 'id' => $wager->id,
                 'title' => $wager->title,
                 'url' => route('wager.show', ['wager' => $wager->id]),
-                'group' => ['id' => $wager->group->id, 'name' => $wager->group->name],
+                'group' => [
+                    'id' => $wager->group->id,
+                    'name' => $wager->group->name,
+                    'currency' => $wager->group->points_currency_name ?? 'points',
+                ],
                 'type' => $wager->type,
                 'stake_amount' => $wager->stake_amount,
                 'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
@@ -128,7 +132,11 @@ class DashboardController extends Controller
                     'id' => $wager->id,
                     'title' => $wager->title,
                     'url' => route('wager.show', ['wager' => $wager->id]),
-                    'group' => ['id' => $wager->group->id, 'name' => $wager->group->name],
+                    'group' => [
+                        'id' => $wager->group->id,
+                        'name' => $wager->group->name,
+                        'currency' => $wager->group->points_currency_name ?? 'points',
+                    ],
                     'type' => $wager->type,
                     'outcome_value' => $wager->outcome_value,
                     'settled_at' => $wager->settled_at?->toIso8601String(),
@@ -137,6 +145,7 @@ class DashboardController extends Controller
                     'user_points_wagered' => $userEntry?->points_wagered,
                     'is_winner' => $userEntry?->is_winner,
                     'payout_amount' => $userEntry?->payout_amount,
+                    'result' => $userEntry?->result,
                 ];
             });
 

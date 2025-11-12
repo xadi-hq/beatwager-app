@@ -382,6 +382,7 @@ class WagerController extends Controller
                     'points_wagered' => $entry->points_wagered,
                     'is_winner' => $entry->is_winner,
                     'points_won' => $entry->points_won,
+                    'result' => $entry->result,
                 ]),
                 'options' => $wager->type === 'multiple_choice' ? $wager->options : null,
             ],
