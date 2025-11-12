@@ -59,7 +59,7 @@ class MessageService
         // Build wager-specific buttons (organized in rows)
         $buttons = $this->buildWagerButtons($wager);
 
-        // Add Track Progress and View Details buttons as final row
+        // Add Track Progress and View & Settle buttons as final row
         $buttons[] = [
             new Button(
                 label: '📊 Track Progress',
@@ -67,7 +67,7 @@ class MessageService
                 value: "track_progress:{$wager->id}"
             ),
             new Button(
-                label: '👀 View Details',
+                label: '⚙️ View & Settle',
                 action: ButtonAction::Callback,
                 value: "view:{$wager->id}"
             ),
@@ -215,6 +215,90 @@ class MessageService
             variables: [],
             buttons: $buttons,
             context: $wager
+        );
+    }
+
+    /**
+     * Create initial settlement reminder DM (1 hour after expected settlement)
+     * Simple, respectful reminder to creator
+     */
+    public function settlementReminderDM(Wager $wager, string $settleUrl): Message
+    {
+        $meta = __('messages.wager.reminder_dm');
+        $currency = $wager->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'wager.reminder_dm',
+            intent: $meta['intent'] ?? 'Gentle reminder to settle wager now that result should be known',
+            requiredFields: $meta['required_fields'] ?? ['title'],
+            data: [
+                'title' => $wager->title,
+                'currency' => $currency,
+            ],
+            group: $wager->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $wager->group);
+
+        $buttons = [
+            new Button(
+                label: '⚙️ Settle Now',
+                action: ButtonAction::Url,
+                value: $settleUrl
+            ),
+        ];
+
+        return new Message(
+            content: $content,
+            type: MessageType::Reminder,
+            variables: [],
+            buttons: $buttons,
+            context: $wager,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create escalating settlement reminder for group (24h+ after expected settlement)
+     * LLM-powered with escalating urgency based on days waiting
+     */
+    public function settlementReminderGroup(Wager $wager, int $daysWaiting): Message
+    {
+        $meta = __('messages.wager.reminder_group');
+        $currency = $wager->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'wager.reminder_group',
+            intent: $meta['intent'] ?? 'Playful but clear group reminder to settle wager, escalating urgency with days',
+            requiredFields: $meta['required_fields'] ?? ['title', 'creator', 'days_waiting', 'participant_count'],
+            data: [
+                'title' => $wager->title,
+                'creator' => $wager->creator->name ?? 'someone',
+                'days_waiting' => $daysWaiting,
+                'participant_count' => $wager->participants_count,
+                'currency' => $currency,
+                'escalation_level' => match(true) {
+                    $daysWaiting === 1 => 'gentle',      // Day 1: "Let's help them out"
+                    $daysWaiting <= 3 => 'reminder',     // Days 2-3: "Still waiting"
+                    $daysWaiting <= 7 => 'urgent',       // Days 4-7: "Getting old"
+                    default => 'critical',                // Day 8+: "Really needs attention"
+                },
+            ],
+            group: $wager->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $wager->group);
+
+        // Build settlement buttons so anyone can settle
+        $buttons = $this->buildSettlementButtons($wager);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Reminder,
+            variables: [],
+            buttons: $buttons,
+            context: $wager,
+            currencyName: $currency
         );
     }
 
@@ -471,8 +555,8 @@ class MessageService
      */
     public function decayWarning(string $groupName, string $currencyName, int $daysInactive, int $pointsToLose, int $currentBalance): Message
     {
-        $template = "⚠️ **Point Decay Warning**\n\n" .
-                   "You haven't joined any wagers in the **{group}** group for {days} days.\n\n" .
+        $template = "⚠️ <b>Point Decay Warning</b>\n\n" .
+                   "You haven't joined any wagers in the <b>{group}</b> group for {days} days.\n\n" .
                    "🔥 Join a wager in the next 2 days or you'll lose {currency}!\n" .
                    "💸 You'll lose {points} {currency} if you remain inactive.\n\n" .
                    "Current balance: {balance} {currency}";
@@ -497,11 +581,11 @@ class MessageService
      */
     public function decayApplied(string $groupName, string $currencyName, int $pointsLost, int $newBalance): Message
     {
-        $template = "📉 **{currency} Decayed**\n\n" .
-                   "You lost **{points} {currency}** in the **{group}** group due to inactivity.\n\n" .
+        $template = "📉 <b>{currency} Decayed</b>\n\n" .
+                   "You lost <b>{points} {currency}</b> in the <b>{group}</b> group due to inactivity.\n\n" .
                    "🎯 Join a wager now to stop further decay!\n" .
                    "💰 New balance: {balance} {currency}\n\n" .
-                   "_{currency} decay when you don't participate for 14+ days_";
+                   "<i>{currency} decay when you don't participate for 14+ days</i>";
 
         $variables = [
             'group' => $groupName,
@@ -1689,7 +1773,7 @@ class MessageService
         // Build wager-specific buttons (organized in rows)
         $buttons = $this->buildWagerButtons($wager);
 
-        // Add Track Progress and View Details buttons as final row
+        // Add Track Progress and View & Settle buttons as final row
         $buttons[] = [
             new Button(
                 label: '📊 Track Progress',
@@ -1697,7 +1781,7 @@ class MessageService
                 value: "track_progress:{$wager->id}"
             ),
             new Button(
-                label: '👀 View Details',
+                label: '⚙️ View & Settle',
                 action: ButtonAction::Callback,
                 value: "view:{$wager->id}"
             ),

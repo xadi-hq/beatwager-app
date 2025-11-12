@@ -39,7 +39,7 @@ class TelegramMessengerButtonTest extends TestCase
             ],
             [
                 new Button('Track Progress', ButtonAction::Callback, 'track:1'),
-                new Button('View Details', ButtonAction::Url, 'https://example.com'),
+                new Button('View & Settle', ButtonAction::Url, 'https://example.com'),
             ],
         ];
 

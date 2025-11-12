@@ -40,6 +40,29 @@ return [
             'tone_hints' => ['urgent'],
             'max_words' => 25,  // Brief but urgent
         ],
+
+        'reminder_dm' => [
+            'intent' => 'Gentle reminder to wager creator 1 hour after expected settlement',
+            'required_fields' => ['title'],
+            'fallback_template' => "👋 Hey! The result for \"{title}\" should be known by now.\n\nWhen you're ready, settle it using the button below:",
+            'tone_hints' => ['gentle', 'respectful', 'helpful'],
+            'max_words' => 30,
+        ],
+
+        'reminder_group' => [
+            'intent' => 'Playful group reminder to settle wager, escalating with days_waiting',
+            'required_fields' => ['title', 'creator', 'days_waiting', 'participant_count', 'escalation_level'],
+            'fallback_template' => "⏰ Still waiting on \"{title}\" - let's help {creator} out! Anyone know the answer?",
+            'tone_hints' => ['playful', 'collaborative', 'escalating'],
+            'personality_notes' => 'Use escalation_level to adjust tone: gentle (Day 1: "Let\'s help them out"), reminder (Days 2-3: "Still waiting"), urgent (Days 4-7: "Getting old"), critical (Day 8+: "Really needs settling")',
+            'examples' => [
+                'gentle: "Still waiting on \"{title}\" 🤔 Let\'s help {creator} out - anyone know the answer?"',
+                'reminder: "Day {days_waiting} waiting for \"{title}\" to be settled. {creator}, need help?"',
+                'urgent: "⚠️ \"{title}\" has been waiting {days_waiting} days! {participant_count} people are waiting, let\'s wrap this up!"',
+                'critical: "🚨 Seriously, \"{title}\" needs settlement - it\'s been {days_waiting} days! {creator}, what\'s the holdup?"',
+            ],
+            'max_words' => 40,
+        ],
     ],
 
     'event' => [

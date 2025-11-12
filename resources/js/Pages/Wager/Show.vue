@@ -327,12 +327,18 @@ const submitSettlement = () => {
                                 </td>
                                 <!-- Show balance flow for settled wagers -->
                                 <td v-if="wager.status === 'settled'" class="text-right py-2 font-medium">
-                                    <span class="text-neutral-600 dark:text-neutral-400">{{ entry.user_balance }}</span>
-                                    <span class="text-neutral-400 dark:text-neutral-500 mx-1">→</span>
-                                    <span class="text-neutral-900 dark:text-neutral-100 font-semibold">{{ entry.user_balance + (entry.points_won || -entry.points_wagered) }}</span>
-                                    <span class="ml-2 font-bold" :class="entry.points_won ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-                                        <span v-if="entry.points_won">(+{{ entry.points_won }})</span>
-                                        <span v-else>(-{{ entry.points_wagered }})</span>
+                                    <span v-if="entry.result === 'refunded'" class="text-neutral-600 dark:text-neutral-400">
+                                        {{ entry.user_balance }}
+                                        <span class="ml-2 font-medium text-blue-600 dark:text-blue-400">(Refunded)</span>
+                                    </span>
+                                    <span v-else>
+                                        <span class="text-neutral-600 dark:text-neutral-400">{{ entry.user_balance }}</span>
+                                        <span class="text-neutral-400 dark:text-neutral-500 mx-1">→</span>
+                                        <span class="text-neutral-900 dark:text-neutral-100 font-semibold">{{ entry.user_balance + (entry.points_won || -entry.points_wagered) }}</span>
+                                        <span class="ml-2 font-bold" :class="entry.points_won ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                            <span v-if="entry.points_won">(+{{ entry.points_won }})</span>
+                                            <span v-else>(-{{ entry.points_wagered }})</span>
+                                        </span>
                                     </span>
                                 </td>
                             </tr>
@@ -701,12 +707,18 @@ const submitSettlement = () => {
                                     </td>
                                     <!-- Show balance flow for settled wagers -->
                                     <td v-if="wager.status === 'settled'" class="text-right py-2 font-medium">
-                                        <span class="text-neutral-600 dark:text-neutral-400">{{ entry.user_balance }}</span>
-                                        <span class="text-neutral-400 dark:text-neutral-500 mx-1">→</span>
-                                        <span class="text-neutral-900 dark:text-neutral-100 font-semibold">{{ entry.user_balance + (entry.points_won || -entry.points_wagered) }}</span>
-                                        <span class="ml-2 font-bold" :class="entry.points_won ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-                                            <span v-if="entry.points_won">(+{{ entry.points_won }})</span>
-                                            <span v-else>(-{{ entry.points_wagered }})</span>
+                                        <span v-if="entry.result === 'refunded'" class="text-neutral-600 dark:text-neutral-400">
+                                            {{ entry.user_balance }}
+                                            <span class="ml-2 font-medium text-blue-600 dark:text-blue-400">(Refunded)</span>
+                                        </span>
+                                        <span v-else>
+                                            <span class="text-neutral-600 dark:text-neutral-400">{{ entry.user_balance }}</span>
+                                            <span class="text-neutral-400 dark:text-neutral-500 mx-1">→</span>
+                                            <span class="text-neutral-900 dark:text-neutral-100 font-semibold">{{ entry.user_balance + (entry.points_won || -entry.points_wagered) }}</span>
+                                            <span class="ml-2 font-bold" :class="entry.points_won ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                                <span v-if="entry.points_won">(+{{ entry.points_won }})</span>
+                                                <span v-else>(-{{ entry.points_wagered }})</span>
+                                            </span>
                                         </span>
                                     </td>
                                 </tr>

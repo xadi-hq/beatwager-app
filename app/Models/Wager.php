@@ -44,6 +44,8 @@ class Wager extends Model
         'settler_id',
         'total_points_wagered',
         'participants_count',
+        'last_settlement_reminder_sent_at',
+        'settlement_reminder_count',
     ];
 
     protected function casts(): array
