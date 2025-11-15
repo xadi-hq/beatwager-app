@@ -161,11 +161,8 @@ class DashboardController extends Controller
         $recentTransactions = $transactionsQuery
             ->with([
                 'group:id,name,points_currency_name',
-                'transactionable' => [
-                    WagerEntry::class => ['wager:id,title'],
-                    GroupEvent::class => [],
-                    Challenge::class => [],
-                ]
+                'transactionable',
+                'wager:id,title',
             ])
             ->orderBy('created_at', 'desc')
             ->limit(20)
