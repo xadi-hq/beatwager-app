@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Challenge;
+use App\Models\GroupEvent;
 use App\Models\OneTimeToken;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wager;
+use App\Models\WagerEntry;
 use App\Services\EventService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -159,9 +161,11 @@ class DashboardController extends Controller
         $recentTransactions = $transactionsQuery
             ->with([
                 'group:id,name,points_currency_name',
-                'transactionable' => function ($query) {
-                    $query->with('wager:id,title');
-                }
+                'transactionable' => [
+                    WagerEntry::class => ['wager:id,title'],
+                    GroupEvent::class => [],
+                    Challenge::class => [],
+                ]
             ])
             ->orderBy('created_at', 'desc')
             ->limit(20)
