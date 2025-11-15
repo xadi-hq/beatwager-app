@@ -161,24 +161,31 @@ class DashboardController extends Controller
         $recentTransactions = $transactionsQuery
             ->with([
                 'group:id,name,points_currency_name',
-                'transactionable',
-                'wager:id,title',
+                'transactionable.wager:id,title',
             ])
             ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get()
-            ->map(fn($tx) => [
-                'id' => $tx->id,
-                'type' => $tx->type,
-                'amount' => $tx->amount,
-                'balance_before' => $tx->balance_before,
-                'balance_after' => $tx->balance_after,
-                'description' => $tx->description,
-                'currency' => $tx->group ? ($tx->group->points_currency_name ?? 'points') : 'points',
-                'group' => $tx->group ? ['id' => $tx->group->id, 'name' => $tx->group->name] : null,
-                'wager' => $tx->wager ? ['id' => $tx->wager->id, 'title' => $tx->wager->title] : null,
-                'created_at' => $tx->created_at->toIso8601String(),
-            ]);
+            ->map(function($tx) {
+                // Get wager from WagerEntry if transactionable is a WagerEntry
+                $wager = null;
+                if ($tx->transactionable instanceof WagerEntry) {
+                    $wager = $tx->transactionable->wager;
+                }
+
+                return [
+                    'id' => $tx->id,
+                    'type' => $tx->type,
+                    'amount' => $tx->amount,
+                    'balance_before' => $tx->balance_before,
+                    'balance_after' => $tx->balance_after,
+                    'description' => $tx->description,
+                    'currency' => $tx->group ? ($tx->group->points_currency_name ?? 'points') : 'points',
+                    'group' => $tx->group ? ['id' => $tx->group->id, 'name' => $tx->group->name] : null,
+                    'wager' => $wager ? ['id' => $wager->id, 'title' => $wager->title] : null,
+                    'created_at' => $tx->created_at->toIso8601String(),
+                ];
+            });
 
         // Calculate stats
         $totalBalance = $groups->sum('balance');
