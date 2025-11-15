@@ -73,7 +73,9 @@ class Transaction extends Model
             'id', // Foreign key on wagers table
             'transactionable_id', // Local key on transactions table
             'wager_id' // Local key on wager_entries table
-        )->select('wagers.*', 'wager_entries.id as laravel_through_key');
+        )
+        ->select('wagers.*', 'wager_entries.id as laravel_through_key')
+        ->where('transactions.transactionable_type', WagerEntry::class);
     }
 
     /**

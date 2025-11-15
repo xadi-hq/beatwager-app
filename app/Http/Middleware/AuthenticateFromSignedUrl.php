@@ -105,10 +105,12 @@ class AuthenticateFromSignedUrl
             }
         }
 
-        // 3. No valid authentication method found
-        return response()->json([
-            'error' => 'Unauthorized',
-            'message' => 'Please access this page through a valid authentication link.'
+        // 3. No valid authentication method found - show friendly login instructions
+        $botName = config('telegram.bot_username', 'WagerBot');
+
+        return response()->view('auth.login-required', [
+            'botName' => $botName,
+            'requestedUrl' => $request->fullUrl(),
         ], 401);
     }
 
