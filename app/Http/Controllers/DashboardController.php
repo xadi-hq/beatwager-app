@@ -161,7 +161,11 @@ class DashboardController extends Controller
         $recentTransactions = $transactionsQuery
             ->with([
                 'group:id,name,points_currency_name',
-                'transactionable.wager:id,title',
+                'transactionable' => function ($query) {
+                    $query->morphWith([
+                        WagerEntry::class => ['wager'],
+                    ]);
+                },
             ])
             ->orderBy('created_at', 'desc')
             ->limit(20)
@@ -185,7 +189,7 @@ class DashboardController extends Controller
                     'wager' => $wager ? ['id' => $wager->id, 'title' => $wager->title] : null,
                     'created_at' => $tx->created_at->toIso8601String(),
                 ];
-            });
+            ]);
 
         // Calculate stats
         $totalBalance = $groups->sum('balance');
