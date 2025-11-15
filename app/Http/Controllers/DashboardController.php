@@ -189,7 +189,7 @@ class DashboardController extends Controller
                     'wager' => $wager ? ['id' => $wager->id, 'title' => $wager->title] : null,
                     'created_at' => $tx->created_at->toIso8601String(),
                 ];
-            ]);
+            });
 
         // Calculate stats
         $totalBalance = $groups->sum('balance');
