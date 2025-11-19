@@ -106,10 +106,20 @@ class SendBirthdayReminders implements ShouldQueue
             ->whereRaw('EXTRACT(DAY FROM birthday) = ?', [$targetDay])
             ->get();
 
-        return $users->map(function ($user) use ($targetDate) {
+        return $users->map(function ($user) {
+            // Calculate actual days until birthday
+            $nextBirthday = $user->birthday->setYear(now()->year);
+            $daysUntil = now()->diffInDays($nextBirthday, false);
+
+            // If birthday already passed this year, check next year
+            if ($daysUntil < 0) {
+                $nextBirthday = $user->birthday->setYear(now()->year + 1);
+                $daysUntil = now()->diffInDays($nextBirthday, false);
+            }
+
             return [
                 'user' => $user,
-                'days_until' => 7,
+                'days_until' => (int) $daysUntil,
             ];
         })->toArray();
     }
