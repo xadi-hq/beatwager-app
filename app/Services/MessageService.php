@@ -11,6 +11,7 @@ use App\DTOs\MessageContext;
 use App\DTOs\MessageType;
 use App\Models\Wager;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Platform-agnostic message builder (LLM-first)
