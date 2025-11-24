@@ -558,8 +558,8 @@ class MessageService
     {
         $template = "⚠️ <b>Point Decay Warning</b>\n\n" .
                    "You haven't joined any wagers in the <b>{group}</b> group for {days} days.\n\n" .
-                   "🔥 Join a wager in the next 2 days or you'll lose {currency}!\n" .
-                   "💸 You'll lose {points} {currency} if you remain inactive.\n\n" .
+                   "🔥 Join a wager in the next 2 days or you'll start bleeding out {currency}!\n" .
+                   "💸 You'll lose {points} {currency} per day if you remain inactive.\n\n" .
                    "Current balance: {balance} {currency}";
 
         $variables = [

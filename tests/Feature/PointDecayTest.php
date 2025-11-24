@@ -356,4 +356,127 @@ class PointDecayTest extends TestCase
         $this->assertEquals(1425, $this->pointService->getBalance($midUser, $group)); // 1500 - 75 (5%)
         $this->assertEquals(4900, $this->pointService->getBalance($highUser, $group)); // 5000 - 100 (max)
     }
+
+    public function test_max_per_user_per_week_blocks_duplicate_warnings(): void
+    {
+        $group = Group::factory()->create();
+        $user = User::factory()->create();
+        $this->pointService->initializeUserPoints($user, $group);
+
+        // Mock messenger service
+        $user->messengerServices()->create([
+            'platform' => 'telegram',
+            'platform_user_id' => '12345',
+            'is_primary' => true,
+        ]);
+
+        // Set last_wager_joined_at to exactly 12 days ago
+        $twelveAgo = \Carbon\Carbon::now()->startOfDay()->subDays(12);
+
+        DB::table('group_user')
+            ->where('user_id', $user->id)
+            ->where('group_id', $group->id)
+            ->update([
+                'last_wager_joined_at' => $twelveAgo->toDateTimeString(),
+                'created_at' => now()->subDays(20)->toDateTimeString(),
+            ]);
+
+        // First warning attempt - should succeed
+        $results1 = $this->pointService->applyDecayForGroup($group);
+        $this->assertEquals(1, $results1['warnings_sent']);
+
+        // Try sending again immediately (still day 12, within same week)
+        $results2 = $this->pointService->applyDecayForGroup($group);
+
+        // Should be blocked by max_per_user_per_week rule
+        $this->assertEquals(0, $results2['warnings_sent']);
+
+        // Verify only ONE SentMessage record exists
+        $messageCount = \App\Models\SentMessage::where('group_id', $group->id)
+            ->where('message_type', 'decay.warning')
+            ->where('context_type', 'user')
+            ->where('context_id', $user->id)
+            ->count();
+
+        $this->assertEquals(1, $messageCount);
+    }
+
+    public function test_joining_wager_clears_decay_warning_for_new_cycle(): void
+    {
+        $group = Group::factory()->create();
+        $user = User::factory()->create();
+        $this->pointService->initializeUserPoints($user, $group);
+
+        // Mock messenger service
+        $user->messengerServices()->create([
+            'platform' => 'telegram',
+            'platform_user_id' => '12345',
+            'is_primary' => true,
+        ]);
+
+        // Cycle 1: Set user to day 12 of inactivity
+        DB::table('group_user')
+            ->where('user_id', $user->id)
+            ->where('group_id', $group->id)
+            ->update([
+                'last_wager_joined_at' => now()->subDays(12)->toDateTimeString(),
+                'created_at' => now()->subDays(20)->toDateTimeString(),
+            ]);
+
+        // Send warning on day 12
+        $results1 = $this->pointService->applyDecayForGroup($group);
+        $this->assertEquals(1, $results1['warnings_sent']);
+
+        // Verify decay_warning_sent_at is set
+        $pivot1 = DB::table('group_user')
+            ->where('user_id', $user->id)
+            ->where('group_id', $group->id)
+            ->first();
+        $this->assertNotNull($pivot1->decay_warning_sent_at);
+
+        // User joins a wager (resets cycle)
+        $wager = Wager::factory()->create([
+            'group_id' => $group->id,
+            'status' => 'open',
+            'stake_amount' => 100,
+        ]);
+        $this->wagerService->placeWager($wager, $user, 'yes', 100);
+
+        // Verify decay_warning_sent_at was cleared
+        $pivot2 = DB::table('group_user')
+            ->where('user_id', $user->id)
+            ->where('group_id', $group->id)
+            ->first();
+        $this->assertNull($pivot2->decay_warning_sent_at);
+        $this->assertNotNull($pivot2->last_wager_joined_at);
+
+        // Cycle 2: Simulate time passing - set last wager to 12 days ago
+        DB::table('group_user')
+            ->where('user_id', $user->id)
+            ->where('group_id', $group->id)
+            ->update([
+                'last_wager_joined_at' => now()->subDays(12)->toDateTimeString(),
+            ]);
+
+        // Update the first SentMessage to be 8 days old (outside the 7-day anti-spam window)
+        // This simulates the warning from cycle 1 being sent 8 days ago
+        \App\Models\SentMessage::where('group_id', $group->id)
+            ->where('message_type', 'decay.warning')
+            ->where('context_type', 'user')
+            ->where('context_id', $user->id)
+            ->update(['sent_at' => now()->subDays(8)]);
+
+        // Should send warning again (new cycle, outside anti-spam window)
+        $results2 = $this->pointService->applyDecayForGroup($group);
+        $this->assertEquals(1, $results2['warnings_sent']);
+
+        // Verify we now have TWO SentMessage records (one per cycle)
+        $messageCount = \App\Models\SentMessage::where('group_id', $group->id)
+            ->where('message_type', 'decay.warning')
+            ->where('context_type', 'user')
+            ->where('context_id', $user->id)
+            ->count();
+
+        $this->assertEquals(2, $messageCount);
+    }
 }

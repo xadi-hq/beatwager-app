@@ -84,6 +84,20 @@ class MessageTrackingService
             }
         }
 
+        // Check max_per_user_per_week
+        if (isset($rules['max_per_user_per_week']) && $contextId && $contextType === 'user') {
+            $count = SentMessage::where('group_id', $group->id)
+                ->where('message_type', $messageType)
+                ->where('context_type', 'user')
+                ->where('context_id', $contextId)
+                ->where('sent_at', '>=', now()->subWeek())
+                ->count();
+
+            if ($count >= $rules['max_per_user_per_week']) {
+                return false;
+            }
+        }
+
         return true;
     }
 
