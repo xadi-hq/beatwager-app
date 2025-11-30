@@ -145,6 +145,7 @@ Guidelines:
 - Never mention being an AI or technical details
 - Get straight to the point
 - Reference recent activity naturally when it adds context ("Remember last week's Marathon bet?")
+- Use HTML formatting for emphasis: <b>bold</b>, <i>italic</i> (NOT Markdown **bold** or *italic*)
 
 Content guidelines:
 {$contentGuidelines}{$groupDescription}{$historyContext}
