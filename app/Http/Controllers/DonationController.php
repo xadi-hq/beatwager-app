@@ -239,7 +239,12 @@ class DonationController extends Controller
                     $prompt .= " Include their message: \"{$userMessage}\"";
                 }
 
-                $groupMessage = $this->messageService->generateWithLLM($group, $prompt);
+                $generatedContent = $this->messageService->generateWithLLM($group, $prompt);
+                $groupMessage = new \App\DTOs\Message(
+                    content: $generatedContent,
+                    type: \App\DTOs\MessageType::Announcement,
+                    currencyName: $currencyName
+                );
 
                 try {
                     $group->sendMessage($groupMessage);
@@ -287,14 +292,14 @@ class DonationController extends Controller
                     $prompt .= " Include their message: \"{$userMessage}\"";
                 }
 
-                $dmMessage = $this->messageService->generateWithLLM($group, $prompt);
+                $dmContent = $this->messageService->generateWithLLM($group, $prompt);
 
                 // Send DM to recipient via messenger
                 if ($recipient->platform_user_id) {
                     try {
                         app(\App\Messaging\MessengerAdapterInterface::class)->sendDirectMessage(
                             $recipient->platform_user_id,
-                            \App\Messaging\DTOs\OutgoingMessage::text($recipient->platform_user_id, $dmMessage->getFormattedContent())
+                            \App\Messaging\DTOs\OutgoingMessage::text($recipient->platform_user_id, $dmContent)
                         );
                     } catch (\Exception $sendError) {
                         Log::warning('Failed to send donation DM', [

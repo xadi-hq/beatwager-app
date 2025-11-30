@@ -196,11 +196,24 @@ class WagerCallbackHandler extends AbstractCallbackHandler
     {
         return match ($wager->type) {
             'binary' => in_array(strtolower($answer), ['yes', 'no']) ? strtolower($answer) : null,
-            'multiple_choice' => in_array($answer, $wager->options ?? []) ? $answer : null,
+            'multiple_choice' => $this->findMatchingOption($answer, $wager->options ?? []),
             'numeric' => is_numeric($answer) ? $answer : null,
             'date' => $this->validateDate($answer) ? $answer : null,
             default => null,
         };
+    }
+
+    /**
+     * Find matching option case-insensitively, return original option value
+     */
+    private function findMatchingOption(string $answer, array $options): ?string
+    {
+        foreach ($options as $option) {
+            if (strtolower($option) === strtolower($answer)) {
+                return $option; // Return original casing from options
+            }
+        }
+        return null;
     }
 
     /**
