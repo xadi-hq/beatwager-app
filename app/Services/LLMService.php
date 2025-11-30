@@ -188,7 +188,11 @@ PROMPT;
     private function buildUserPrompt(MessageContext $ctx): string
     {
         $meta = __('messages.' . $ctx->key);
-        $intent = $meta['intent'] ?? '';
+
+        // For ad-hoc messages, use the intent from context directly (not from translation file)
+        // Translation returns the key itself if not found, so check for that
+        $translationExists = is_array($meta) && isset($meta['intent']);
+        $intent = $translationExists ? $meta['intent'] : $ctx->intent;
         $toneHints = $meta['tone_hints'] ?? [];
         $maxWords = $meta['max_words'] ?? 30;  // Default to 30 if not specified
 
