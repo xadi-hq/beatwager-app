@@ -85,7 +85,7 @@ class DonateCommandHandler extends AbstractCommandHandler
         $messageText = "🎁 *Send Points to Friends*\n\n";
         $messageText .= "Choose your group, recipient, and amount:\n";
         $messageText .= "👉 {$shortUrl}\n\n";
-        $messageText .= "_Link expires in 1 hour\\._";
+        $messageText .= "_Link expires in 1 hour._";
 
         try {
             $this->messenger->sendMessage(

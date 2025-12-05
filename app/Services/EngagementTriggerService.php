@@ -218,11 +218,12 @@ class EngagementTriggerService
 
     /**
      * Get hours remaining to deadline
+     * Uses floor rounding to match diffForHumans() behavior for consistency
      */
     private function getHoursToDeadline(Wager $wager): ?int
     {
         $hoursLeft = now()->diffInHours($wager->betting_closes_at, false);
-        return $hoursLeft > 0 ? (int) ceil($hoursLeft) : null;
+        return $hoursLeft > 0 ? (int) $hoursLeft : null;
     }
 
     /**
