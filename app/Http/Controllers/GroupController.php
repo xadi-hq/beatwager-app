@@ -134,6 +134,7 @@ class GroupController extends Controller
                 'llm_metrics' => $llmMetrics,
                 'current_season' => $currentSeason,
                 'season_ends_at' => $group->season_ends_at?->toIso8601String(),
+                'superchallenge_frequency' => $group->superchallenge_frequency ?? 'off',
             ],
             'members' => $members,
             'stats' => $stats,
