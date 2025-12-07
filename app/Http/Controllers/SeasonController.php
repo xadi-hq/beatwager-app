@@ -84,7 +84,8 @@ class SeasonController extends Controller
             'prize_structure.*.position' => 'required|string|in:winner,runner_up,loser,most_active,most_social,most_servant,most_generous,most_improved',
         ]);
 
-        $endsAt = isset($validated['season_ends_at']) ? \Carbon\Carbon::parse($validated['season_ends_at']) : null;
+        // Convert datetime from group timezone to UTC for storage
+        $endsAt = isset($validated['season_ends_at']) ? $group->toUtc($validated['season_ends_at']) : null;
         $prizeStructure = $validated['prize_structure'] ?? null;
 
         $season = $this->seasonService->createSeason($group, $endsAt, $prizeStructure);

@@ -78,6 +78,12 @@ class EventController extends Controller
         $user = Auth::user();
         $group = Group::findOrFail($validated['group_id']);
 
+        // Convert datetime fields from group timezone to UTC for storage
+        $validated['event_date'] = $group->toUtc($validated['event_date']);
+        if (!empty($validated['rsvp_deadline'])) {
+            $validated['rsvp_deadline'] = $group->toUtc($validated['rsvp_deadline']);
+        }
+
         // Create event
         $event = $this->eventService->createEvent($group, $user, $validated);
         $event->load('creator', 'group');

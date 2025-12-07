@@ -81,6 +81,12 @@ class ChallengeController extends Controller
         $user = Auth::user();
         $group = Group::findOrFail($validated['group_id']);
 
+        // Convert datetime fields from group timezone to UTC for storage
+        $validated['completion_deadline'] = $group->toUtc($validated['completion_deadline']);
+        if (!empty($validated['acceptance_deadline'])) {
+            $validated['acceptance_deadline'] = $group->toUtc($validated['acceptance_deadline']);
+        }
+
         // Create challenge
         $challenge = $this->challengeService->createChallenge($group, $user, $validated);
         $challenge->load("creator");
