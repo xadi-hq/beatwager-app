@@ -34,6 +34,7 @@ class Group extends Model
         'notification_preferences',
         'llm_api_key',
         'llm_provider',
+        'llm_model',
         'bot_tone',
         'allow_nsfw',
         'group_type',

@@ -36,6 +36,7 @@ class GroupSettingsController extends Controller
             'notification_preferences.weekly_summaries' => 'boolean',
             'bot_tone' => 'sometimes|string|max:1000|nullable',
             'llm_provider' => 'sometimes|string|in:openai,anthropic,requesty',
+            'llm_model' => 'sometimes|string|max:100|nullable',
             'llm_api_key' => 'sometimes|string|max:500|nullable',
             'allow_nsfw' => 'sometimes|boolean',
             'superchallenge_frequency' => 'sometimes|string|in:off,weekly,monthly,quarterly',

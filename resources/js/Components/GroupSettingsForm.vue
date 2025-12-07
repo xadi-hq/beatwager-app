@@ -1,8 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import axios from 'axios';
 import Toast from '@/Components/Toast.vue';
 import StreakSettingsPanel from '@/Components/StreakSettingsPanel.vue';
+
+interface LLMModel {
+    id: string;
+    name: string;
+}
 
 const props = defineProps<{
     group: {
@@ -22,6 +28,7 @@ const props = defineProps<{
         };
         bot_tone?: string;
         llm_provider?: string;
+        llm_model?: string;
         allow_nsfw?: boolean;
         has_llm_configured: boolean;
         llm_metrics?: {
@@ -58,9 +65,45 @@ const notificationForm = useForm({
 const botForm = useForm({
     group_type: props.group.group_type || 'friends',
     bot_tone: props.group.bot_tone || '',
-    llm_provider: props.group.llm_provider || 'openai',
+    llm_provider: props.group.llm_provider || 'anthropic',
+    llm_model: props.group.llm_model || '',
     llm_api_key: '',
     allow_nsfw: props.group.allow_nsfw || false,
+});
+
+// Available LLM models
+const availableModels = ref<LLMModel[]>([]);
+const loadingModels = ref(false);
+
+// Load available models for the selected provider
+async function loadModels(provider: string) {
+    loadingModels.value = true;
+    try {
+        const response = await axios.get(`/groups/${props.group.id}/llm-models`, {
+            params: { provider }
+        });
+        availableModels.value = response.data.models;
+
+        // If current model isn't in the list, clear it
+        if (botForm.llm_model && !availableModels.value.find(m => m.id === botForm.llm_model)) {
+            botForm.llm_model = '';
+        }
+    } catch (error) {
+        console.error('Failed to load models:', error);
+        availableModels.value = [];
+    } finally {
+        loadingModels.value = false;
+    }
+}
+
+// Watch for provider changes and reload models
+watch(() => botForm.llm_provider, (newProvider) => {
+    loadModels(newProvider);
+});
+
+// Load models on mount
+onMounted(() => {
+    loadModels(botForm.llm_provider);
 });
 
 // Toast notification state
@@ -436,12 +479,31 @@ function submitBot() {
                                 v-model="botForm.llm_provider"
                                 class="w-full px-3 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
-                                <option value="openai">OpenAI (gpt-4o-mini)</option>
-                                <option value="anthropic">Anthropic (claude-3-haiku)</option>
-                                <option value="requesty">Requesty.ai (openai/gpt-4o-mini)</option>
+                                <option value="anthropic">Anthropic (Claude)</option>
+                                <option value="openai">OpenAI (GPT)</option>
+                                <option value="requesty">Requesty.ai (Multi-provider)</option>
                             </select>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                                Select your LLM provider and model
+                                Select your LLM provider
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Model
+                            </label>
+                            <select
+                                v-model="botForm.llm_model"
+                                :disabled="loadingModels"
+                                class="w-full px-3 py-2 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+                            >
+                                <option value="">{{ loadingModels ? 'Loading models...' : 'Use default model' }}</option>
+                                <option v-for="model in availableModels" :key="model.id" :value="model.id">
+                                    {{ model.name }}
+                                </option>
+                            </select>
+                            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                                Choose a specific model or use the provider's default
                             </p>
                         </div>
 

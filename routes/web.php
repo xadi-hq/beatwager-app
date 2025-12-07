@@ -6,6 +6,7 @@ use App\Http\Controllers\DonationController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupSettingsController;
+use App\Http\Controllers\LLMModelsController;
 use App\Http\Controllers\ScheduledMessageController;
 use App\Http\Controllers\SeasonController;
 use App\Http\Controllers\ShortUrlController;
@@ -137,6 +138,13 @@ Route::middleware(['signed.auth'])->group(function () {
     Route::post('/groups/{group}/settings', [GroupSettingsController::class, 'update'])
         ->middleware(['throttle:5,1', 'group.member'])
         ->name('groups.settings.update');
+
+    // LLM models routes
+    Route::get('/groups/{group}/llm-models', [LLMModelsController::class, 'index'])
+        ->middleware('group.member')
+        ->name('groups.llm-models');
+    Route::get('/llm-models/defaults', [LLMModelsController::class, 'defaults'])
+        ->name('llm-models.defaults');
 
     // Season management routes
     Route::get('/groups/{group}/seasons', [SeasonController::class, 'index'])->name('seasons.index');

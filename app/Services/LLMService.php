@@ -36,6 +36,7 @@ class LLMService
         $systemPrompt = $this->buildSystemPrompt($group, $ctx);
         $userPrompt = $this->buildUserPrompt($ctx);
         $provider = $group->llm_provider ?? 'anthropic';
+        $model = $group->llm_model ?: null;
 
         try {
             // Call LLM
@@ -43,7 +44,8 @@ class LLMService
                 $provider,
                 $group->llm_api_key,
                 $systemPrompt,
-                $userPrompt
+                $userPrompt,
+                $model
             );
 
             // Validate and cache
@@ -264,17 +266,21 @@ PROMPT;
         string $provider,
         string $apiKey,
         string $systemPrompt,
-        string $userPrompt
+        string $userPrompt,
+        ?string $model = null
     ): string {
         return match ($provider) {
-            'anthropic' => $this->callAnthropic($apiKey, $systemPrompt, $userPrompt),
-            'openai', 'requesty' => $this->callOpenAI($apiKey, $systemPrompt, $userPrompt, $provider),
+            'anthropic' => $this->callAnthropic($apiKey, $systemPrompt, $userPrompt, $model),
+            'openai', 'requesty' => $this->callOpenAI($apiKey, $systemPrompt, $userPrompt, $provider, $model),
             default => throw new \InvalidArgumentException("Unknown provider: {$provider}")
         };
     }
 
-    private function callAnthropic(string $apiKey, string $system, string $user): string
+    private function callAnthropic(string $apiKey, string $system, string $user, ?string $model = null): string
     {
+        // Use configured model or fall back to default
+        $model = $model ?: 'claude-3-haiku-20240307';
+
         $response = Http::withHeaders([
             'x-api-key' => $apiKey,
             'anthropic-version' => '2023-06-01',
@@ -282,7 +288,7 @@ PROMPT;
         ])
             ->timeout(10)
             ->post('https://api.anthropic.com/v1/messages', [
-                'model' => 'claude-3-haiku-20240307',
+                'model' => $model,
                 'max_tokens' => 300,
                 'system' => $system,
                 'messages' => [
@@ -297,19 +303,21 @@ PROMPT;
         return $response->json()['content'][0]['text'];
     }
 
-    private function callOpenAI(string $apiKey, string $system, string $user, string $provider = 'openai'): string
+    private function callOpenAI(string $apiKey, string $system, string $user, string $provider = 'openai', ?string $model = null): string
     {
-        // Determine the API endpoint and model format based on provider
-        [$endpoint, $model] = match ($provider) {
-            'requesty' => [
-                'https://router.requesty.ai/v1/chat/completions',
-                'openai/gpt-4o-mini'  // Requesty expects provider/model format
-            ],
-            default => [
-                'https://api.openai.com/v1/chat/completions',
-                'gpt-4o-mini'
-            ],
+        // Determine the API endpoint based on provider
+        $endpoint = match ($provider) {
+            'requesty' => 'https://router.requesty.ai/v1/chat/completions',
+            default => 'https://api.openai.com/v1/chat/completions',
         };
+
+        // Use configured model or fall back to defaults
+        if (!$model) {
+            $model = match ($provider) {
+                'requesty' => 'openai/gpt-4o-mini',
+                default => 'gpt-4o-mini',
+            };
+        }
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $apiKey,
