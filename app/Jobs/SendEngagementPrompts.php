@@ -37,9 +37,11 @@ class SendEngagementPrompts implements ShouldQueue
         Log::info('SendEngagementPrompts: Starting job');
 
         // Find wagers with low engagement (0-1 participants after 24 hours)
+        // Only include wagers where betting deadline hasn't passed yet
         $staleWagers = Wager::where('status', 'open')
             ->where('created_at', '<=', now()->subHours(self::MIN_HOURS_OPEN))
             ->where('participants_count', '<=', self::MAX_PARTICIPANTS)
+            ->where('betting_closes_at', '>', now())
             ->with(['group', 'creator'])
             ->get();
 
