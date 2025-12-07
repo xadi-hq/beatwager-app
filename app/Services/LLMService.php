@@ -278,8 +278,9 @@ PROMPT;
 
     private function callAnthropic(string $apiKey, string $system, string $user, ?string $model = null): string
     {
-        // Use configured model or fall back to default
-        $model = $model ?: 'claude-3-haiku-20240307';
+        // Default model - use a stable alias that Anthropic maintains
+        $defaultModel = 'claude-3-5-haiku-latest';
+        $model = $model ?: $defaultModel;
 
         $response = Http::withHeaders([
             'x-api-key' => $apiKey,
@@ -295,6 +296,18 @@ PROMPT;
                     ['role' => 'user', 'content' => $user]
                 ],
             ]);
+
+        // If model not found (404) or invalid, retry with default model
+        if (!$response->successful() && $model !== $defaultModel) {
+            $errorBody = $response->body();
+            if (str_contains($errorBody, 'model') || $response->status() === 404) {
+                Log::warning("LLM model '{$model}' failed, retrying with default", [
+                    'error' => $errorBody,
+                ]);
+
+                return $this->callAnthropic($apiKey, $system, $user, $defaultModel);
+            }
+        }
 
         if (!$response->successful()) {
             throw new \RuntimeException('Anthropic API error: ' . $response->body());

@@ -35,4 +35,26 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | LLM Provider API Keys (System-level)
+    |--------------------------------------------------------------------------
+    |
+    | These system-level API keys are used for free operations like listing
+    | available models. Groups use their own API keys for actual generation.
+    |
+    */
+
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+    ],
+
+    'requesty' => [
+        'api_key' => env('REQUESTY_API_KEY'),
+    ],
+
 ];
