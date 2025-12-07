@@ -211,6 +211,19 @@ return [
             ],
             'max_words' => 40,
         ],
+        'betting_closed' => [
+            'intent' => 'Reveal all bets now that betting has closed, build excitement for the outcome',
+            'required_fields' => ['wager_title', 'participant_count', 'stake_amount', 'currency', 'bets_summary'],
+            'optional_fields' => ['expected_settlement_at'],
+            'fallback_template' => "🔔 Betting is now CLOSED for {wager_title}!\n\n{participant_count} brave souls wagered {stake_amount} {currency} each.\n\n📊 The bets are in:\n{bets_summary}\n\nNow we wait for the results! 🎯",
+            'tone_hints' => ['dramatic', 'suspenseful', 'exciting', 'reveal'],
+            'personality_notes' => 'Build anticipation for the outcome, comment on interesting bet distributions or surprising picks',
+            'examples' => [
+                "🔒 Betting CLOSED on \"Ajax - Groningen\"!\n\n8 of you put your money where your mouth is:\n\n🏠 Ajax: Sarah, Mike, Tom\n🚌 Groningen: Dave, Lisa\n🤝 Draw: Alex, Chris, Emma\n\nThis is going to be SPICY! 🌶️",
+                "⏰ Time's up! \"Will it rain tomorrow?\" is locked in!\n\n☀️ Team No Rain: 4 believers\n🌧️ Team Umbrella: 3 pessimists\n\nMother Nature has the final say!",
+            ],
+            'max_words' => 80,
+        ],
     ],
 
     'season' => [

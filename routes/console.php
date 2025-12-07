@@ -3,6 +3,7 @@
 use App\Jobs\ApplyPointDecay;
 use App\Jobs\ProcessSuperChallengeAutoApprovals;
 use App\Jobs\ProcessSuperChallengeEligibility;
+use App\Jobs\SendBettingClosedNotifications;
 use App\Jobs\SendEngagementPrompts;
 use App\Jobs\SendEventAttendancePrompts;
 use App\Jobs\SendSeasonMilestoneDrops;
@@ -38,6 +39,12 @@ Schedule::job(new SendEventAttendancePrompts())
 // Send engagement prompts for stale wagers (hourly)
 Schedule::job(new SendEngagementPrompts())
     ->hourly()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Send betting closed notifications with bet reveals (every 5 minutes)
+Schedule::job(new SendBettingClosedNotifications())
+    ->everyFiveMinutes()
     ->withoutOverlapping()
     ->onOneServer();
 

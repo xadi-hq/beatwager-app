@@ -1797,4 +1797,109 @@ class MessageService
             currencyName: $currency
         );
     }
+
+    /**
+     * Generate a betting closed reveal message showing all bets
+     *
+     * @param Wager $wager
+     * @param \Illuminate\Support\Collection<WagerEntry> $entries
+     */
+    public function bettingClosedReveal(Wager $wager, $entries): Message
+    {
+        $meta = __('messages.engagement.betting_closed');
+        $currency = $wager->group->points_currency_name ?? 'points';
+
+        // Build bets summary based on wager type
+        $betsSummary = $this->formatBetsSummary($wager, $entries);
+
+        // Convert expected settlement to group timezone if available
+        $expectedSettlement = $wager->expected_settlement_at
+            ? $wager->group->toGroupTimezone($wager->expected_settlement_at)->format('M j, Y')
+            : null;
+
+        $ctx = new MessageContext(
+            key: 'engagement.betting_closed',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'wager_title' => $wager->title,
+                'participant_count' => $wager->participants_count,
+                'stake_amount' => $wager->stake_amount,
+                'currency' => $currency,
+                'bets_summary' => $betsSummary,
+                'expected_settlement_at' => $expectedSettlement,
+                'total_pool' => $wager->stake_amount * $wager->participants_count,
+            ],
+            group: $wager->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $wager->group);
+
+        // Add View & Settle button
+        $buttons = [
+            [
+                new Button(
+                    label: '⚙️ View & Settle',
+                    action: ButtonAction::Callback,
+                    value: "view:{$wager->id}"
+                ),
+            ],
+        ];
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: $buttons,
+            context: $wager,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Format bets summary for display based on wager type
+     */
+    private function formatBetsSummary(Wager $wager, $entries): string
+    {
+        if ($entries->isEmpty()) {
+            return 'No bets placed';
+        }
+
+        // Group entries by answer
+        $byAnswer = $entries->groupBy('answer_value');
+
+        $lines = [];
+
+        if ($wager->type === 'binary') {
+            foreach ($byAnswer as $answer => $group) {
+                $emoji = $answer === 'yes' ? '✅' : '❌';
+                $label = $answer === 'yes' ? 'Yes' : 'No';
+                $names = $group->pluck('user.name')->filter()->join(', ');
+                $lines[] = "{$emoji} {$label}: {$names}";
+            }
+        } elseif ($wager->type === 'multiple_choice') {
+            foreach ($byAnswer as $answer => $group) {
+                $names = $group->pluck('user.name')->filter()->join(', ');
+                $lines[] = "• {$answer}: {$names}";
+            }
+        } elseif ($wager->type === 'numeric') {
+            foreach ($entries as $entry) {
+                $name = $entry->user->name ?? 'Unknown';
+                $lines[] = "• {$name}: {$entry->answer_value}";
+            }
+        } elseif ($wager->type === 'date') {
+            foreach ($entries as $entry) {
+                $name = $entry->user->name ?? 'Unknown';
+                $formattedDate = \Carbon\Carbon::parse($entry->answer_value)->format('M j, Y');
+                $lines[] = "• {$name}: {$formattedDate}";
+            }
+        } else {
+            foreach ($entries as $entry) {
+                $name = $entry->user->name ?? 'Unknown';
+                $lines[] = "• {$name}: {$entry->answer_value}";
+            }
+        }
+
+        return implode("\n", $lines);
+    }
 }

@@ -27,7 +27,9 @@ class MessageTrackingService
         'decay.warning' => [
             'max_per_user_per_week' => 1,        // Only 1 decay warning per user per week
         ],
-        // Add more as needed
+        'betting.closed' => [
+            'max_per_context_per_day' => 1,      // Only 1 betting closed notification per wager (ever, effectively)
+        ],
     ];
 
     /**

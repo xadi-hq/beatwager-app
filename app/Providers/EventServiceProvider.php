@@ -18,6 +18,7 @@ use App\Events\SuperChallengeCompletionClaimed;
 use App\Events\SuperChallengeCompletionValidated;
 use App\Events\SuperChallengeCreated;
 use App\Events\SuperChallengeNudgeSent;
+use App\Events\WagerBettingClosed;
 use App\Events\WagerCreated;
 use App\Events\WagerJoined;
 use App\Events\WagerSettled;
@@ -37,6 +38,7 @@ use App\Listeners\SendSuperChallengeAutoValidatedNotification;
 use App\Listeners\SendSuperChallengeCompletionClaimedNotification;
 use App\Listeners\SendSuperChallengeNudge;
 use App\Listeners\SendSuperChallengeValidatedNotification;
+use App\Listeners\SendBettingClosedAnnouncement;
 use App\Listeners\SendWagerAnnouncement;
 use App\Listeners\SendWagerJoinAnnouncement;
 use App\Listeners\SendWagerSettlement;
@@ -88,6 +90,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         WagerSettled::class => [
             SendWagerSettlement::class,
+        ],
+        WagerBettingClosed::class => [
+            SendBettingClosedAnnouncement::class,
         ],
         SuperChallengeNudgeSent::class => [
             SendSuperChallengeNudge::class,
