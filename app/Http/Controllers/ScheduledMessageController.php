@@ -254,10 +254,11 @@ class ScheduledMessageController extends Controller
             ->get();
 
         // Get all birthday scheduled messages for this group
+        // Use normalized (lowercase, trimmed) title as key for robust matching
         $scheduledBirthdays = ScheduledMessage::where('group_id', $group->id)
             ->where('message_type', 'birthday')
             ->get()
-            ->keyBy('title'); // Key by member name for easy lookup
+            ->keyBy(fn($msg) => mb_strtolower(trim($msg->title)));
 
         $scheduled = [];
         $notScheduled = [];
@@ -270,12 +271,15 @@ class ScheduledMessageController extends Controller
                 'birthday' => $member->birthday?->toDateString(),
             ];
 
+            // Normalize member name for lookup
+            $normalizedName = mb_strtolower(trim($member->name));
+
             if (!$member->birthday) {
                 // Member has no birthday set
                 $missingBirthday[] = $memberData;
-            } elseif (isset($scheduledBirthdays[$member->name])) {
+            } elseif (isset($scheduledBirthdays[$normalizedName])) {
                 // Birthday is already scheduled
-                $scheduledMessage = $scheduledBirthdays[$member->name];
+                $scheduledMessage = $scheduledBirthdays[$normalizedName];
                 $scheduled[] = array_merge($memberData, [
                     'scheduled_message_id' => $scheduledMessage->id,
                     'is_active' => $scheduledMessage->is_active,
