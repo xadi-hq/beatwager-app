@@ -144,46 +144,56 @@ const showToast = ref(false);
 const toastType = ref<'success' | 'error'>('success');
 const toastMessage = ref('');
 
+// Format date to local datetime-local input format
+const formatLocalDateTime = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 // Set default completion deadline to 3 days from now
 const setDefaultCompletionDeadline = () => {
     const date = new Date();
-    date.setDate(date.getDate() + 3);
-    form.completion_deadline = date.toISOString().slice(0, 16);
+    date.setTime(date.getTime() + 3 * 24 * 60 * 60 * 1000);
+    form.completion_deadline = formatLocalDateTime(date);
 };
 
 // Set completion deadline to 7 days from now (for elimination)
 const setWeekDeadline = () => {
     const date = new Date();
-    date.setDate(date.getDate() + 7);
-    form.completion_deadline = date.toISOString().slice(0, 16);
+    date.setTime(date.getTime() + 7 * 24 * 60 * 60 * 1000);
+    form.completion_deadline = formatLocalDateTime(date);
 };
 
 // Set completion deadline to 30 days from now (for elimination)
 const setMonthDeadline = () => {
     const date = new Date();
-    date.setDate(date.getDate() + 30);
-    form.completion_deadline = date.toISOString().slice(0, 16);
+    date.setTime(date.getTime() + 30 * 24 * 60 * 60 * 1000);
+    form.completion_deadline = formatLocalDateTime(date);
 };
 
 // Set default acceptance deadline to 1 day from now
 const setDefaultAcceptanceDeadline = () => {
     const date = new Date();
-    date.setDate(date.getDate() + 1);
-    form.acceptance_deadline = date.toISOString().slice(0, 16);
+    date.setTime(date.getTime() + 24 * 60 * 60 * 1000);
+    form.acceptance_deadline = formatLocalDateTime(date);
 };
 
 // Set tap-in deadline to 24 hours from now
 const setTapInDeadline24h = () => {
     const date = new Date();
-    date.setDate(date.getDate() + 1);
-    form.tap_in_deadline = date.toISOString().slice(0, 16);
+    date.setTime(date.getTime() + 24 * 60 * 60 * 1000);
+    form.tap_in_deadline = formatLocalDateTime(date);
 };
 
 // Set tap-in deadline to 48 hours from now
 const setTapInDeadline48h = () => {
     const date = new Date();
-    date.setDate(date.getDate() + 2);
-    form.tap_in_deadline = date.toISOString().slice(0, 16);
+    date.setTime(date.getTime() + 48 * 60 * 60 * 1000);
+    form.tap_in_deadline = formatLocalDateTime(date);
 };
 
 const clearAcceptanceDeadline = () => {
@@ -244,7 +254,7 @@ const eliminationExamples = [
     { trigger: "Eating fast food", description: "Health-focused survival" },
     { trigger: "Being late to a meeting", description: "Punctuality challenge" },
     { trigger: "Skip a workout", description: "Gym commitment" },
-    { trigger: "Get lucky", description: "Parental endurance" },
+    { trigger: "Getting lucky", description: "Parental endurance" },
 ];
 </script>
 
@@ -321,7 +331,7 @@ const eliminationExamples = [
                                         🤝 1-on-1 Challenge
                                     </div>
                                     <div class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                                        One person accepts and completes a task for points
+                                        A direct task exchange for points
                                     </div>
                                 </div>
                             </label>
@@ -341,7 +351,7 @@ const eliminationExamples = [
                                         🎯 Elimination Challenge
                                     </div>
                                     <div class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                                        Survival game - avoid the trigger or get eliminated!
+                                        Avoid the trigger or get eliminated!
                                     </div>
                                 </div>
                             </label>
@@ -609,7 +619,7 @@ const eliminationExamples = [
                                             🏆 Last One Standing
                                         </div>
                                         <div class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                                            Continues until only one survivor remains
+                                            Continues until one survivor remains
                                         </div>
                                     </div>
                                 </label>
@@ -748,7 +758,7 @@ const eliminationExamples = [
                                 class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                             />
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                Suggested: {{ suggestedPot.toLocaleString() }} {{ currencyName }} (minimum 100)
+                                Suggested: {{ suggestedPot.toLocaleString() }} {{ currencyName }} (10% of your group's total pool)
                             </p>
                             <FormError :error="form.errors.point_pot" />
                         </div>
@@ -759,10 +769,9 @@ const eliminationExamples = [
                             <ul class="text-sm text-orange-800 dark:text-orange-200 space-y-1">
                                 <li><strong>Current Pot:</strong> {{ (form.point_pot || 0).toLocaleString() }} {{ currencyName }}</li>
                                 <li><strong>Est. Buy-in:</strong> ~{{ calculatedBuyIn.toLocaleString() }} {{ currencyName }} per participant</li>
-                                <li><strong>System match:</strong> The house covers the difference!</li>
                             </ul>
                             <p class="text-xs text-orange-700 dark:text-orange-300 mt-2">
-                                Buy-in is 50% of (pot ÷ group size) - adjusted based on your pot value
+                                Buy-in is set so players fund half the pot, the house covers the rest.
                             </p>
                         </div>
 

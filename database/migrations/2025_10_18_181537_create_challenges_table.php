@@ -24,7 +24,7 @@ return new class extends Migration
             
             // Timing
             $table->timestamp('acceptance_deadline')->nullable();
-            $table->timestamp('completion_deadline');
+            $table->timestamp('completion_deadline')->nullable(); // Nullable for last_man_standing elimination challenges
             
             // Status tracking
             $table->enum('status', ['open', 'accepted', 'completed', 'failed', 'cancelled'])->default('open');

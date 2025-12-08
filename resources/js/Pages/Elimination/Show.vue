@@ -253,8 +253,8 @@ const cancelChallenge = () => {
                 </div>
             </div>
 
-            <!-- User Status & Actions -->
-            <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6 mb-6">
+            <!-- User Status & Actions (hidden for cancelled challenges) -->
+            <div v-if="challenge.status !== 'cancelled'" class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6 mb-6">
                 <h2 class="text-lg font-bold text-neutral-900 dark:text-white mb-4">Your Status</h2>
 
                 <div v-if="userParticipant" class="mb-4">

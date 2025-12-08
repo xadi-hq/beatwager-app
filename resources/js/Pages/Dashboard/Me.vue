@@ -419,37 +419,87 @@ function formatDate(dateStr: string): string {
 
                     <!-- Challenges Tab -->
                     <div v-if="activeTab === 'challenges'">
-                        <!-- Open Challenges -->
+                        <!-- Active Elimination Challenges (user is participating and not eliminated) -->
+                        <div v-if="filteredChallenges.filter(c => c.type === 'elimination_challenge' && c.status === 'active').length > 0" class="mb-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
+                                🎯 Active Eliminations ({{ filteredChallenges.filter(c => c.type === 'elimination_challenge' && c.status === 'active').length }})
+                            </h3>
+                            <div class="space-y-3">
+                                <div v-for="challenge in filteredChallenges.filter(c => c.type === 'elimination_challenge' && c.status === 'active')" :key="challenge.id" class="bg-orange-50 dark:bg-orange-900/20 rounded p-4 border border-orange-200 dark:border-orange-800">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <a :href="challenge.url" class="font-medium text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 hover:underline">{{ challenge.description }}</a>
+                                            <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ challenge.group.name }}</div>
+                                            <div class="text-xs text-orange-600 dark:text-orange-400 mt-1">⚡ {{ challenge.elimination_trigger }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-medium text-orange-600 dark:text-orange-400">{{ challenge.amount?.toLocaleString() }} pts pot</div>
+                                            <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ challenge.survivors_count }}/{{ challenge.participants_count }} surviving</div>
+                                            <div v-if="challenge.completion_deadline" class="text-xs text-neutral-500 dark:text-neutral-400">Ends: {{ formatDate(challenge.completion_deadline) }}</div>
+                                            <div v-else class="text-xs text-neutral-500 dark:text-neutral-400">Last one standing</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
+                                            <span class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded text-xs font-medium">🎯 Elimination</span>
+                                            <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-0.5 rounded text-xs">✓ You're in!</span>
+                                            <span v-if="challenge.is_creator" class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded text-xs">Creator</span>
+                                        </div>
+                                        <a :href="challenge.url" class="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 text-sm">View →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Open Challenges (including elimination challenges available to tap in) -->
                         <div class="mb-8">
                             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Open ({{ filteredChallenges.filter(c => c.status === 'open').length }})</h3>
                             <div v-if="filteredChallenges.filter(c => c.status === 'open').length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                 No open challenges
                             </div>
                             <div v-else class="space-y-3">
-                                <div v-for="challenge in filteredChallenges.filter(c => c.status === 'open')" :key="challenge.id" class="bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
+                                <div v-for="challenge in filteredChallenges.filter(c => c.status === 'open')" :key="challenge.id"
+                                     :class="challenge.type === 'elimination_challenge'
+                                         ? 'bg-orange-50 dark:bg-orange-900/20 rounded p-4 border border-orange-200 dark:border-orange-800'
+                                         : 'bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600'">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1">
-                                            <a :href="challenge.url" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">{{ challenge.description }}</a>
+                                            <a :href="challenge.url" :class="challenge.type === 'elimination_challenge'
+                                                    ? 'font-medium text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 hover:underline'
+                                                    : 'font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline'">
+                                                {{ challenge.description }}
+                                            </a>
                                             <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ challenge.group.name }}</div>
+                                            <div v-if="challenge.type === 'elimination_challenge'" class="text-xs text-orange-600 dark:text-orange-400 mt-1">⚡ {{ challenge.elimination_trigger }}</div>
                                         </div>
                                         <div class="text-right">
-                                            <div class="text-sm font-medium text-green-600 dark:text-green-400">{{ Math.abs(challenge.amount) }} pts</div>
-                                            <div v-if="challenge.acceptance_deadline" class="text-xs text-neutral-500 dark:text-neutral-400">Accept by: {{ formatDate(challenge.acceptance_deadline) }}</div>
+                                            <div v-if="challenge.type === 'elimination_challenge'" class="text-sm font-medium text-orange-600 dark:text-orange-400">{{ challenge.amount?.toLocaleString() }} pts pot</div>
+                                            <div v-else class="text-sm font-medium text-green-600 dark:text-green-400">{{ Math.abs(challenge.amount) }} pts</div>
+                                            <div v-if="challenge.type === 'elimination_challenge' && challenge.buy_in_amount" class="text-xs text-neutral-500 dark:text-neutral-400">Buy-in: {{ challenge.buy_in_amount }} pts</div>
+                                            <div v-if="challenge.type === 'elimination_challenge' && challenge.tap_in_deadline" class="text-xs text-neutral-500 dark:text-neutral-400">Tap in by: {{ formatDate(challenge.tap_in_deadline) }}</div>
+                                            <div v-else-if="challenge.acceptance_deadline" class="text-xs text-neutral-500 dark:text-neutral-400">Accept by: {{ formatDate(challenge.acceptance_deadline) }}</div>
                                         </div>
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
-                                            <span v-if="challenge.type === 'super_challenge'" class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded text-xs font-medium">⭐ SuperChallenge</span>
+                                            <span v-if="challenge.type === 'elimination_challenge'" class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded text-xs font-medium">🎯 Elimination</span>
+                                            <span v-else-if="challenge.type === 'super_challenge'" class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded text-xs font-medium">⭐ SuperChallenge</span>
                                             <span v-if="challenge.is_creator" class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded text-xs">Creator</span>
+                                            <span v-else-if="challenge.type === 'elimination_challenge'" class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded text-xs">Tap in to join!</span>
                                             <span v-else class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded text-xs">Available to accept</span>
+                                            <span v-if="challenge.type === 'elimination_challenge' && challenge.participants_count" class="text-neutral-600 dark:text-neutral-400">{{ challenge.participants_count }} joined</span>
                                         </div>
-                                        <a :href="challenge.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
+                                        <a :href="challenge.url" :class="challenge.type === 'elimination_challenge'
+                                                ? 'text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 text-sm'
+                                                : 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm'">
+                                            View →
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Accepted Challenges -->
+                        <!-- Accepted Challenges (non-elimination) -->
                         <div class="mb-8">
                             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Accepted ({{ filteredChallenges.filter(c => c.status === 'accepted').length }})</h3>
                             <div v-if="filteredChallenges.filter(c => c.status === 'accepted').length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
@@ -463,7 +513,7 @@ function formatDate(dateStr: string): string {
                                             <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ challenge.group.name }}</div>
                                         </div>
                                         <div class="text-right">
-                                            <div class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ formatTimeRemaining(challenge.completion_deadline) }}</div>
+                                            <div v-if="challenge.completion_deadline" class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ formatTimeRemaining(challenge.completion_deadline) }}</div>
                                             <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ Math.abs(challenge.amount) }} pts reward</div>
                                         </div>
                                     </div>
@@ -475,6 +525,34 @@ function formatDate(dateStr: string): string {
                                             <span v-if="challenge.acceptor" class="ml-2 text-neutral-600 dark:text-neutral-400">Acceptor: {{ challenge.acceptor.name }}</span>
                                         </div>
                                         <a :href="challenge.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Eliminated (user was eliminated from elimination challenges) -->
+                        <div v-if="filteredChallenges.filter(c => c.type === 'elimination_challenge' && c.status === 'eliminated').length > 0" class="mb-8">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
+                                💀 Eliminated ({{ filteredChallenges.filter(c => c.type === 'elimination_challenge' && c.status === 'eliminated').length }})
+                            </h3>
+                            <div class="space-y-3">
+                                <div v-for="challenge in filteredChallenges.filter(c => c.type === 'elimination_challenge' && c.status === 'eliminated')" :key="challenge.id" class="bg-red-50 dark:bg-red-900/20 rounded p-4 border border-red-200 dark:border-red-800 opacity-75">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <a :href="challenge.url" class="font-medium text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:underline">{{ challenge.description }}</a>
+                                            <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ challenge.group.name }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-medium text-red-600 dark:text-red-400">{{ challenge.amount?.toLocaleString() }} pts pot</div>
+                                            <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ challenge.survivors_count }} still surviving</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
+                                            <span class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-0.5 rounded text-xs font-medium">💀 Eliminated</span>
+                                            <span class="text-red-600 dark:text-red-400">-{{ challenge.buy_in_amount }} pts</span>
+                                        </div>
+                                        <a :href="challenge.url" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm">View →</a>
                                     </div>
                                 </div>
                             </div>
@@ -499,7 +577,8 @@ function formatDate(dateStr: string): string {
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm flex items-center gap-2">
-                                            <span v-if="challenge.type === 'super_challenge'" class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded text-xs font-medium">⭐ SuperChallenge</span>
+                                            <span v-if="challenge.type === 'elimination_challenge'" class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded text-xs font-medium">🎯 Elimination</span>
+                                            <span v-else-if="challenge.type === 'super_challenge'" class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded text-xs font-medium">⭐ SuperChallenge</span>
                                             <span v-if="challenge.status === 'completed'" class="text-green-600 dark:text-green-400 font-medium">✅ Completed (+{{ Math.abs(challenge.amount) }} pts)</span>
                                             <span v-else class="text-red-600 dark:text-red-400">❌ Failed</span>
                                             <span v-if="challenge.acceptor" class="ml-2 text-neutral-600 dark:text-neutral-400">by {{ challenge.acceptor.name }}</span>

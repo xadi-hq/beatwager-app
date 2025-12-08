@@ -261,7 +261,7 @@ class DashboardController extends Controller
                 // 1-on-1 challenges: created by or accepted by user
                 $q->where('creator_id', $user->id)
                   ->orWhere('acceptor_id', $user->id)
-                  // SuperChallenges: user is a participant
+                  // SuperChallenges or Elimination: user is a participant
                   ->orWhereHas('participants', function($q2) use ($user) {
                       $q2->where('user_id', $user->id);
                   })
@@ -274,28 +274,70 @@ class DashboardController extends Controller
                                 ->from('group_user')
                                 ->where('user_id', $user->id);
                          });
+                  })
+                  // Open Elimination Challenges in user's groups (available to tap in)
+                  ->orWhere(function($q3) use ($user) {
+                      $q3->where('type', \App\Enums\ChallengeType::ELIMINATION_CHALLENGE)
+                         ->where('status', 'open')
+                         ->whereIn('group_id', function($q4) use ($user) {
+                             $q4->select('group_id')
+                                ->from('group_user')
+                                ->where('user_id', $user->id);
+                         });
                   });
             })
             ->with(['group', 'creator', 'acceptor', 'participants.user'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function($c) use ($user) {
-                $isParticipant = $c->isSuperChallenge() && $c->participants->contains('user_id', $user->id);
+                $isParticipant = ($c->isSuperChallenge() || $c->isEliminationChallenge())
+                    && $c->participants->contains('user_id', $user->id);
+
+                // For elimination challenges, get user's participant record
+                $userParticipant = $c->isEliminationChallenge()
+                    ? $c->participants->firstWhere('user_id', $user->id)
+                    : null;
+
+                // Determine the appropriate URL based on challenge type
+                $url = $c->isEliminationChallenge()
+                    ? route('elimination.show', $c->id)
+                    : route('challenges.show', $c->id);
+
+                // For elimination challenges, determine effective status for display
+                $effectiveStatus = $c->status;
+                if ($c->isEliminationChallenge()) {
+                    if ($isParticipant) {
+                        $effectiveStatus = $userParticipant?->eliminated_at ? 'eliminated' : 'active';
+                    } else {
+                        $effectiveStatus = 'open'; // Available to tap in
+                    }
+                } elseif ($c->isSuperChallenge()) {
+                    $effectiveStatus = $isParticipant ? 'accepted' : 'open';
+                }
 
                 return [
                     'id' => $c->id,
                     'description' => $c->description,
-                    'amount' => $c->isSuperChallenge() ? $c->prize_per_person : $c->amount,
+                    'amount' => $c->isSuperChallenge() ? $c->prize_per_person : ($c->isEliminationChallenge() ? $c->point_pot : $c->amount),
                     'type' => $c->type?->value,
-                    'status' => $c->isSuperChallenge() ? ($isParticipant ? 'accepted' : 'open') : $c->status,
+                    'status' => $effectiveStatus,
                     'completion_deadline' => $c->completion_deadline?->toIso8601String(),
                     'acceptance_deadline' => $c->acceptance_deadline?->toIso8601String(),
+                    'tap_in_deadline' => $c->tap_in_deadline?->toIso8601String(),
                     'accepted_at' => $c->accepted_at?->toIso8601String(),
                     'submitted_at' => $c->submitted_at?->toIso8601String(),
                     'completed_at' => $c->completed_at?->toIso8601String(),
                     'failed_at' => $c->failed_at?->toIso8601String(),
                     'is_creator' => $c->creator_id === $user->id,
                     'is_acceptor' => $c->acceptor_id === $user->id || $isParticipant,
+                    'is_participant' => $isParticipant,
+                    // Elimination-specific fields
+                    'elimination_mode' => $c->elimination_mode,
+                    'elimination_trigger' => $c->elimination_trigger,
+                    'buy_in_amount' => $c->buy_in_amount,
+                    'participants_count' => $c->isEliminationChallenge() ? $c->participants->count() : null,
+                    'survivors_count' => $c->isEliminationChallenge() ? $c->participants->whereNull('eliminated_at')->count() : null,
+                    'user_eliminated' => $userParticipant?->eliminated_at !== null,
                     'group' => [
                         'id' => $c->group->id,
                         'name' => $c->group->name ?? $c->group->platform_chat_title,
@@ -308,7 +350,7 @@ class DashboardController extends Controller
                         'id' => $c->acceptor->id,
                         'name' => $c->acceptor->name,
                     ] : null,
-                    'url' => route('challenges.show', $c->id),
+                    'url' => $url,
                 ];
             });
 
