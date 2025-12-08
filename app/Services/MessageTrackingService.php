@@ -28,7 +28,7 @@ class MessageTrackingService
             'max_per_user_per_week' => 1,        // Only 1 decay warning per user per week
         ],
         'betting.closed' => [
-            'max_per_context_per_day' => 1,      // Only 1 betting closed notification per wager (ever, effectively)
+            'once_per_context' => true,          // Only 1 betting closed notification per wager (ever)
         ],
     ];
 
@@ -46,6 +46,18 @@ class MessageTrackingService
         if (empty($rules)) {
             // No rules defined = always allow
             return true;
+        }
+
+        // Check once_per_context (one-time only, no time window)
+        if (isset($rules['once_per_context']) && $rules['once_per_context'] && $contextId) {
+            $exists = SentMessage::where('group_id', $group->id)
+                ->where('message_type', $messageType)
+                ->where('context_id', $contextId)
+                ->exists();
+
+            if ($exists) {
+                return false;
+            }
         }
 
         // Check max_per_context_per_day
