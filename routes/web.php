@@ -3,6 +3,7 @@
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DonationController;
+use App\Http\Controllers\EliminationChallengeController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupSettingsController;
@@ -107,6 +108,39 @@ Route::middleware(['signed.auth'])->group(function () {
     Route::post('/challenges/{challenge}/cancel', [ChallengeController::class, 'cancel'])
         ->middleware(['throttle:10,1', 'group.member'])
         ->name('challenges.cancel');
+
+    // Elimination Challenge routes
+    Route::post('/challenges/store-elimination', [ChallengeController::class, 'storeElimination'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('challenges.storeElimination');
+    Route::get('/elimination/success/{challenge}', [ChallengeController::class, 'eliminationSuccess'])
+        ->name('elimination.success');
+
+    // Elimination Challenge participation routes
+    Route::get('/elimination/{challenge}', [EliminationChallengeController::class, 'show'])
+        ->middleware('group.member')
+        ->name('elimination.show');
+    Route::get('/elimination/{challenge}/tap-in', [EliminationChallengeController::class, 'showTapIn'])
+        ->middleware('group.member')
+        ->name('elimination.tap-in');
+    Route::post('/elimination/{challenge}/tap-in', [EliminationChallengeController::class, 'tapIn'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('elimination.tap-in.submit');
+    Route::get('/elimination/{challenge}/tap-in/success', [EliminationChallengeController::class, 'tapInSuccess'])
+        ->name('elimination.tap-in.success');
+    Route::get('/elimination/{challenge}/tap-out', [EliminationChallengeController::class, 'showTapOut'])
+        ->middleware('group.member')
+        ->name('elimination.tap-out');
+    Route::post('/elimination/{challenge}/tap-out', [EliminationChallengeController::class, 'tapOut'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('elimination.tap-out.submit');
+    Route::get('/elimination/{challenge}/tap-out/success', [EliminationChallengeController::class, 'tapOutSuccess'])
+        ->name('elimination.tap-out.success');
+    Route::post('/elimination/{challenge}/cancel', [EliminationChallengeController::class, 'cancel'])
+        ->middleware(['throttle:10,1', 'group.member'])
+        ->name('elimination.cancel');
+    Route::get('/elimination/{challenge}/cancelled', [EliminationChallengeController::class, 'cancelled'])
+        ->name('elimination.cancelled');
 
     // SuperChallenge routes
     Route::get('/superchallenge/nudge/{nudge}/respond', [SuperChallengeController::class, 'respondToNudge'])

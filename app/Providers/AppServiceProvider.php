@@ -84,6 +84,10 @@ class AppServiceProvider extends ServiceProvider
             $registry->register(new \App\Callbacks\Handlers\SettleChallengeCallbackHandler($messenger, $challengeService));
             $registry->register(new \App\Callbacks\Handlers\SettleItemCallbackHandler($messenger));
 
+            // Elimination challenge handlers
+            $registry->register(new \App\Callbacks\Handlers\EliminationTapInCallbackHandler($messenger));
+            $registry->register(new \App\Callbacks\Handlers\EliminationViewCallbackHandler($messenger));
+
             return $registry;
         });
     }

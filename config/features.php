@@ -31,4 +31,16 @@ return [
      */
     'activity_tracking' => env('FEATURE_ACTIVITY_TRACKING', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Elimination Challenge Settings
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Minimum participants for elimination challenges.
+     * Set lower for testing (e.g., 2), production default is 3.
+     */
+    'elimination_min_participants' => (int) env('ELIMINATION_MIN_PARTICIPANTS', 3),
+
 ];

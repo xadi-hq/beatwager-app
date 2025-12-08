@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ChallengeType;
+use App\Enums\EliminationMode;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +15,50 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
+/**
+ * @property string $id
+ * @property string $group_id
+ * @property string|null $creator_id
+ * @property string|null $acceptor_id
+ * @property ChallengeType $type
+ * @property string $description
+ * @property int|null $amount
+ * @property int|null $prize_per_person
+ * @property int|null $max_participants
+ * @property string|null $evidence_guidance
+ * @property string|null $elimination_trigger
+ * @property EliminationMode|null $elimination_mode
+ * @property int|null $point_pot
+ * @property int|null $buy_in_amount
+ * @property int $min_participants
+ * @property Carbon|null $tap_in_deadline
+ * @property Carbon|null $acceptance_deadline
+ * @property Carbon|null $completion_deadline
+ * @property string $status
+ * @property Carbon|null $accepted_at
+ * @property Carbon|null $submitted_at
+ * @property Carbon|null $verified_at
+ * @property Carbon|null $completed_at
+ * @property Carbon|null $failed_at
+ * @property Carbon|null $cancelled_at
+ * @property string|null $verified_by_id
+ * @property string|null $cancelled_by_id
+ * @property string|null $failure_reason
+ * @property string|null $submission_note
+ * @property array<string>|null $submission_media
+ * @property string|null $hold_transaction_id
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ *
+ * @property-read Group|null $group
+ * @property-read User|null $creator
+ * @property-read User|null $acceptor
+ * @property-read User|null $verifiedBy
+ * @property-read User|null $cancelledBy
+ * @property-read Transaction|null $holdTransaction
+ * @property-read Collection<int, ChallengeParticipant> $participants
+ * @property-read Collection<int, Transaction> $transactions
+ */
 class Challenge extends Model
 {
     use HasFactory, HasUuids;
@@ -26,6 +73,14 @@ class Challenge extends Model
         'prize_per_person',
         'max_participants',
         'evidence_guidance',
+        'elimination_trigger',
+        'elimination_mode',
+        'point_pot',
+        'last_countdown_hours',
+        'milestones_sent',
+        'buy_in_amount',
+        'tap_in_deadline',
+        'min_participants',
         'acceptance_deadline',
         'completion_deadline',
         'status',
@@ -47,11 +102,18 @@ class Challenge extends Model
     {
         return [
             'type' => ChallengeType::class,
+            'elimination_mode' => EliminationMode::class,
             'amount' => 'integer',
             'prize_per_person' => 'integer',
             'max_participants' => 'integer',
+            'point_pot' => 'integer',
+            'last_countdown_hours' => 'integer',
+            'milestones_sent' => 'array',
+            'buy_in_amount' => 'integer',
+            'min_participants' => 'integer',
             'acceptance_deadline' => 'datetime',
             'completion_deadline' => 'datetime',
+            'tap_in_deadline' => 'datetime',
             'accepted_at' => 'datetime',
             'submitted_at' => 'datetime',
             'verified_at' => 'datetime',
@@ -360,5 +422,162 @@ class Challenge extends Model
         return $query->superChallenges()
             ->where('status', 'open')
             ->where('completion_deadline', '>=', now());
+    }
+
+    /**
+     * Elimination Challenge methods
+     */
+
+    public function isEliminationChallenge(): bool
+    {
+        return $this->type === ChallengeType::ELIMINATION_CHALLENGE;
+    }
+
+    public function isLastManStanding(): bool
+    {
+        return $this->elimination_mode === EliminationMode::LAST_MAN_STANDING;
+    }
+
+    public function isDeadlineMode(): bool
+    {
+        return $this->elimination_mode === EliminationMode::DEADLINE;
+    }
+
+    public function isTapInOpen(): bool
+    {
+        if (!$this->isEliminationChallenge() || !$this->isOpen()) {
+            return false;
+        }
+
+        if ($this->tap_in_deadline === null) {
+            return true;
+        }
+
+        return $this->tap_in_deadline->isFuture();
+    }
+
+    public function isTapInClosed(): bool
+    {
+        return $this->tap_in_deadline !== null && $this->tap_in_deadline->isPast();
+    }
+
+    public function hasMinimumParticipants(): bool
+    {
+        return $this->participants()->count() >= $this->min_participants;
+    }
+
+    public function getSurvivors()
+    {
+        return $this->participants()
+            ->whereNull('eliminated_at')
+            ->get();
+    }
+
+    public function getSurvivorCount(): int
+    {
+        return $this->participants()
+            ->whereNull('eliminated_at')
+            ->count();
+    }
+
+    public function getEliminatedCount(): int
+    {
+        return $this->participants()
+            ->whereNotNull('eliminated_at')
+            ->count();
+    }
+
+    public function getPotPerSurvivor(): int
+    {
+        $survivors = $this->getSurvivorCount();
+        if ($survivors === 0) {
+            return 0;
+        }
+
+        return (int) floor($this->point_pot / $survivors);
+    }
+
+    public function getEliminationPercentage(): float
+    {
+        $total = $this->participants()->count();
+        if ($total === 0) {
+            return 0.0;
+        }
+
+        return ($this->getEliminatedCount() / $total) * 100;
+    }
+
+    public function shouldResolve(): bool
+    {
+        if (!$this->isEliminationChallenge() || !$this->isOpen()) {
+            return false;
+        }
+
+        // Last man standing: resolve when 1 survivor
+        if ($this->isLastManStanding() && $this->getSurvivorCount() === 1) {
+            return true;
+        }
+
+        // Deadline mode: resolve when deadline passed
+        if ($this->isDeadlineMode() && $this->completion_deadline?->isPast()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function shouldAutoCancel(): bool
+    {
+        if (!$this->isEliminationChallenge() || !$this->isOpen()) {
+            return false;
+        }
+
+        // Auto-cancel if tap-in closed and not enough participants
+        return $this->isTapInClosed() && !$this->hasMinimumParticipants();
+    }
+
+    /**
+     * Scopes for Elimination Challenges
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<Challenge> $query
+     * @return \Illuminate\Database\Eloquent\Builder<Challenge>
+     */
+    public function scopeEliminationChallenges(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('type', ChallengeType::ELIMINATION_CHALLENGE->value);
+    }
+
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder<Challenge> $query
+     * @return \Illuminate\Database\Eloquent\Builder<Challenge>
+     */
+    public function scopeActiveEliminationChallenges(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->eliminationChallenges()
+            ->where('status', 'open')
+            ->where(function ($q) {
+                $q->whereNull('completion_deadline')
+                  ->orWhere('completion_deadline', '>=', now());
+            });
+    }
+
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder<Challenge> $query
+     * @return \Illuminate\Database\Eloquent\Builder<Challenge>
+     */
+    public function scopeNeedingResolution(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->eliminationChallenges()
+            ->where('status', 'open')
+            ->where('completion_deadline', '<', now());
+    }
+
+    public function scopeNeedingAutoCancel($query)
+    {
+        return $query->eliminationChallenges()
+            ->where('status', 'open')
+            ->whereNotNull('tap_in_deadline')
+            ->where('tap_in_deadline', '<', now())
+            ->whereRaw('(SELECT COUNT(*) FROM challenge_participants WHERE challenge_id = challenges.id) < min_participants');
     }
 }

@@ -24,4 +24,8 @@ enum TransactionType: string
     case SuperChallengeAcceptanceBonus = 'super_challenge_acceptance_bonus';
     case SuperChallengePrize = 'super_challenge_prize';
     case SuperChallengeValidationBonus = 'super_challenge_validation_bonus';
+    case EliminationBuyIn = 'elimination_buy_in';
+    case EliminationBuyInRefund = 'elimination_buy_in_refund';
+    case EliminationPrize = 'elimination_prize';
+    case EliminationSystemContribution = 'elimination_system_contribution';
 }

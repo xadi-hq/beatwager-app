@@ -1,9 +1,11 @@
 <?php
 
 use App\Jobs\ApplyPointDecay;
+use App\Jobs\ProcessEliminationAutoResolution;
 use App\Jobs\ProcessSuperChallengeAutoApprovals;
 use App\Jobs\ProcessSuperChallengeEligibility;
 use App\Jobs\SendBettingClosedNotifications;
+use App\Jobs\SendEliminationCountdownReminders;
 use App\Jobs\SendEngagementPrompts;
 use App\Jobs\SendEventAttendancePrompts;
 use App\Jobs\SendSeasonMilestoneDrops;
@@ -107,5 +109,17 @@ Schedule::job(new ProcessSuperChallengeEligibility())
 // Process SuperChallenge auto-approvals (48h timeout check)
 Schedule::job(new ProcessSuperChallengeAutoApprovals())
     ->hourly()  // Check hourly for pending completions past 48h
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Send elimination challenge countdown reminders (24h, 12h, 6h, 1h before deadline)
+Schedule::job(new SendEliminationCountdownReminders())
+    ->hourly()  // Check hourly for approaching deadlines
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Process elimination challenge auto-resolution (deadline reached or insufficient participants)
+Schedule::job(new ProcessEliminationAutoResolution())
+    ->everyFifteenMinutes()  // Check frequently for deadline resolution
     ->withoutOverlapping()
     ->onOneServer();

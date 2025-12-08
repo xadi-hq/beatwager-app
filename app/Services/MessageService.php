@@ -1857,6 +1857,376 @@ class MessageService
     }
 
     /**
+     * Create elimination challenge announcement message
+     */
+    public function eliminationChallengeAnnouncement(\App\Models\Challenge $challenge): Message
+    {
+        $meta = __('messages.elimination.announced');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $modeDescription = $challenge->isLastManStanding()
+            ? 'Last survivor takes the entire pot!'
+            : 'All survivors at deadline split the pot equally';
+
+        $ctx = new MessageContext(
+            key: 'elimination.announced',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'challenge_name' => $challenge->description,
+                'elimination_trigger' => $challenge->elimination_trigger,
+                'mode' => $challenge->elimination_mode?->value,
+                'mode_description' => $modeDescription,
+                'pot' => $challenge->point_pot,
+                'buy_in' => $challenge->buy_in_amount,
+                'currency' => $currency,
+                'deadline' => $challenge->completion_deadline?->format('M j, Y g:i A'),
+                'tap_in_deadline' => $challenge->tap_in_deadline?->format('M j, Y g:i A'),
+                'min_participants' => $challenge->min_participants,
+                'creator_name' => $challenge->creator->name ?? 'Someone',
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        $buttons = [
+            [
+                new Button(
+                    label: '🎯 Tap In',
+                    action: ButtonAction::Callback,
+                    value: "elimination_tap_in:{$challenge->id}"
+                ),
+            ],
+            [
+                new Button(
+                    label: '📊 View Details',
+                    action: ButtonAction::Callback,
+                    value: "elimination_view:{$challenge->id}"
+                ),
+            ],
+        ];
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: $buttons,
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create elimination challenge tap-in notification
+     */
+    public function eliminationChallengeTappedIn(\App\Models\ChallengeParticipant $participant): Message
+    {
+        $meta = __('messages.elimination.tapped_in');
+        $challenge = $participant->challenge;
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'elimination.tapped_in',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $participant->user->name ?? 'Someone',
+                'challenge_name' => $challenge->description,
+                'participant_count' => $challenge->participants()->count(),
+                'buy_in' => $challenge->buy_in_amount,
+                'currency' => $currency,
+                'pot_per_survivor' => $challenge->getPotPerSurvivor(),
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create elimination challenge activated notification (min participants reached)
+     */
+    public function eliminationChallengeActivated(\App\Models\Challenge $challenge): Message
+    {
+        $meta = __('messages.elimination.activated');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'elimination.activated',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'challenge_name' => $challenge->description,
+                'participant_count' => $challenge->participants()->count(),
+                'pot' => $challenge->point_pot,
+                'currency' => $currency,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create elimination challenge tap-out notification
+     */
+    public function eliminationChallengeTappedOut(\App\Models\ChallengeParticipant $participant): Message
+    {
+        $meta = __('messages.elimination.tapped_out');
+        $challenge = $participant->challenge;
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $ctx = new MessageContext(
+            key: 'elimination.tapped_out',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'user_name' => $participant->user->name ?? 'Someone',
+                'challenge_name' => $challenge->description,
+                'days_survived' => $participant->getDaysSurvived(),
+                'survivor_count' => $challenge->getSurvivorCount(),
+                'eliminated_count' => $challenge->getEliminatedCount(),
+                'elimination_note' => $participant->elimination_note,
+                'elimination_note_section' => $participant->elimination_note
+                    ? "📝 \"{$participant->elimination_note}\"\n\n"
+                    : '',
+                'pot_per_survivor' => $challenge->getPotPerSurvivor(),
+                'currency' => $currency,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create elimination challenge milestone notification
+     */
+    public function eliminationChallengeMilestone(\App\Models\Challenge $challenge, string $milestone): Message
+    {
+        $meta = __('messages.elimination.milestone');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $survivors = $challenge->getSurvivors()->load('user');
+        $survivorNames = $survivors->map(fn($p) => $p->user->name ?? 'Unknown')->join(', ', ' and ');
+
+        $milestoneMessage = match($milestone) {
+            'half_eliminated' => "⚡ HALF THE FIELD IS DOWN!",
+            'final_two' => "🔥 FINAL TWO SHOWDOWN!",
+            default => "📢 Milestone reached!",
+        };
+
+        $ctx = new MessageContext(
+            key: 'elimination.milestone',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'challenge_name' => $challenge->description,
+                'milestone' => $milestone,
+                'milestone_message' => $milestoneMessage,
+                'survivor_count' => $survivors->count(),
+                'survivor_names' => $survivorNames,
+                'eliminated_count' => $challenge->getEliminatedCount(),
+                'pot_per_survivor' => $challenge->getPotPerSurvivor(),
+                'currency' => $currency,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create elimination challenge countdown notification
+     */
+    public function eliminationChallengeCountdown(\App\Models\Challenge $challenge, int $hoursRemaining): Message
+    {
+        $meta = __('messages.elimination.countdown');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $survivors = $challenge->getSurvivors()->load('user');
+        $survivorNames = $survivors->map(fn($p) => $p->user->name ?? 'Unknown')->join(', ', ' and ');
+
+        // Format time remaining
+        $timeRemaining = match(true) {
+            $hoursRemaining >= 168 => '7 days',
+            $hoursRemaining >= 48 => '48 hours',
+            $hoursRemaining >= 24 => '24 hours',
+            $hoursRemaining >= 6 => '6 hours',
+            default => '1 hour',
+        };
+
+        // Social engineering prompt based on time remaining
+        $socialPrompt = match(true) {
+            $hoursRemaining >= 168 => 'Anyone feeling tempted to slip up? 👀',
+            $hoursRemaining >= 48 => 'The pressure is ON. Who will crack first? 😈',
+            $hoursRemaining >= 24 => 'One slip-up changes everything! Time to test your willpower...',
+            $hoursRemaining >= 6 => 'SO close to victory... or are they? 😏',
+            default => 'Unless someone cracks in the next 60 minutes! 👀',
+        };
+
+        $ctx = new MessageContext(
+            key: 'elimination.countdown',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'challenge_name' => $challenge->description,
+                'time_remaining' => $timeRemaining,
+                'hours_remaining' => $hoursRemaining,
+                'survivor_count' => $survivors->count(),
+                'survivor_names' => $survivorNames,
+                'pot_per_survivor' => $challenge->getPotPerSurvivor(),
+                'currency' => $currency,
+                'social_prompt' => $socialPrompt,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create elimination challenge resolved notification
+     *
+     * @param \Illuminate\Support\Collection<int, \App\Models\ChallengeParticipant> $survivors
+     */
+    public function eliminationChallengeResolved(\App\Models\Challenge $challenge, \Illuminate\Support\Collection $survivors): Message
+    {
+        $meta = __('messages.elimination.resolved');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $survivorNames = $survivors->map(fn($p) => $p->user->name ?? 'Unknown')->join(', ', ' and ');
+        $totalParticipants = $challenge->participants()->count();
+        $prizePerSurvivor = $survivors->count() > 0
+            ? (int) floor($challenge->point_pot / $survivors->count())
+            : 0;
+
+        // Calculate duration
+        $durationDays = $challenge->created_at->diffInDays(now());
+
+        // Build winner announcement based on mode
+        $winnerAnnouncement = $challenge->isLastManStanding()
+            ? ($survivors->count() === 1
+                ? "👑 THE CHAMPION: {$survivorNames}"
+                : "🏆 The survivors: {$survivorNames}")
+            : "🎉 SURVIVORS: {$survivorNames}";
+
+        $ctx = new MessageContext(
+            key: 'elimination.resolved',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'challenge_name' => $challenge->description,
+                'mode' => $challenge->elimination_mode?->value,
+                'survivor_count' => $survivors->count(),
+                'survivor_names' => $survivorNames,
+                'winner_announcement' => $winnerAnnouncement,
+                'total_participants' => $totalParticipants,
+                'duration_days' => $durationDays,
+                'prize_per_survivor' => $prizePerSurvivor,
+                'currency' => $currency,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create elimination challenge cancelled notification
+     */
+    public function eliminationChallengeCancelled(\App\Models\Challenge $challenge, ?\App\Models\User $cancelledBy = null, ?string $reason = null): Message
+    {
+        $meta = __('messages.elimination.cancelled');
+        $currency = $challenge->group->points_currency_name ?? 'points';
+
+        $reasonSection = $reason
+            ? "📝 Reason: {$reason}\n\n"
+            : '';
+
+        $ctx = new MessageContext(
+            key: 'elimination.cancelled',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'challenge_name' => $challenge->description,
+                'cancelled_by' => $cancelledBy?->name,
+                'reason' => $reason,
+                'reason_section' => $reasonSection,
+                'refund_amount' => $challenge->buy_in_amount,
+                'currency' => $currency,
+            ],
+            group: $challenge->group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $challenge->group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $challenge,
+            currencyName: $currency
+        );
+    }
+
+    /**
      * Format bets summary for display based on wager type
      */
     private function formatBetsSummary(Wager $wager, $entries): string

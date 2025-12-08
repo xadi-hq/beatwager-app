@@ -18,6 +18,13 @@ use App\Events\SuperChallengeCompletionClaimed;
 use App\Events\SuperChallengeCompletionValidated;
 use App\Events\SuperChallengeCreated;
 use App\Events\SuperChallengeNudgeSent;
+use App\Events\EliminationChallengeActivated;
+use App\Events\EliminationChallengeCancelled;
+use App\Events\EliminationChallengeCreated;
+use App\Events\EliminationChallengeMilestone;
+use App\Events\EliminationChallengeResolved;
+use App\Events\EliminationChallengeTappedIn;
+use App\Events\EliminationChallengeTappedOut;
 use App\Events\WagerBettingClosed;
 use App\Events\WagerCreated;
 use App\Events\WagerJoined;
@@ -39,6 +46,13 @@ use App\Listeners\SendSuperChallengeCompletionClaimedNotification;
 use App\Listeners\SendSuperChallengeNudge;
 use App\Listeners\SendSuperChallengeValidatedNotification;
 use App\Listeners\SendBettingClosedAnnouncement;
+use App\Listeners\SendEliminationActivatedAnnouncement;
+use App\Listeners\SendEliminationCancelledAnnouncement;
+use App\Listeners\SendEliminationChallengeAnnouncement;
+use App\Listeners\SendEliminationMilestoneAnnouncement;
+use App\Listeners\SendEliminationResolvedAnnouncement;
+use App\Listeners\SendEliminationTappedInAnnouncement;
+use App\Listeners\SendEliminationTappedOutAnnouncement;
 use App\Listeners\SendWagerAnnouncement;
 use App\Listeners\SendWagerJoinAnnouncement;
 use App\Listeners\SendWagerSettlement;
@@ -111,6 +125,27 @@ class EventServiceProvider extends ServiceProvider
         ],
         SuperChallengeAutoValidated::class => [
             SendSuperChallengeAutoValidatedNotification::class,
+        ],
+        EliminationChallengeCreated::class => [
+            SendEliminationChallengeAnnouncement::class,
+        ],
+        EliminationChallengeTappedIn::class => [
+            SendEliminationTappedInAnnouncement::class,
+        ],
+        EliminationChallengeActivated::class => [
+            SendEliminationActivatedAnnouncement::class,
+        ],
+        EliminationChallengeTappedOut::class => [
+            SendEliminationTappedOutAnnouncement::class,
+        ],
+        EliminationChallengeMilestone::class => [
+            SendEliminationMilestoneAnnouncement::class,
+        ],
+        EliminationChallengeResolved::class => [
+            SendEliminationResolvedAnnouncement::class,
+        ],
+        EliminationChallengeCancelled::class => [
+            SendEliminationCancelledAnnouncement::class,
         ],
     ];
 

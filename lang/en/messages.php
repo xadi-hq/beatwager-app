@@ -466,6 +466,110 @@ return [
         ],
     ],
 
+    'elimination' => [
+        'announced' => [
+            'intent' => 'Announce a new elimination challenge with survival drama and buy-in info',
+            'required_fields' => ['challenge_name', 'elimination_trigger', 'mode', 'pot', 'buy_in', 'currency'],
+            'optional_fields' => ['deadline', 'tap_in_deadline', 'min_participants', 'creator_name'],
+            'fallback_template' => "🎯 New Elimination Challenge!\n\n\"{challenge_name}\"\n\n🚫 Trigger: {elimination_trigger}\n💰 Pot: {pot} {currency}\n🎟️ Buy-in: {buy_in} {currency}\n\n{mode_description}\n\nWho's brave enough to tap in?",
+            'tone_hints' => ['dramatic', 'competitive', 'survivor_vibes'],
+            'personality_notes' => 'Create tension and excitement. Make it feel like a survival game. Use mode to set expectations (last man standing = intense, deadline = strategic).',
+            'examples' => [
+                'Last man standing: "🎯 The Wham! Challenge begins! Avoid hearing \'Last Christmas\' or tap out. Last survivor takes 500 points! 💀"',
+                'Deadline mode: "⏰ 30-day no fast food challenge! Survivors at deadline split 1000 points. Are you in?"',
+            ],
+            'max_words' => 60,
+        ],
+
+        'tapped_in' => [
+            'intent' => 'Celebrate someone joining the elimination challenge with competitive energy',
+            'required_fields' => ['user_name', 'challenge_name', 'participant_count', 'buy_in', 'currency'],
+            'optional_fields' => ['pot_per_survivor'],
+            'fallback_template' => "💪 {user_name} tapped in to \"{challenge_name}\"!\n\n👥 {participant_count} survivors so far\n💰 Current pot share: {pot_per_survivor} {currency} each\n\nWho else dares to join?",
+            'tone_hints' => ['competitive', 'FOMO', 'exciting'],
+            'personality_notes' => 'Make others feel like they\'re missing out. Create hype around growing participant count.',
+            'max_words' => 35,
+        ],
+
+        'activated' => [
+            'intent' => 'Announce challenge officially starting after minimum participants reached',
+            'required_fields' => ['challenge_name', 'participant_count', 'pot', 'currency'],
+            'fallback_template' => "🚀 It's ON! \"{challenge_name}\" is now LIVE!\n\n👥 {participant_count} brave souls are in\n💰 Total pot: {pot} {currency}\n\nLet the survival games begin! 🎯",
+            'tone_hints' => ['exciting', 'dramatic', 'game_on'],
+            'personality_notes' => 'This is the moment of activation. Build hype. Make it feel like the games are starting.',
+            'max_words' => 35,
+        ],
+
+        'tapped_out' => [
+            'intent' => 'Announce elimination with drama and updated survivor count',
+            'required_fields' => ['user_name', 'challenge_name', 'days_survived', 'survivor_count', 'eliminated_count'],
+            'optional_fields' => ['elimination_note', 'pot_per_survivor', 'currency'],
+            'fallback_template' => "💀 {user_name} is OUT!\n\n{elimination_note_section}Survived: {days_survived} days\n\n👥 {survivor_count} survivors remain\n💰 Pot per survivor: {pot_per_survivor} {currency}",
+            'tone_hints' => ['dramatic', 'fallen_soldier', 'suspenseful'],
+            'personality_notes' => 'Honor their attempt while building drama. If elimination_note exists, use it to tell the story of their downfall. Update stakes for remaining survivors.',
+            'examples' => [
+                'With note: "💀 Mike is OUT! He heard \'Last Christmas\' at the mall food court. 5 days survived. 4 survivors remain fighting for 200 points each!"',
+                'Without note: "💀 Sarah tapped out after 12 brave days. 3 survivors left - stakes just got higher!"',
+            ],
+            'max_words' => 45,
+        ],
+
+        'milestone' => [
+            'intent' => 'Announce milestone moments to build drama and engagement',
+            'required_fields' => ['challenge_name', 'milestone', 'survivor_count', 'pot_per_survivor', 'currency'],
+            'optional_fields' => ['survivor_names', 'eliminated_count'],
+            'fallback_template' => "{milestone_message}\n\n👥 {survivor_count} still standing\n💰 Pot per survivor: {pot_per_survivor} {currency}",
+            'tone_hints' => ['dramatic', 'suspenseful', 'escalating'],
+            'personality_notes' => 'Milestones are "half_eliminated" and "final_two". Build tension. For final two, create head-to-head rivalry feel.',
+            'examples' => [
+                'half_eliminated: "⚡ HALF THE FIELD IS DOWN! Only 5 survivors remain in the Wham! Challenge. Stakes are doubling! 🎯"',
+                'final_two: "🔥 FINAL TWO! Sarah vs Mike - one will walk away with 500 points, one walks away with nothing! 💀"',
+            ],
+            'max_words' => 40,
+        ],
+
+        'countdown' => [
+            'intent' => 'Build urgency with time-based countdown messages',
+            'required_fields' => ['challenge_name', 'time_remaining', 'survivor_count', 'pot_per_survivor', 'currency'],
+            'optional_fields' => ['survivor_names', 'social_engineering_prompt'],
+            'fallback_template' => "⏰ {time_remaining} remaining!\n\n\"{challenge_name}\" ends soon\n\n👥 {survivor_count} survivors\n💰 Each takes home: {pot_per_survivor} {currency}\n\n{social_prompt}",
+            'tone_hints' => ['urgent', 'suspenseful', 'strategic'],
+            'personality_notes' => 'Countdown triggers: 7d, 48h, 24h, 6h, 1h. Include social engineering - subtly encourage survivors to eliminate each other. More aggressive as deadline approaches.',
+            'examples' => [
+                '7 days: "⏰ One week left! 8 survivors holding strong. Anyone feeling tempted to slip up? 👀"',
+                '48 hours: "⏰ 48 hours to go! 5 survivors, 400 points each. The pressure is ON. Who will crack first? 😈"',
+                '24 hours: "🔥 FINAL 24 HOURS! 4 survivors splitting 500 points. One slip-up changes everything! Time to test your willpower..."',
+                '6 hours: "⚡ 6 HOURS LEFT! 3 survivors about to split 600 points each. SO close to victory... or are they? 😏"',
+                '1 hour: "🚨 FINAL HOUR! If you\'re still in, you\'ve basically won... unless someone cracks in the next 60 minutes! 👀"',
+            ],
+            'max_words' => 50,
+        ],
+
+        'resolved' => [
+            'intent' => 'Announce challenge completion with winner celebration',
+            'required_fields' => ['challenge_name', 'mode', 'survivor_count', 'prize_per_survivor', 'currency'],
+            'optional_fields' => ['survivor_names', 'total_participants', 'duration_days'],
+            'fallback_template' => "🏆 {challenge_name} is COMPLETE!\n\n{winner_announcement}\n\n🎯 Duration: {duration_days} days\n👥 Survivors: {survivor_count}/{total_participants}\n💰 Prize each: {prize_per_survivor} {currency}\n\nCongratulations to the champions!",
+            'tone_hints' => ['triumphant', 'celebratory', 'dramatic_conclusion'],
+            'personality_notes' => 'For last_man_standing, celebrate the single winner heroically. For deadline mode, celebrate all survivors equally. Use names if available.',
+            'examples' => [
+                'last_man_standing: "👑 THE CHAMPION! Sarah outlasted everyone in the Wham! Challenge and takes home 500 points! 🏆"',
+                'deadline: "🎉 SURVIVORS WIN! Mike, Sarah, and Tom made it 30 days without fast food! Each takes home 333 points! 💪"',
+            ],
+            'max_words' => 60,
+        ],
+
+        'cancelled' => [
+            'intent' => 'Announce challenge cancellation with refund information',
+            'required_fields' => ['challenge_name'],
+            'optional_fields' => ['cancelled_by', 'reason', 'refund_amount', 'currency'],
+            'fallback_template' => "🚫 \"{challenge_name}\" has been cancelled.\n\n{reason_section}All participants have been refunded their buy-in.",
+            'tone_hints' => ['neutral', 'informative', 'reassuring'],
+            'personality_notes' => 'Be clear and reassuring about refunds. Common reasons: not enough participants, creator cancelled.',
+            'max_words' => 30,
+        ],
+    ],
+
     'buttons' => [
         'yes' => '✅ Yes',
         'no' => '❌ No',
