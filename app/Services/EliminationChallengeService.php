@@ -72,7 +72,8 @@ class EliminationChallengeService
             $group, $creator, $name, $eliminationTrigger, $mode,
             $deadline, $pot, $tapInDeadline, $minParticipants
         ) {
-            $groupSize = $group->users()->count();
+            // Use minimum of 3 for buy-in calculation (matches min_participants default)
+            $groupSize = max($group->users()->count(), 3);
             $buyIn = $this->calculateBuyIn($pot, $groupSize);
 
             $challenge = Challenge::create([

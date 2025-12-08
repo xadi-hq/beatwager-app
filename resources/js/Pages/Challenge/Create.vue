@@ -52,7 +52,7 @@ const form = useForm({
     // Elimination challenge fields
     challenge_type: 'user_challenge' as ChallengeKind,
     elimination_trigger: '',
-    elimination_mode: 'deadline' as EliminationMode,
+    elimination_mode: 'last_man_standing' as EliminationMode,
     tap_in_deadline: '',
     min_participants: props.eliminationMinParticipants ?? 3,
     point_pot: 0,
@@ -72,22 +72,29 @@ watch(challengeKind, (newKind) => {
         // Initialize with suggested pot for elimination challenges
         form.point_pot = suggestedPot.value;
 
-        // If group has active season, default deadline to season end
+        // If group has active season, default to deadline mode with season end date
         if (props.eliminationDefaults?.season_ends_at) {
+            form.elimination_mode = 'deadline';
             const seasonEnd = new Date(props.eliminationDefaults.season_ends_at);
             form.completion_deadline = seasonEnd.toISOString().slice(0, 16);
+        } else {
+            // No season - default to last man standing
+            form.elimination_mode = 'last_man_standing';
         }
     }
 });
 
-// Computed suggested pot and buy-in
+// Computed suggested pot and buy-in (minimum 100)
 const suggestedPot = computed(() => {
+    let pot = 100;
     if (props.eliminationDefaults) {
-        return props.eliminationDefaults.suggested_pot;
+        pot = props.eliminationDefaults.suggested_pot;
+    } else {
+        // Fallback: 10% of group points (estimated)
+        const totalPoints = props.groupMembers.reduce((sum, m) => sum + m.points, 0);
+        pot = Math.floor(totalPoints * 0.1);
     }
-    // Fallback: 10% of group points (estimated)
-    const totalPoints = props.groupMembers.reduce((sum, m) => sum + m.points, 0);
-    return Math.floor(totalPoints * 0.1);
+    return Math.max(pot, 100); // Enforce minimum of 100
 });
 
 const suggestedBuyIn = computed(() => {
@@ -233,11 +240,11 @@ const submit = () => {
 
 // Elimination challenge examples
 const eliminationExamples = [
-    { trigger: "Hearing 'Last Christmas' by Wham!", description: "Classic holiday avoidance challenge" },
+    { trigger: "Under 2500 steps a day", description: "Fitness accountability" },
     { trigger: "Eating fast food", description: "Health-focused survival" },
     { trigger: "Being late to a meeting", description: "Punctuality challenge" },
-    { trigger: "Using the word 'like' as a filler", description: "Speaking challenge" },
-    { trigger: "Checking social media before noon", description: "Digital detox" },
+    { trigger: "Skip a workout", description: "Gym commitment" },
+    { trigger: "Get lucky", description: "Parental endurance" },
 ];
 </script>
 
@@ -538,7 +545,7 @@ const eliminationExamples = [
                                 v-model="form.elimination_trigger"
                                 required
                                 rows="2"
-                                placeholder="e.g., Hearing 'Last Christmas' by Wham!"
+                                placeholder="e.g., Take less than 2500 steps in a day"
                                 class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                             ></textarea>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
@@ -736,12 +743,12 @@ const eliminationExamples = [
                             <input
                                 v-model.number="form.point_pot"
                                 type="number"
-                                min="0"
+                                min="100"
                                 :placeholder="suggestedPot.toString()"
                                 class="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
                             />
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                Suggested: {{ suggestedPot.toLocaleString() }} {{ currencyName }} (10% of group total)
+                                Suggested: {{ suggestedPot.toLocaleString() }} {{ currencyName }} (minimum 100)
                             </p>
                             <FormError :error="form.errors.point_pot" />
                         </div>
