@@ -113,6 +113,12 @@ class ChallengeService
         }
 
         if (!$challenge->canBeSubmitted()) {
+            if (!$challenge->isAccepted()) {
+                throw new \Exception('Challenge must be accepted before it can be submitted (current status: ' . $challenge->status . ')');
+            }
+            if ($challenge->isPastSubmissionGracePeriod()) {
+                throw new \Exception('Submission grace period has passed (24 hours after completion deadline)');
+            }
             throw new \Exception('Challenge cannot be submitted at this time');
         }
 

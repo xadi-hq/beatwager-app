@@ -202,7 +202,16 @@ class Challenge extends Model
 
     public function canBeSubmitted(): bool
     {
-        return $this->isAccepted() && !$this->isPastCompletionDeadline();
+        return $this->isAccepted() && !$this->isPastSubmissionGracePeriod();
+    }
+
+    /**
+     * Check if the 24-hour grace period after completion deadline has passed.
+     * Users can submit up to 24 hours after the completion deadline.
+     */
+    public function isPastSubmissionGracePeriod(): bool
+    {
+        return $this->completion_deadline->addHours(24)->isPast();
     }
 
     public function isAwaitingReview(): bool
