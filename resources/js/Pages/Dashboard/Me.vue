@@ -65,6 +65,15 @@ const filteredStats = computed(() => {
     const groupWagers = props.activeWagers.filter(w => w.group.id === selectedGroupFilter.value);
     const groupSettled = props.settledWagers.filter(w => w.group.id === selectedGroupFilter.value);
 
+    // Filter challenges for this group
+    const groupChallenges = props.userChallenges.filter(c =>
+        c.group.id === selectedGroupFilter.value &&
+        ['open', 'accepted', 'active'].includes(c.status)
+    );
+
+    // Filter events for this group
+    const groupEvents = props.upcomingEvents.filter(e => e.group.id === selectedGroupFilter.value);
+
     // Calculate win rate for this group
     const totalGroupWagers = groupWagers.length + groupSettled.length;
     const wonGroupWagers = groupSettled.filter(w => w.is_winner).length;
@@ -73,6 +82,9 @@ const filteredStats = computed(() => {
     return {
         total_balance: groupBalance,
         active_wagers: groupWagers.length,
+        active_challenges: groupChallenges.length,
+        upcoming_events: groupEvents.length,
+        active_items: groupWagers.length + groupChallenges.length + groupEvents.length,
         win_rate: groupWinRate,
         total_wagers: totalGroupWagers,
         won_wagers: wonGroupWagers,
@@ -242,14 +254,18 @@ function formatDate(dateStr: string): string {
                     </div>
                 </button>
 
-                <button
-                    @click="activeTab = 'wagers'"
-                    class="bg-white dark:bg-neutral-800 rounded-lg shadow p-4 text-left hover:shadow-md transition-shadow"
+                <div
+                    class="bg-white dark:bg-neutral-800 rounded-lg shadow p-4 text-left"
                 >
-                    <div class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Active Wagers</div>
-                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ filteredStats.active_wagers }}</div>
-                    <div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">in progress</div>
-                </button>
+                    <div class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Active Items</div>
+                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ filteredStats.active_items }}</div>
+                    <div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1 flex flex-wrap gap-x-2">
+                        <span v-if="filteredStats.active_wagers" class="cursor-pointer hover:text-blue-500" @click="activeTab = 'wagers'">{{ filteredStats.active_wagers }} wager{{ filteredStats.active_wagers !== 1 ? 's' : '' }}</span>
+                        <span v-if="filteredStats.active_challenges" class="cursor-pointer hover:text-blue-500" @click="activeTab = 'challenges'">{{ filteredStats.active_challenges }} challenge{{ filteredStats.active_challenges !== 1 ? 's' : '' }}</span>
+                        <span v-if="filteredStats.upcoming_events" class="cursor-pointer hover:text-blue-500" @click="activeTab = 'events'">{{ filteredStats.upcoming_events }} event{{ filteredStats.upcoming_events !== 1 ? 's' : '' }}</span>
+                        <span v-if="!filteredStats.active_items">none active</span>
+                    </div>
+                </div>
 
                 <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-4">
                     <div class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Win Rate</div>

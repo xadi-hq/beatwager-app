@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+
+const activeChallengeTab = ref<'1on1' | 'super' | 'elimination'>('1on1');
 </script>
 
 <template>
@@ -84,8 +87,13 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                     <div class="border-l-4 border-red-500 pl-4">
                         <h4 class="font-semibold text-gray-900">/newchallenge</h4>
                         <p class="text-gray-600 text-sm">
-                            Create a 1-on-1 challenge. You can either <strong>offer points</strong> for someone to complete a task, or <strong>request points</strong> to complete a task yourself.
+                            Create a challenge. Choose from three types:
                         </p>
+                        <ul class="text-gray-600 text-sm mt-1 ml-4 list-disc space-y-1">
+                            <li><strong>1-on-1:</strong> Offer or request points for completing a task</li>
+                            <li><strong>Super Challenge:</strong> Group-wide task where the first to complete wins the pot</li>
+                            <li><strong>Elimination:</strong> Endurance tournament - last one standing wins!</li>
+                        </ul>
                     </div>
 
                     <div class="border-l-4 border-red-400 pl-4">
@@ -132,164 +140,211 @@ import AppLayout from '@/Layouts/AppLayout.vue';
             <section class="bg-white rounded-lg shadow p-6 mb-6">
                 <h2 class="text-2xl font-semibold text-gray-900 mb-4">Wager Types</h2>
 
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">Binary (Yes/No)</h3>
-                        <p class="text-gray-600 mb-2">
-                            Simple yes or no questions. Perfect for predictions like "Will it rain tomorrow?" or "Will Team A win?"
-                        </p>
-                        <div class="bg-gray-50 rounded p-3 text-sm">
-                            <strong>Example:</strong> "Will it snow on Christmas Day?"<br>
-                            Options: Yes / No
-                        </div>
+                <!-- Binary Types -->
+                <h3 class="font-semibold text-gray-800 mb-3">Binary (Two Options)</h3>
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                        <h4 class="font-semibold text-blue-900 text-sm mb-1">🔘 Yes / No</h4>
+                        <p class="text-blue-800 text-xs">"Will it rain tomorrow?"</p>
                     </div>
-
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">Multiple Choice</h3>
-                        <p class="text-gray-600 mb-2">
-                            Choose from multiple options. Great for "Who will win?" or "What color will they choose?"
-                        </p>
-                        <div class="bg-gray-50 rounded p-3 text-sm">
-                            <strong>Example:</strong> "Who will win the Super Bowl?"<br>
-                            Options: Chiefs / 49ers / Eagles / Cowboys
-                        </div>
+                    <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                        <h4 class="font-semibold text-blue-900 text-sm mb-1">📊 Over / Under</h4>
+                        <p class="text-blue-800 text-xs">"Over/under 100 points scored?"</p>
                     </div>
-
+                    <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                        <h4 class="font-semibold text-blue-900 text-sm mb-1">📅 Before / After</h4>
+                        <p class="text-blue-800 text-xs">"Will it happen before March 1st?"</p>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                        <h4 class="font-semibold text-blue-900 text-sm mb-1">✏️ Custom Binary</h4>
+                        <p class="text-blue-800 text-xs">"Red team or Blue team?"</p>
+                    </div>
                 </div>
-            </section>
 
-            <!-- 1-on-1 Challenges -->
-            <section class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-4">1-on-1 Challenges</h2>
-                <p class="text-gray-700 mb-4">
-                    Challenges are 1-on-1 tasks where points are at stake. Unlike wagers, challenges have a challenger and an acceptor.
-                </p>
-
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">Offer Points (Positive Amount)</h3>
-                        <p class="text-gray-600 mb-2">
-                            You offer points for someone to complete a task. The challenger puts up the points, and the acceptor earns them upon completion.
-                        </p>
-                        <div class="bg-green-50 rounded p-3 text-sm border border-green-200">
-                            <strong>Example:</strong> "I'll give 100 points to whoever brings me coffee"<br>
-                            <span class="text-green-800">→ Someone accepts, completes the task, and earns 100 points from you</span>
-                        </div>
+                <!-- Other Types -->
+                <h3 class="font-semibold text-gray-800 mb-3">Other Types</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                        <h4 class="font-semibold text-purple-900 text-sm mb-1">📋 Multiple Choice</h4>
+                        <p class="text-purple-800 text-xs">"Who will win?" Pick from several options</p>
                     </div>
-
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">Request Points (Negative Amount)</h3>
-                        <p class="text-gray-600 mb-2">
-                            You request points to complete a task for someone else. The acceptor puts up the points, and the challenger earns them upon completion.
-                        </p>
-                        <div class="bg-blue-50 rounded p-3 text-sm border border-blue-200">
-                            <strong>Example:</strong> "I'll clean the garage for 150 points"<br>
-                            <span class="text-blue-800">→ Someone accepts, you complete the task, and you earn 150 points from them</span>
-                        </div>
+                    <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                        <h4 class="font-semibold text-green-900 text-sm mb-1">🔢 Numeric</h4>
+                        <p class="text-green-800 text-xs">Guess a number - closest wins!</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                        <h4 class="font-semibold text-orange-900 text-sm mb-1">📅 Date</h4>
+                        <p class="text-orange-800 text-xs">Predict a date - closest wins!</p>
+                    </div>
+                    <div class="bg-teal-50 rounded-lg p-3 border border-teal-200">
+                        <h4 class="font-semibold text-teal-900 text-sm mb-1">💬 Short Answer</h4>
+                        <p class="text-teal-800 text-xs">Free text response</p>
+                    </div>
+                    <div class="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                        <h4 class="font-semibold text-amber-900 text-sm mb-1">🏆 Top N Ranking</h4>
+                        <p class="text-amber-800 text-xs">Rank the top performers</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Super Challenges -->
+            <!-- Challenge Types (Tabbed) -->
             <section class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Super Challenges</h2>
-                <p class="text-gray-700 mb-4">
-                    Super Challenges are group-wide challenges where multiple participants contribute to a shared prize pool. The bot automatically nudges random group members to create Super Challenges based on your group's settings.
-                </p>
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Challenge Types</h2>
 
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">How It Works</h3>
-                        <ol class="list-decimal list-inside space-y-2 text-gray-600">
-                            <li>The bot sends a nudge to a random group member suggesting a Super Challenge</li>
-                            <li>That member creates a challenge task (e.g., "First person to run 5km")</li>
-                            <li>Group members join by contributing points to the pot</li>
-                            <li>Someone completes the challenge and claims completion</li>
-                            <li>Participants validate the completion (or it auto-validates after 24h)</li>
-                            <li>The winner takes the entire pot!</li>
-                        </ol>
-                    </div>
-
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">Frequency Settings</h3>
-                        <p class="text-gray-600 mb-2">
-                            Group admins can configure how often Super Challenge nudges are sent:
-                        </p>
-                        <div class="bg-purple-50 rounded p-3 text-sm border border-purple-200">
-                            <ul class="space-y-1 text-purple-800">
-                                <li><strong>Weekly:</strong> One nudge per week</li>
-                                <li><strong>Monthly:</strong> One nudge per month</li>
-                                <li><strong>Quarterly:</strong> One nudge every 3 months</li>
-                                <li><strong>Off:</strong> No automatic nudges</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <h3 class="font-semibold text-yellow-900 mb-2">Example Super Challenge:</h3>
-                        <div class="text-yellow-800 space-y-1 text-sm">
-                            <p>• Challenge: "First to post a gym selfie today"</p>
-                            <p>• 5 members join with 50 points each = 250 point pot</p>
-                            <p>• Alex posts their gym selfie and claims completion</p>
-                            <p>• Other participants validate (or wait 24h for auto-validation)</p>
-                            <p class="font-semibold mt-2">→ Alex wins 250 points!</p>
-                        </div>
-                    </div>
+                <!-- Tab Navigation -->
+                <div class="border-b border-gray-200 mb-6">
+                    <nav class="flex -mb-px space-x-4">
+                        <button
+                            @click="activeChallengeTab = '1on1'"
+                            :class="[
+                                'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+                                activeChallengeTab === '1on1'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            ]"
+                        >
+                            🤝 1-on-1
+                        </button>
+                        <button
+                            @click="activeChallengeTab = 'super'"
+                            :class="[
+                                'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+                                activeChallengeTab === 'super'
+                                    ? 'border-amber-500 text-amber-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            ]"
+                        >
+                            ⭐ Super Challenge
+                        </button>
+                        <button
+                            @click="activeChallengeTab = 'elimination'"
+                            :class="[
+                                'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+                                activeChallengeTab === 'elimination'
+                                    ? 'border-orange-500 text-orange-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            ]"
+                        >
+                            🎯 Elimination
+                        </button>
+                    </nav>
                 </div>
-            </section>
 
-            <!-- Elimination Challenges -->
-            <section class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Elimination Challenges</h2>
-                <p class="text-gray-700 mb-4">
-                    Elimination Challenges are tournament-style endurance competitions. Participants "tap in" with a buy-in, and get eliminated when they fail to meet the challenge criteria. The last person standing (or survivors at the deadline) wins the pot!
-                </p>
+                <!-- 1-on-1 Content -->
+                <div v-if="activeChallengeTab === '1on1'">
+                    <p class="text-gray-700 mb-4">
+                        1-on-1 challenges are tasks between two people where points are at stake. One person creates the challenge, another accepts it.
+                    </p>
 
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">How It Works</h3>
-                        <ol class="list-decimal list-inside space-y-2 text-gray-600">
-                            <li>Someone creates an elimination challenge with a task and pot size</li>
-                            <li>Participants "tap in" during the registration period (paying a buy-in)</li>
-                            <li>The challenge activates once minimum participants join</li>
-                            <li>Participants must avoid the elimination trigger (e.g., "Don't eat sugar")</li>
-                            <li>If you fail, you "tap out" and are eliminated</li>
-                            <li>Last person standing wins, or survivors split at deadline!</li>
-                        </ol>
-                    </div>
-
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">Challenge Modes</h3>
-                        <div class="space-y-3">
-                            <div class="bg-red-50 rounded p-3 text-sm border border-red-200">
-                                <strong class="text-red-900">Last Man Standing:</strong>
-                                <p class="text-red-800">Challenge continues until only one person remains. That person takes the entire pot.</p>
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-2">Offer Points (Positive Amount)</h3>
+                            <p class="text-gray-600 mb-2">
+                                You offer points for someone to complete a task. The challenger puts up the points, and the acceptor earns them upon completion.
+                            </p>
+                            <div class="bg-green-50 rounded p-3 text-sm border border-green-200">
+                                <strong>Example:</strong> "I'll give 100 points to whoever brings me coffee"<br>
+                                <span class="text-green-800">→ Someone accepts, completes the task, and earns 100 points from you</span>
                             </div>
-                            <div class="bg-orange-50 rounded p-3 text-sm border border-orange-200">
-                                <strong class="text-orange-900">Deadline Mode:</strong>
-                                <p class="text-orange-800">Challenge runs until a set deadline. All survivors split the pot equally.</p>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-2">Request Points (Negative Amount)</h3>
+                            <p class="text-gray-600 mb-2">
+                                You request points to complete a task for someone else. The acceptor puts up the points, and the challenger earns them upon completion.
+                            </p>
+                            <div class="bg-blue-50 rounded p-3 text-sm border border-blue-200">
+                                <strong>Example:</strong> "I'll clean the garage for 150 points"<br>
+                                <span class="text-blue-800">→ Someone accepts, you complete the task, and you earn 150 points from them</span>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">Buy-In & Pot</h3>
-                        <p class="text-gray-600 mb-2">
-                            The buy-in is automatically calculated based on the pot size and group size. This ensures fair entry costs while building an exciting prize pool.
-                        </p>
+                <!-- Super Challenge Content -->
+                <div v-if="activeChallengeTab === 'super'">
+                    <p class="text-gray-700 mb-4">
+                        Super Challenges are group-wide competitions where multiple participants can join. The first person to complete the challenge wins points from the creator!
+                    </p>
+
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-2">How It Works</h3>
+                            <ol class="list-decimal list-inside space-y-2 text-gray-600">
+                                <li>Someone creates a Super Challenge with a task and prize</li>
+                                <li>Group members join to compete (no entry fee)</li>
+                                <li>First person to complete the task claims the prize</li>
+                                <li>Participants validate the completion (or it auto-validates after 24h)</li>
+                                <li>The winner earns the prize from the creator!</li>
+                            </ol>
+                        </div>
+
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-yellow-900 mb-2">Example Super Challenge:</h3>
+                            <div class="text-yellow-800 space-y-1 text-sm">
+                                <p>• Challenge: "First to post a gym selfie today"</p>
+                                <p>• Prize: 200 points from the creator</p>
+                                <p>• 5 members join to compete</p>
+                                <p>• Alex posts their gym selfie and claims completion</p>
+                                <p>• Other participants validate (or wait 24h for auto-validation)</p>
+                                <p class="font-semibold mt-2">→ Alex wins 200 points!</p>
+                            </div>
+                        </div>
                     </div>
+                </div>
 
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <h3 class="font-semibold text-green-900 mb-2">Example Elimination Challenge:</h3>
-                        <div class="text-green-800 space-y-1 text-sm">
-                            <p>• Challenge: "No caffeine for a week"</p>
-                            <p>• Elimination trigger: "Drinking coffee, tea, or energy drinks"</p>
-                            <p>• Mode: Deadline (7 days)</p>
-                            <p>• Pot: 500 points, Buy-in: 80 points each</p>
-                            <p>• 6 people tap in</p>
-                            <p>• Day 3: Two people tap out (drank coffee)</p>
-                            <p>• Day 7: Four survivors remain</p>
-                            <p class="font-semibold mt-2">→ Each survivor wins 125 points (500 ÷ 4)!</p>
+                <!-- Elimination Content -->
+                <div v-if="activeChallengeTab === 'elimination'">
+                    <p class="text-gray-700 mb-4">
+                        Elimination Challenges are tournament-style endurance competitions. Participants "tap in" with a buy-in, and get eliminated when they fail. The last person standing (or survivors at the deadline) wins the pot!
+                    </p>
+
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-2">How It Works</h3>
+                            <ol class="list-decimal list-inside space-y-2 text-gray-600">
+                                <li>Someone creates an elimination challenge with a task and pot size</li>
+                                <li>Participants "tap in" during the registration period (paying a buy-in)</li>
+                                <li>The challenge activates once minimum participants join</li>
+                                <li>Participants must avoid the elimination trigger (e.g., "Don't eat sugar")</li>
+                                <li>If you fail, you "tap out" and are eliminated</li>
+                                <li>Last person standing wins, or survivors split at deadline!</li>
+                            </ol>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-2">Challenge Modes</h3>
+                            <div class="space-y-3">
+                                <div class="bg-red-50 rounded p-3 text-sm border border-red-200">
+                                    <strong class="text-red-900">Last Man Standing:</strong>
+                                    <p class="text-red-800">Challenge continues until only one person remains. That person takes the entire pot.</p>
+                                </div>
+                                <div class="bg-orange-50 rounded p-3 text-sm border border-orange-200">
+                                    <strong class="text-orange-900">Deadline Mode:</strong>
+                                    <p class="text-orange-800">Challenge runs until a set deadline. All survivors split the pot equally.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-2">Buy-In & Pot</h3>
+                            <p class="text-gray-600 mb-2">
+                                The buy-in is automatically calculated based on the pot size and expected participants. This ensures fair entry costs while building an exciting prize pool.
+                            </p>
+                        </div>
+
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-green-900 mb-2">Example Elimination Challenge:</h3>
+                            <div class="text-green-800 space-y-1 text-sm">
+                                <p>• Challenge: "No caffeine for a week"</p>
+                                <p>• Elimination trigger: "Drinking coffee, tea, or energy drinks"</p>
+                                <p>• Mode: Deadline (7 days)</p>
+                                <p>• Pot: 500 points, Buy-in: 80 points each</p>
+                                <p>• 6 people tap in</p>
+                                <p>• Day 3: Two people tap out (drank coffee)</p>
+                                <p>• Day 7: Four survivors remain</p>
+                                <p class="font-semibold mt-2">→ Each survivor wins 125 points (500 ÷ 4)!</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -386,8 +441,8 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                     </div>
 
                     <div>
-                        <h3 class="font-semibold text-gray-900">How do Super Challenge nudges work?</h3>
-                        <p class="text-gray-600">The bot randomly selects an active group member and sends them a private message asking if they'd like to create a Super Challenge. If they decline or don't respond, another member is nudged. Group admins can configure the frequency in group settings.</p>
+                        <h3 class="font-semibold text-gray-900">What's the difference between challenge types?</h3>
+                        <p class="text-gray-600"><strong>1-on-1:</strong> Between two people, one creates and one accepts. <strong>Super:</strong> Anyone in the group can join, first to complete wins. <strong>Elimination:</strong> Endurance tournament with buy-ins, last one standing wins the pot.</p>
                     </div>
 
                     <div>

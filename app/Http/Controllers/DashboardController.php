@@ -354,6 +354,14 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Calculate active challenges (user is involved and not completed/failed/cancelled)
+        $activeChallengesCount = $userChallenges->filter(function($c) {
+            return in_array($c['status'], ['open', 'accepted', 'active']);
+        })->count();
+
+        // Calculate upcoming events count
+        $upcomingEventsCount = $upcomingEvents->count();
+
         return Inertia::render('Dashboard/Me', [
             'user' => [
                 'id' => $user->id,
@@ -365,6 +373,9 @@ class DashboardController extends Controller
             'stats' => [
                 'total_balance' => $totalBalance,
                 'active_wagers' => $activeWagersCount,
+                'active_challenges' => $activeChallengesCount,
+                'upcoming_events' => $upcomingEventsCount,
+                'active_items' => $activeWagersCount + $activeChallengesCount + $upcomingEventsCount,
                 'win_rate' => $winRate,
                 'total_wagers' => $totalWagersCount,
                 'won_wagers' => $wonWagersCount,

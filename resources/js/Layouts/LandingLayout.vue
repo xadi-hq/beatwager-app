@@ -81,11 +81,17 @@ function scrollToSection(sectionId: string) {
                             >
                                 What is this?
                             </button>
+                            <a
+                                href="/help"
+                                class="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-[#5da7f8] dark:hover:text-[#5da7f8] transition-colors"
+                            >
+                                Help
+                            </a>
                             <button
                                 @click="scrollToSection('donate')"
                                 class="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-[#5da7f8] dark:hover:text-[#5da7f8] transition-colors"
                             >
-                                Support
+                                Donate
                             </button>
                         </div>
 

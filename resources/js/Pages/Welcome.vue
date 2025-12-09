@@ -24,7 +24,7 @@ import LandingLayout from '@/Layouts/LandingLayout.vue';
                 </div>
 
                 <!-- Hero Text -->
-                <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-lg">
+                <h1 class="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-lg">
                     Welcome to WagerBot
                 </h1>
                 <p class="text-xl sm:text-2xl md:text-3xl text-white/90 mb-12 max-w-3xl mx-auto drop-shadow">
@@ -43,13 +43,6 @@ import LandingLayout from '@/Layouts/LandingLayout.vue';
                     </svg>
                     Start a chat with @WagerBot
                 </a>
-
-                <!-- Scroll Indicator -->
-                <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-                    <svg class="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-                    </svg>
-                </div>
             </div>
         </section>
 
