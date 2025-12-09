@@ -4,8 +4,11 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 </script>
 
 <template>
-    <AppLayout>
-        <Head title="Help - BeatWager" />
+    <AppLayout
+        title="Help & Documentation - WagerBot"
+        description="Learn how to use WagerBot: create wagers, super challenges, elimination tournaments, and more. Complete guide to commands, points system, and challenge types."
+    >
+        <Head title="Help & Documentation - WagerBot" />
 
         <div class="max-w-4xl mx-auto py-8 px-4">
             <!-- Header -->

@@ -4,6 +4,8 @@ import { Head } from '@inertiajs/vue3';
 
 defineProps<{
     title?: string;
+    description?: string;
+    ogImage?: string;
 }>();
 
 // Dark mode management
@@ -45,7 +47,16 @@ function scrollToSection(sectionId: string) {
 
 <template>
     <div>
-        <Head :title="title" />
+        <Head :title="title">
+            <meta v-if="description" name="description" :content="description" />
+            <meta v-if="description" property="og:description" :content="description" />
+            <meta v-if="title" property="og:title" :content="title" />
+            <meta property="og:type" content="website" />
+            <meta v-if="ogImage" property="og:image" :content="ogImage" />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta v-if="title" name="twitter:title" :content="title" />
+            <meta v-if="description" name="twitter:description" :content="description" />
+        </Head>
 
         <div class="min-h-screen bg-white dark:bg-neutral-900">
             <!-- Fixed Navigation -->

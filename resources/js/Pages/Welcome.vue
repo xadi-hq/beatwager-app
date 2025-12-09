@@ -3,7 +3,11 @@ import LandingLayout from '@/Layouts/LandingLayout.vue';
 </script>
 
 <template>
-    <LandingLayout title="WagerBot - Social Wagering for Telegram">
+    <LandingLayout
+        title="WagerBot - Social Wagering for Telegram"
+        description="Create friendly wagers, super challenges, and elimination tournaments with your friends. Track points, compete for bragging rights, and have fun in your Telegram groups!"
+        og-image="/media/wagerbot-lg.png"
+    >
         <!-- Hero Section -->
         <section id="hero" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#5da7f8] via-[#6bb4ff] to-[#7ac1ff] dark:from-[#4a8bc9] dark:via-[#5498d8] dark:to-[#5ea5e7]">
             <div class="text-center px-4 sm:px-6 lg:px-8">

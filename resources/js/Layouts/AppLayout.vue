@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import Drawer from '@/Components/Drawer.vue';
 import UserProfileForm from '@/Components/UserProfileForm.vue';
 
 defineProps<{
     title?: string;
+    description?: string;
 }>();
 
 const page = usePage();
@@ -49,7 +50,9 @@ function toggleDarkMode() {
 
 <template>
     <div>
-        <Head :title="title" />
+        <Head :title="title">
+            <meta v-if="description" name="description" :content="description" />
+        </Head>
 
         <div class="min-h-screen bg-neutral-50 dark:bg-neutral-900">
             <!-- Navigation -->

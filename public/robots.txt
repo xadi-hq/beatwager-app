@@ -1,2 +1,12 @@
 User-agent: *
-Disallow:
+Disallow: /me
+Disallow: /wager/
+Disallow: /challenge/
+Disallow: /event/
+Disallow: /elimination/
+Disallow: /superchallenge/
+Disallow: /group/
+Disallow: /l/
+
+# Sitemap
+Sitemap: https://bw.xadi.eu/sitemap.xml
