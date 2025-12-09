@@ -296,6 +296,17 @@ class Challenge extends Model
                   $superQ->where('status', 'open')
                          ->where('type', ChallengeType::SUPER_CHALLENGE->value)
                          ->where('completion_deadline', '>=', now());
+              })
+              // Open Elimination Challenges (tap-in open or already has participants)
+              ->orWhere(function ($elimQ) {
+                  $elimQ->where('status', 'open')
+                        ->where('type', ChallengeType::ELIMINATION_CHALLENGE->value)
+                        ->where(function ($deadlineQ) {
+                            // Tap-in still open OR no tap-in deadline OR has participants
+                            $deadlineQ->whereNull('tap_in_deadline')
+                                      ->orWhere('tap_in_deadline', '>=', now())
+                                      ->orWhereHas('participants');
+                        });
               });
         });
     }
