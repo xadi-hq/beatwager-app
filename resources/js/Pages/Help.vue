@@ -155,9 +155,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                 </div>
             </section>
 
-            <!-- Challenges -->
+            <!-- 1-on-1 Challenges -->
             <section class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Challenges</h2>
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">1-on-1 Challenges</h2>
                 <p class="text-gray-700 mb-4">
                     Challenges are 1-on-1 tasks where points are at stake. Unlike wagers, challenges have a challenger and an acceptor.
                 </p>
@@ -182,6 +182,111 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                         <div class="bg-blue-50 rounded p-3 text-sm border border-blue-200">
                             <strong>Example:</strong> "I'll clean the garage for 150 points"<br>
                             <span class="text-blue-800">→ Someone accepts, you complete the task, and you earn 150 points from them</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Super Challenges -->
+            <section class="bg-white rounded-lg shadow p-6 mb-6">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Super Challenges</h2>
+                <p class="text-gray-700 mb-4">
+                    Super Challenges are group-wide challenges where multiple participants contribute to a shared prize pool. The bot automatically nudges random group members to create Super Challenges based on your group's settings.
+                </p>
+
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">How It Works</h3>
+                        <ol class="list-decimal list-inside space-y-2 text-gray-600">
+                            <li>The bot sends a nudge to a random group member suggesting a Super Challenge</li>
+                            <li>That member creates a challenge task (e.g., "First person to run 5km")</li>
+                            <li>Group members join by contributing points to the pot</li>
+                            <li>Someone completes the challenge and claims completion</li>
+                            <li>Participants validate the completion (or it auto-validates after 24h)</li>
+                            <li>The winner takes the entire pot!</li>
+                        </ol>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Frequency Settings</h3>
+                        <p class="text-gray-600 mb-2">
+                            Group admins can configure how often Super Challenge nudges are sent:
+                        </p>
+                        <div class="bg-purple-50 rounded p-3 text-sm border border-purple-200">
+                            <ul class="space-y-1 text-purple-800">
+                                <li><strong>Weekly:</strong> One nudge per week</li>
+                                <li><strong>Monthly:</strong> One nudge per month</li>
+                                <li><strong>Quarterly:</strong> One nudge every 3 months</li>
+                                <li><strong>Off:</strong> No automatic nudges</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-yellow-900 mb-2">Example Super Challenge:</h3>
+                        <div class="text-yellow-800 space-y-1 text-sm">
+                            <p>• Challenge: "First to post a gym selfie today"</p>
+                            <p>• 5 members join with 50 points each = 250 point pot</p>
+                            <p>• Alex posts their gym selfie and claims completion</p>
+                            <p>• Other participants validate (or wait 24h for auto-validation)</p>
+                            <p class="font-semibold mt-2">→ Alex wins 250 points!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Elimination Challenges -->
+            <section class="bg-white rounded-lg shadow p-6 mb-6">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Elimination Challenges</h2>
+                <p class="text-gray-700 mb-4">
+                    Elimination Challenges are tournament-style endurance competitions. Participants "tap in" with a buy-in, and get eliminated when they fail to meet the challenge criteria. The last person standing (or survivors at the deadline) wins the pot!
+                </p>
+
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">How It Works</h3>
+                        <ol class="list-decimal list-inside space-y-2 text-gray-600">
+                            <li>Someone creates an elimination challenge with a task and pot size</li>
+                            <li>Participants "tap in" during the registration period (paying a buy-in)</li>
+                            <li>The challenge activates once minimum participants join</li>
+                            <li>Participants must avoid the elimination trigger (e.g., "Don't eat sugar")</li>
+                            <li>If you fail, you "tap out" and are eliminated</li>
+                            <li>Last person standing wins, or survivors split at deadline!</li>
+                        </ol>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Challenge Modes</h3>
+                        <div class="space-y-3">
+                            <div class="bg-red-50 rounded p-3 text-sm border border-red-200">
+                                <strong class="text-red-900">Last Man Standing:</strong>
+                                <p class="text-red-800">Challenge continues until only one person remains. That person takes the entire pot.</p>
+                            </div>
+                            <div class="bg-orange-50 rounded p-3 text-sm border border-orange-200">
+                                <strong class="text-orange-900">Deadline Mode:</strong>
+                                <p class="text-orange-800">Challenge runs until a set deadline. All survivors split the pot equally.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Buy-In & Pot</h3>
+                        <p class="text-gray-600 mb-2">
+                            The buy-in is automatically calculated based on the pot size and group size. This ensures fair entry costs while building an exciting prize pool.
+                        </p>
+                    </div>
+
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-green-900 mb-2">Example Elimination Challenge:</h3>
+                        <div class="text-green-800 space-y-1 text-sm">
+                            <p>• Challenge: "No caffeine for a week"</p>
+                            <p>• Elimination trigger: "Drinking coffee, tea, or energy drinks"</p>
+                            <p>• Mode: Deadline (7 days)</p>
+                            <p>• Pot: 500 points, Buy-in: 80 points each</p>
+                            <p>• 6 people tap in</p>
+                            <p>• Day 3: Two people tap out (drank coffee)</p>
+                            <p>• Day 7: Four survivors remain</p>
+                            <p class="font-semibold mt-2">→ Each survivor wins 125 points (500 ÷ 4)!</p>
                         </div>
                     </div>
                 </div>
@@ -275,6 +380,21 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                     <div>
                         <h3 class="font-semibold text-gray-900">Are points transferred between groups?</h3>
                         <p class="text-gray-600">No, each group has its own separate point economy and leaderboard.</p>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-gray-900">How do Super Challenge nudges work?</h3>
+                        <p class="text-gray-600">The bot randomly selects an active group member and sends them a private message asking if they'd like to create a Super Challenge. If they decline or don't respond, another member is nudged. Group admins can configure the frequency in group settings.</p>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-gray-900">What happens if I tap out of an Elimination Challenge?</h3>
+                        <p class="text-gray-600">You're eliminated from the challenge and forfeit your buy-in. Your points go to the pot, increasing the prize for the remaining participants. Be honest - it's all about bragging rights!</p>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-gray-900">What's the minimum participants for an Elimination Challenge?</h3>
+                        <p class="text-gray-600">By default, at least 3 participants must tap in before the challenge activates. If the minimum isn't reached by the tap-in deadline, the challenge is cancelled and buy-ins are refunded.</p>
                     </div>
                 </div>
             </section>

@@ -59,7 +59,7 @@ import LandingLayout from '@/Layouts/LandingLayout.vue';
                     <div class="w-24 h-1 bg-[#5da7f8] mx-auto rounded-full"></div>
                 </div>
 
-                <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
                     <!-- Feature 1 -->
                     <div class="text-center p-8 rounded-3xl bg-gradient-to-br from-[#5da7f8]/10 to-[#7ac1ff]/10 dark:from-[#5da7f8]/20 dark:to-[#7ac1ff]/20 hover:shadow-xl transition-shadow duration-300">
                         <div class="text-5xl mb-4">🎲</div>
@@ -71,14 +71,41 @@ import LandingLayout from '@/Layouts/LandingLayout.vue';
 
                     <!-- Feature 2 -->
                     <div class="text-center p-8 rounded-3xl bg-gradient-to-br from-[#5da7f8]/10 to-[#7ac1ff]/10 dark:from-[#5da7f8]/20 dark:to-[#7ac1ff]/20 hover:shadow-xl transition-shadow duration-300">
-                        <div class="text-5xl mb-4">📅</div>
-                        <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-3">Events & Challenges</h3>
+                        <div class="text-5xl mb-4">🏆</div>
+                        <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-3">Super Challenges</h3>
                         <p class="text-neutral-600 dark:text-neutral-400">
-                            Organize group events and challenges. Keep everyone engaged and the competition friendly.
+                            Group-wide challenges where everyone contributes to the pot. Complete the task and claim your reward!
                         </p>
                     </div>
 
                     <!-- Feature 3 -->
+                    <div class="text-center p-8 rounded-3xl bg-gradient-to-br from-[#5da7f8]/10 to-[#7ac1ff]/10 dark:from-[#5da7f8]/20 dark:to-[#7ac1ff]/20 hover:shadow-xl transition-shadow duration-300">
+                        <div class="text-5xl mb-4">🔥</div>
+                        <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-3">Elimination Challenges</h3>
+                        <p class="text-neutral-600 dark:text-neutral-400">
+                            Tournament-style endurance challenges. Tap in, survive the longest, and take home the prize pool!
+                        </p>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="text-center p-8 rounded-3xl bg-gradient-to-br from-[#5da7f8]/10 to-[#7ac1ff]/10 dark:from-[#5da7f8]/20 dark:to-[#7ac1ff]/20 hover:shadow-xl transition-shadow duration-300">
+                        <div class="text-5xl mb-4">📅</div>
+                        <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-3">Events</h3>
+                        <p class="text-neutral-600 dark:text-neutral-400">
+                            Organize group events with attendance tracking. Reward participants with bonus points!
+                        </p>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div class="text-center p-8 rounded-3xl bg-gradient-to-br from-[#5da7f8]/10 to-[#7ac1ff]/10 dark:from-[#5da7f8]/20 dark:to-[#7ac1ff]/20 hover:shadow-xl transition-shadow duration-300">
+                        <div class="text-5xl mb-4">🎯</div>
+                        <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-3">1-on-1 Challenges</h3>
+                        <p class="text-neutral-600 dark:text-neutral-400">
+                            Challenge a friend directly. Offer points for tasks or earn points by completing them yourself.
+                        </p>
+                    </div>
+
+                    <!-- Feature 6 -->
                     <div class="text-center p-8 rounded-3xl bg-gradient-to-br from-[#5da7f8]/10 to-[#7ac1ff]/10 dark:from-[#5da7f8]/20 dark:to-[#7ac1ff]/20 hover:shadow-xl transition-shadow duration-300">
                         <div class="text-5xl mb-4">🤖</div>
                         <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-3">AI-Powered</h3>
