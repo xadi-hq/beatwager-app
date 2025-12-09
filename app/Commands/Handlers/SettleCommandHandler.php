@@ -42,7 +42,7 @@ class SettleCommandHandler extends AbstractCommandHandler
 
         // Get the group from the chat
         $group = \App\Models\Group::where('platform_chat_id', $message->chatId)
-            ->where('platform', 'telegram')
+            ->where('platform', $message->platform)
             ->first();
 
         if (!$group) {
