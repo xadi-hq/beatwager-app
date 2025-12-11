@@ -101,8 +101,9 @@ class EventsCommandHandler extends AbstractCommandHandler
 
             foreach ($events as $i => $event) {
                 $name = $this->truncateName($event->name);
-                $eventDate = $event->event_date;
-                $isPast = $eventDate < $now;
+                // Convert UTC to group timezone for display
+                $eventDate = $group->toGroupTimezone($event->event_date);
+                $isPast = $event->event_date < $now;
                 $timeInfo = $this->formatEventTime($eventDate, $isPast);
                 $location = $event->location ? substr($event->location, 0, 30) : 'TBD';
                 $bonus = $event->attendance_bonus;

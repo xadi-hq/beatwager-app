@@ -87,7 +87,7 @@ class TrackEventProgressCallbackHandler extends AbstractCallbackHandler
         }
 
         $message .= "*Status:* " . ucfirst($event->status) . "\n";
-        $message .= "*When:* " . $event->event_date->format('M j, Y g:i A') . "\n";
+        $message .= "*When:* " . $event->group->toGroupTimezone($event->event_date)->format('M j, Y g:i A') . "\n";
 
         if ($event->location) {
             $message .= "*Where:* {$event->location}\n";
@@ -101,7 +101,7 @@ class TrackEventProgressCallbackHandler extends AbstractCallbackHandler
         if ($event->rsvp_deadline) {
             $deadline = $event->rsvp_deadline;
             if ($deadline > now()) {
-                $message .= "*RSVP by:* " . $deadline->format('M j, Y') . "\n";
+                $message .= "*RSVP by:* " . $event->group->toGroupTimezone($deadline)->format('M j, Y') . "\n";
             }
         }
 

@@ -84,7 +84,7 @@ const statusColor = computed(() => {
 
 const statusIcon = computed(() => {
     switch (props.challenge.status) {
-        case 'open': return '🔓';
+        case 'open': return isTapInClosed.value ? '🔒' : '🔓';
         case 'in_progress': return '⚡';
         case 'completed': return '🏆';
         case 'cancelled': return '🚫';
@@ -92,19 +92,24 @@ const statusIcon = computed(() => {
     }
 });
 
+// Time remaining calculations
+const tapInDeadline = props.challenge.tap_in_deadline ? new Date(props.challenge.tap_in_deadline) : null;
+const completionDeadline = props.challenge.completion_deadline ? new Date(props.challenge.completion_deadline) : null;
+
+const isTapInClosed = computed(() => {
+    if (!tapInDeadline) return false;
+    return tapInDeadline.getTime() < now.value;
+});
+
 const statusText = computed(() => {
     switch (props.challenge.status) {
-        case 'open': return 'Open for Tap-In';
+        case 'open': return isTapInClosed.value ? 'Tap-In Closed' : 'Open for Tap-In';
         case 'in_progress': return 'In Progress';
         case 'completed': return 'Completed';
         case 'cancelled': return 'Cancelled';
         default: return 'Unknown';
     }
 });
-
-// Time remaining calculations
-const tapInDeadline = props.challenge.tap_in_deadline ? new Date(props.challenge.tap_in_deadline) : null;
-const completionDeadline = props.challenge.completion_deadline ? new Date(props.challenge.completion_deadline) : null;
 
 const tapInTimeRemaining = computed(() => {
     if (!tapInDeadline) return null;

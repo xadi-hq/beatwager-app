@@ -36,10 +36,13 @@ class SendEventRsvpReminders implements ShouldQueue
                     $message .= "📍 Location: {$event->location}\n";
                 }
 
-                $message .= "🗓 Date: {$event->event_date->format('D, M j @ g:i A')}\n\n";
+                // Convert UTC times to group timezone for display
+                $eventDate = $event->group->toGroupTimezone($event->event_date);
+                $message .= "🗓 Date: {$eventDate->format('D, M j @ g:i A')}\n\n";
 
                 if ($event->rsvp_deadline) {
-                    $message .= "⚠️ RSVP by: {$event->rsvp_deadline->format('M j @ g:i A')}\n\n";
+                    $rsvpDeadline = $event->group->toGroupTimezone($event->rsvp_deadline);
+                    $message .= "⚠️ RSVP by: {$rsvpDeadline->format('M j @ g:i A')}\n\n";
                 } else {
                     $message .= "📢 Please RSVP before tomorrow!\n\n";
                 }

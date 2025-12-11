@@ -141,7 +141,7 @@ class SuperChallengeController extends Controller
                 'description' => $challenge->description,
                 'prize_per_person' => $challenge->prize_per_person,
                 'max_participants' => $challenge->max_participants,
-                'deadline' => $challenge->completion_deadline->format('M j, Y'),
+                'deadline' => $challenge->group->toGroupTimezone($challenge->completion_deadline)->format('M j, Y'),
             ],
             'group' => [
                 'name' => $challenge->group->platform_chat_title ?: $challenge->group->name,
@@ -170,7 +170,7 @@ class SuperChallengeController extends Controller
                     'prize_per_person' => $challenge->prize_per_person,
                     'max_participants' => $challenge->max_participants,
                     'current_participants' => $challenge->participants()->count(),
-                    'deadline' => $challenge->completion_deadline->format('M j, Y g:i A'),
+                    'deadline' => $challenge->group->toGroupTimezone($challenge->completion_deadline)->format('M j, Y g:i A'),
                     'evidence_guidance' => $challenge->evidence_guidance,
                 ],
                 'group' => [
@@ -203,7 +203,7 @@ class SuperChallengeController extends Controller
             'challenge' => [
                 'description' => $challenge->description,
                 'prize_per_person' => $challenge->prize_per_person,
-                'deadline' => $challenge->completion_deadline->format('M j, Y'),
+                'deadline' => $challenge->group->toGroupTimezone($challenge->completion_deadline)->format('M j, Y'),
             ],
         ]);
     }
@@ -284,7 +284,7 @@ class SuperChallengeController extends Controller
                 'participant' => [
                     'id' => $participant->id,
                     'user_name' => $participant->user->name,
-                    'completed_at' => $participant->completed_at->format('M j, Y g:i A'),
+                    'completed_at' => $challenge->group->toGroupTimezone($participant->completed_at)->format('M j, Y g:i A'),
                 ],
                 'challenge' => [
                     'description' => $challenge->description,

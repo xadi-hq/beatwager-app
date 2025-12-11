@@ -534,7 +534,7 @@ class MessageService
 
         $nextEventData = $nextEvent ? [
             'name' => $nextEvent->name,
-            'date' => $nextEvent->event_date->format('M j, Y'),
+            'date' => $nextEvent->group->toGroupTimezone($nextEvent->event_date)->format('M j, Y'),
             'days_until' => (int) now()->diffInDays($nextEvent->event_date),
         ] : null;
 
@@ -642,11 +642,11 @@ class MessageService
             data: [
                 'name' => $event->name,
                 'description' => $event->description ?? '',
-                'event_date' => $event->event_date->format('M j, Y g:i A'),
+                'event_date' => $event->group->toGroupTimezone($event->event_date)->format('M j, Y g:i A'),
                 'location' => $event->location ?? '',
                 'attendance_bonus' => $event->attendance_bonus,
                 'currency' => $currency,
-                'rsvp_deadline' => $event->rsvp_deadline?->format('M j, Y'),
+                'rsvp_deadline' => $event->rsvp_deadline ? $event->group->toGroupTimezone($event->rsvp_deadline)->format('M j, Y') : null,
                 'creator' => $event->creator->name ?? 'Someone',
                 // NEW: Streak context for LLM
                 'streaks_at_risk' => $streaksAtRisk,
@@ -719,7 +719,7 @@ class MessageService
             requiredFields: $meta['required_fields'],
             data: [
                 'event_name' => $event->name,
-                'event_date' => $event->event_date->format('M j, Y g:i A'),
+                'event_date' => $event->group->toGroupTimezone($event->event_date)->format('M j, Y g:i A'),
                 'cancelled_by' => $event->creator->name ?? 'Someone',
             ],
             group: $event->group
@@ -754,8 +754,8 @@ class MessageService
                 'description' => $challenge->description,
                 'reward' => $challenge->getAbsoluteAmount(), // Use absolute value for display
                 'currency' => $currency,
-                'deadline_at' => $challenge->completion_deadline->format('M j, Y g:i A'),
-                'acceptance_deadline' => $challenge->acceptance_deadline?->format('M j, Y g:i A'),
+                'deadline_at' => $challenge->group->toGroupTimezone($challenge->completion_deadline)->format('M j, Y g:i A'),
+                'acceptance_deadline' => $challenge->acceptance_deadline ? $challenge->group->toGroupTimezone($challenge->acceptance_deadline)->format('M j, Y g:i A') : null,
                 'creator' => $challenge->creator->name ?? 'Someone',
                 'type' => $challenge->isOfferingService() ? 'offering_service' : 'offering_payment',
             ],
@@ -816,7 +816,7 @@ class MessageService
                 'challenge_title' => $challenge->description,
                 'reward' => $challenge->getAbsoluteAmount(),
                 'currency' => $currency,
-                'deadline_at' => $challenge->completion_deadline->format('M j, Y g:i A'),
+                'deadline_at' => $challenge->group->toGroupTimezone($challenge->completion_deadline)->format('M j, Y g:i A'),
             ],
             group: $challenge->group
         );
@@ -1096,7 +1096,7 @@ class MessageService
                 'max_participants' => $challenge->max_participants,
                 'current_participants' => $challenge->participants()->count(),
                 'currency' => $currency,
-                'deadline_at' => $challenge->completion_deadline->format('M j, Y g:i A'),
+                'deadline_at' => $challenge->group->toGroupTimezone($challenge->completion_deadline)->format('M j, Y g:i A'),
                 'evidence_guidance' => $challenge->evidence_guidance,
             ],
             group: $challenge->group
@@ -1186,7 +1186,7 @@ class MessageService
                 'description' => $challenge->description,
                 'prize_per_person' => $challenge->prize_per_person,
                 'currency' => $currency,
-                'completed_at' => $participant->completed_at->format('M j, Y g:i A'),
+                'completed_at' => $challenge->group->toGroupTimezone($participant->completed_at)->format('M j, Y g:i A'),
             ],
             group: $challenge->group
         );
@@ -1339,7 +1339,7 @@ class MessageService
             data: [
                 'user_name' => $user->name,
                 'event_name' => $event->name,
-                'event_date' => $event->event_date->format('M j, Y'),
+                'event_date' => $event->group->toGroupTimezone($event->event_date)->format('M j, Y'),
                 'currency' => $currency,
                 'response' => $response, // Current response (going, maybe, not_going)
                 'previous_response' => $previousResponseText, // Only for change messages
@@ -1880,8 +1880,8 @@ class MessageService
                 'pot' => $challenge->point_pot,
                 'buy_in' => $challenge->buy_in_amount,
                 'currency' => $currency,
-                'deadline' => $challenge->completion_deadline?->format('M j, Y g:i A'),
-                'tap_in_deadline' => $challenge->tap_in_deadline?->format('M j, Y g:i A'),
+                'deadline' => $challenge->completion_deadline ? $challenge->group->toGroupTimezone($challenge->completion_deadline)->format('M j, Y g:i A') : null,
+                'tap_in_deadline' => $challenge->tap_in_deadline ? $challenge->group->toGroupTimezone($challenge->tap_in_deadline)->format('M j, Y g:i A') : null,
                 'min_participants' => $challenge->min_participants,
                 'creator_name' => $challenge->creator->name ?? 'Someone',
             ],
