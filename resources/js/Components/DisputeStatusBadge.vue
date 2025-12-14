@@ -22,8 +22,8 @@ const statusConfig = computed(() => {
     // Handle "disputed" status (item is currently being disputed)
     if (props.status === 'disputed') {
         return {
-            icon: '⚖️',
-            text: 'Under Dispute',
+            icon: '⚠️',
+            text: 'Disputed',
             bgClass: 'bg-amber-100 dark:bg-amber-900/30',
             textClass: 'text-amber-700 dark:text-amber-300',
             borderClass: 'border-amber-300 dark:border-amber-700',
@@ -68,10 +68,10 @@ const statusConfig = computed(() => {
         }
     }
 
-    // Pending status
+    // Pending status (dispute awaiting votes)
     return {
-        icon: '⏳',
-        text: 'Voting in Progress',
+        icon: '⚖️',
+        text: 'Awaiting Verdict',
         bgClass: 'bg-blue-100 dark:bg-blue-900/30',
         textClass: 'text-blue-700 dark:text-blue-300',
         borderClass: 'border-blue-300 dark:border-blue-700',

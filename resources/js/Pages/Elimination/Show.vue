@@ -214,7 +214,7 @@ const cancelChallenge = () => {
                             <span>{{ statusIcon }}</span>
                             <span>{{ statusText }}</span>
                         </div>
-                        <DisputeStatusBadge v-if="dispute" :status="dispute.status" :resolution="dispute.resolution" />
+                        <DisputeStatusBadge v-if="dispute" :status="dispute.status" :resolution="dispute.resolution" :dispute-id="dispute.id" clickable />
                     </div>
                 </div>
 

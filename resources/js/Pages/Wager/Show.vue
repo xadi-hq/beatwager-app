@@ -251,7 +251,7 @@ const submitSettlement = () => {
                             <div class="text-2xl font-bold text-green-600 dark:text-green-400">
                                 ✅ Outcome: {{ formatAnswer(wager.outcome_value, wager.type) }}
                             </div>
-                            <DisputeStatusBadge v-if="dispute" :status="dispute.status" :resolution="dispute.resolution" />
+                            <DisputeStatusBadge v-if="dispute" :status="dispute.status" :resolution="dispute.resolution" :dispute-id="dispute.id" clickable />
                         </div>
                         <div v-if="wager.settlement_note" class="mb-3 p-3 bg-neutral-50 dark:bg-neutral-700 rounded border-l-4 border-blue-500">
                             <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Settlement Note:</p>
@@ -522,7 +522,7 @@ const submitSettlement = () => {
                                     <div class="text-2xl font-bold text-green-600 dark:text-green-400">
                                         ✅ Outcome: {{ formatAnswer(wager.outcome_value, wager.type) }}
                                     </div>
-                                    <DisputeStatusBadge v-if="dispute" :status="dispute.status" :resolution="dispute.resolution" />
+                                    <DisputeStatusBadge v-if="dispute" :status="dispute.status" :resolution="dispute.resolution" :dispute-id="dispute.id" clickable />
                                 </div>
                                 <div v-if="wager.settlement_note" class="mb-3 p-3 bg-neutral-50 dark:bg-neutral-700 rounded border-l-4 border-blue-500">
                                     <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Settlement Note:</p>
