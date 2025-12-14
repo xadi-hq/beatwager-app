@@ -36,6 +36,14 @@ trait Disputable
     }
 
     /**
+     * Alias for activeDispute() - get the currently active dispute.
+     */
+    public function dispute(): BelongsTo
+    {
+        return $this->activeDispute();
+    }
+
+    /**
      * Check if this item currently has an active dispute.
      */
     public function isDisputed(): bool
