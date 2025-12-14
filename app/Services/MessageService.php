@@ -2312,30 +2312,30 @@ class MessageService
 
         $content = $this->contentGenerator->generate($ctx, $group);
 
-        // Build voting buttons
+        // Build voting buttons (shortened callback data to stay under 64 byte limit)
         $buttons = [
             [
                 new Button(
                     label: '✅ Original Correct',
                     action: ButtonAction::Callback,
-                    value: "dispute_vote:{$dispute->id}:original_correct"
+                    value: "dv:{$dispute->id}:oc"
                 ),
                 new Button(
                     label: '❌ Different Outcome',
                     action: ButtonAction::Callback,
-                    value: "dispute_vote:{$dispute->id}:different_outcome"
+                    value: "dv:{$dispute->id}:do"
                 ),
             ],
             [
                 new Button(
-                    label: '⏳ Not Yet Determinable',
+                    label: '⏳ Too Early',
                     action: ButtonAction::Callback,
-                    value: "dispute_vote:{$dispute->id}:not_yet_determinable"
+                    value: "dv:{$dispute->id}:te"
                 ),
                 new Button(
                     label: '👀 View Details',
                     action: ButtonAction::Callback,
-                    value: "dispute_view:{$dispute->id}"
+                    value: "dv:{$dispute->id}:v"
                 ),
             ],
         ];
@@ -2456,25 +2456,25 @@ class MessageService
 
         $content = $this->contentGenerator->generate($ctx, $group);
 
-        // Build voting buttons
+        // Build voting buttons (shortened callback data to stay under 64 byte limit)
         $buttons = [
             [
                 new Button(
                     label: '✅ Original Correct',
                     action: ButtonAction::Callback,
-                    value: "dispute_vote:{$dispute->id}:original_correct"
+                    value: "dv:{$dispute->id}:oc"
                 ),
                 new Button(
                     label: '❌ Different Outcome',
                     action: ButtonAction::Callback,
-                    value: "dispute_vote:{$dispute->id}:different_outcome"
+                    value: "dv:{$dispute->id}:do"
                 ),
             ],
             [
                 new Button(
-                    label: '⏳ Not Yet Determinable',
+                    label: '⏳ Too Early',
                     action: ButtonAction::Callback,
-                    value: "dispute_vote:{$dispute->id}:not_yet_determinable"
+                    value: "dv:{$dispute->id}:te"
                 ),
             ],
         ];

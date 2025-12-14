@@ -17,11 +17,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
 /**
- * Handle dispute_vote callback - User votes on a dispute
+ * Handle dv (dispute vote) callback - User votes on a dispute
  *
  * Callback data format: "{dispute_id}:{vote_type}" or "{dispute_id}:{vote_type}:{selected_outcome}"
  * - dispute_id: UUID of the dispute
- * - vote_type: original_correct, different_outcome, not_yet_determinable
+ * - vote_type: oc (original_correct), do (different_outcome), te (too_early), v (view)
  * - selected_outcome: (optional) the correct outcome for different_outcome votes
  */
 class DisputeVoteCallbackHandler extends AbstractCallbackHandler
@@ -132,11 +132,17 @@ class DisputeVoteCallbackHandler extends AbstractCallbackHandler
             return;
         }
 
-        // Map vote type to enum
+        // Handle view action - redirect to web UI
+        if ($voteType === 'v') {
+            $this->redirectToWebVoting($callback, $dispute, 'view');
+            return;
+        }
+
+        // Map vote type to enum (shortened: oc, do, te)
         $outcome = match ($voteType) {
-            'original_correct' => DisputeVoteOutcome::OriginalCorrect,
-            'different_outcome' => DisputeVoteOutcome::DifferentOutcome,
-            'not_yet_determinable' => DisputeVoteOutcome::NotYetDeterminable,
+            'oc', 'original_correct' => DisputeVoteOutcome::OriginalCorrect,
+            'do', 'different_outcome' => DisputeVoteOutcome::DifferentOutcome,
+            'te', 'not_yet_determinable' => DisputeVoteOutcome::NotYetDeterminable,
             default => null,
         };
 
@@ -269,7 +275,7 @@ class DisputeVoteCallbackHandler extends AbstractCallbackHandler
 
     public function getAction(): string
     {
-        return 'dispute_vote';
+        return 'dv';
     }
 
     public function getDescription(): string

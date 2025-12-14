@@ -72,7 +72,7 @@ const buttonIcon = computed(() => {
     <Link
         v-if="existingDisputeId"
         :href="`/disputes/${existingDisputeId}`"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+        class="flex w-full justify-center items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
     >
         <span>{{ buttonIcon }}</span>
         <span>{{ buttonText }}</span>
@@ -82,7 +82,7 @@ const buttonIcon = computed(() => {
     <button
         v-else-if="canDispute"
         @click="showDrawer = true"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+        class="flex w-full justify-center items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
     >
         <span>{{ buttonIcon }}</span>
         <span>{{ buttonText }}</span>
@@ -91,7 +91,7 @@ const buttonIcon = computed(() => {
     <!-- Disabled state with reason -->
     <div
         v-else-if="disputeReason"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 rounded-lg cursor-not-allowed"
+        class="flex w-full justify-center items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 rounded-lg cursor-not-allowed"
         :title="disputeReason"
     >
         <span>🚨</span>
