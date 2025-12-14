@@ -503,16 +503,8 @@ class DisputeServiceTest extends TestCase
 
         $wager->update(['dispute_id' => $dispute->id]);
 
-        // Should penalize reporter for unresolved dispute
-        $this->pointService->shouldReceive('deductPercentage')
-            ->once()
-            ->with(
-                Mockery::on(fn($u) => $u->id === $reporter->id),
-                Mockery::type(Group::class),
-                10,
-                Mockery::type(\App\Enums\TransactionType::class),
-                Mockery::type(Dispute::class)
-            );
+        // No penalty when nobody voted - that's not a "false" dispute
+        $this->pointService->shouldNotReceive('deductPercentage');
 
         $this->service->handleExpiredDispute($dispute);
 

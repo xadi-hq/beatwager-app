@@ -6,6 +6,8 @@ use App\Enums\DisputeVoteOutcome;
 use App\Events\DisputeResolved;
 use App\Events\DisputeVoteReceived;
 use App\Services\DisputeService;
+use App\Services\MessageService;
+use App\Services\MessengerFactory;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -21,7 +23,9 @@ class CheckDisputeThreshold implements ShouldQueue
      * Create the event listener.
      */
     public function __construct(
-        private readonly DisputeService $disputeService
+        private readonly DisputeService $disputeService,
+        private readonly MessageService $messageService,
+        private readonly MessengerFactory $messengerFactory
     ) {}
 
     /**
@@ -72,6 +76,35 @@ class CheckDisputeThreshold implements ShouldQueue
             // Premature settlement confirmed
             $this->disputeService->resolveDispute($dispute, DisputeVoteOutcome::NotYetDeterminable);
             DisputeResolved::dispatch($dispute->fresh());
+        } else {
+            // Threshold not yet met - send anonymous progress notification
+            $this->sendVoteProgressNotification($dispute);
+        }
+    }
+
+    /**
+     * Send anonymous vote progress notification to group
+     */
+    private function sendVoteProgressNotification(\App\Models\Dispute $dispute): void
+    {
+        try {
+            $group = $dispute->group;
+            $platform = $group->platform;
+            $platformGroupId = $group->platform_group_id;
+
+            if (!$platform || !$platformGroupId) {
+                return;
+            }
+
+            $message = $this->messageService->disputeVoteProgress($dispute);
+            $messenger = $this->messengerFactory->make($platform);
+            $messenger->sendMessage($platformGroupId, $message);
+
+        } catch (\Exception $e) {
+            Log::warning('Failed to send dispute vote progress notification', [
+                'dispute_id' => $dispute->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

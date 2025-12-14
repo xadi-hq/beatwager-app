@@ -384,7 +384,7 @@ describe("Expired Dispute Handling", function () {
         Event::assertDispatched(DisputeResolved::class);
     });
 
-    it("defaults to original correct when no votes", function () {
+    it("defaults to original correct without penalty when no votes", function () {
         Event::fake([DisputeResolved::class]);
 
         $group = Group::factory()->create(["platform" => "telegram"]);
@@ -417,9 +417,9 @@ describe("Expired Dispute Handling", function () {
         expect($dispute->status)->toBe(DisputeStatus::Resolved);
         expect($dispute->resolution)->toBe(DisputeResolution::OriginalCorrect);
 
-        // Reporter penalized for unresolved dispute
+        // No penalty when nobody voted - that's not a "false" dispute
         $reporterBalance = $reporter->groups()->where("group_id", $group->id)->first()->pivot->points;
-        expect($reporterBalance)->toBe(900);
+        expect($reporterBalance)->toBe(1000);
 
         // Wager status restored
         $wager->refresh();

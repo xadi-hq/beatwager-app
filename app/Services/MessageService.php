@@ -2369,20 +2369,27 @@ class MessageService
         };
         $itemTitle = $disputable->title ?? $disputable->description ?? 'Unknown';
 
+        // Check if votes were cast (affects penalty messaging for expired disputes)
+        $hadVotes = $dispute->getVoteCount() > 0;
+
         // Get resolution description
         $resolutionDescription = match ($dispute->resolution?->value) {
-            'original_correct' => 'Original outcome was correct (false dispute)',
+            'original_correct' => $hadVotes
+                ? 'Original outcome was correct (false dispute)'
+                : 'Dispute expired with no votes - original outcome stands',
             'fraud_confirmed' => 'Fraud confirmed - outcome has been corrected',
             'premature_settlement' => 'Premature settlement - outcome cleared for re-settlement',
             default => 'Resolution unknown',
         };
 
-        // Determine penalty applied
+        // Determine penalty applied (no penalty if expired without votes)
         $penaltyDescription = match ($dispute->resolution?->value) {
-            'original_correct' => "{$dispute->reporter->name} received a 10% penalty for false dispute",
+            'original_correct' => $hadVotes
+                ? "{$dispute->reporter->name} received a 10% penalty for false dispute"
+                : "No penalty applied - nobody voted",
             'fraud_confirmed' => $dispute->is_self_report
-                ? "{$dispute->accused->name} received a 5% penalty for honest mistake"
-                : "{$dispute->accused->name} received a penalty for fraudulent settlement",
+                ? "Props to {$dispute->accused->name} for self-reporting! Honest mistake - just a small 5% penalty"
+                : "{$dispute->accused->name} received a penalty for fraudulent settlement. Shame on you!",
             'premature_settlement' => "{$dispute->accused->name} received a penalty for premature settlement and is banned from this item",
             default => '',
         };
@@ -2482,6 +2489,74 @@ class MessageService
         return new Message(
             content: $content,
             type: MessageType::Reminder,
+            variables: [],
+            buttons: $buttons,
+            context: $dispute,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create dispute vote progress message (anonymous - no voter info)
+     */
+    public function disputeVoteProgress(\App\Models\Dispute $dispute): Message
+    {
+        $group = $dispute->group;
+        $currency = $group->points_currency_name ?? 'points';
+        $disputable = $dispute->disputable;
+
+        // Get current vote counts
+        $totalVotes = $dispute->getVoteCount();
+        $votesNeeded = $dispute->getRemainingVotesNeeded();
+
+        // Determine item title
+        $itemTitle = $disputable->title ?? $disputable->description ?? 'Unknown';
+        if (strlen($itemTitle) > 40) {
+            $itemTitle = substr($itemTitle, 0, 37) . '...';
+        }
+
+        // Build progress message - anonymous, no voter or vote details
+        $content = "⚖️ *Dispute Update*\n\n";
+        $content .= "A vote has been cast on the dispute for:\n";
+        $content .= "_{$itemTitle}_\n\n";
+        $content .= "📊 Progress: {$totalVotes}/{$dispute->votes_required} votes\n";
+
+        if ($votesNeeded > 0) {
+            $content .= "🗳️ {$votesNeeded} more " . ($votesNeeded === 1 ? 'vote' : 'votes') . " needed\n\n";
+            $content .= "_Who will bring justice?_";
+        }
+
+        // Build voting buttons
+        $buttons = [
+            [
+                new Button(
+                    label: '✅ Original Correct',
+                    action: ButtonAction::Callback,
+                    value: "dv:{$dispute->id}:oc"
+                ),
+                new Button(
+                    label: '❌ Different Outcome',
+                    action: ButtonAction::Callback,
+                    value: "dv:{$dispute->id}:do"
+                ),
+            ],
+            [
+                new Button(
+                    label: '⏳ Too Early',
+                    action: ButtonAction::Callback,
+                    value: "dv:{$dispute->id}:te"
+                ),
+                new Button(
+                    label: '👀 View Details',
+                    action: ButtonAction::Callback,
+                    value: "dv:{$dispute->id}:v"
+                ),
+            ],
+        ];
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
             variables: [],
             buttons: $buttons,
             context: $dispute,

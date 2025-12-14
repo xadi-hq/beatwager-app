@@ -272,8 +272,11 @@ class DisputeService
                 $item->update(['status' => 'settled']);
             }
 
-            // Penalize reporter for unresolved dispute
-            $this->applyFalseDisputePenalty($dispute);
+            // Only penalize reporter if there were votes against them
+            // No penalty if nobody voted - that's not a "false" dispute
+            if ($dispute->getVoteCount() > 0) {
+                $this->applyFalseDisputePenalty($dispute);
+            }
 
             event(new DisputeResolved($dispute));
         });
