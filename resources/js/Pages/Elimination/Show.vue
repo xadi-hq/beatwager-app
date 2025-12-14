@@ -3,6 +3,8 @@ import { ref, computed, onUnmounted } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Toast from '@/Components/Toast.vue';
+import DisputeButton from '@/Components/DisputeButton.vue';
+import DisputeStatusBadge from '@/Components/DisputeStatusBadge.vue';
 
 const props = defineProps<{
     challenge: {
@@ -31,6 +33,7 @@ const props = defineProps<{
     };
     participants: Array<{
         id: string;
+        user_id: string;
         user_name: string;
         is_eliminated: boolean;
         eliminated_at: string | null;
@@ -45,6 +48,17 @@ const props = defineProps<{
     canTapIn: boolean;
     canTapOut: boolean;
     canCancel: boolean;
+    canDispute: boolean;
+    dispute?: {
+        id: string;
+        status: 'pending' | 'resolved';
+        resolution: string | null;
+    } | null;
+    survivors: Array<{
+        id: string;
+        user_id: string;
+        user_name: string;
+    }>;
 }>();
 
 const now = ref(Date.now());
@@ -58,12 +72,12 @@ onUnmounted(() => {
 });
 
 // Computed properties
-const survivors = computed(() => props.participants.filter(p => !p.is_eliminated));
+const survivorsList = computed(() => props.participants.filter(p => !p.is_eliminated));
 const eliminated = computed(() => props.participants.filter(p => p.is_eliminated));
 
 const potPerSurvivor = computed(() => {
-    if (survivors.value.length === 0) return 0;
-    return Math.floor(props.challenge.point_pot / survivors.value.length);
+    if (survivorsList.value.length === 0) return 0;
+    return Math.floor(props.challenge.point_pot / survivorsList.value.length);
 });
 
 const eliminationModeText = computed(() => {
@@ -195,9 +209,12 @@ const cancelChallenge = () => {
                             Created by <strong>{{ creator.name }}</strong> in <strong>{{ group.name }}</strong>
                         </p>
                     </div>
-                    <div class="flex items-center gap-2 text-xl font-bold" :class="statusColor">
-                        <span>{{ statusIcon }}</span>
-                        <span>{{ statusText }}</span>
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 text-xl font-bold" :class="statusColor">
+                            <span>{{ statusIcon }}</span>
+                            <span>{{ statusText }}</span>
+                        </div>
+                        <DisputeStatusBadge v-if="dispute" :status="dispute.status" :resolution="dispute.resolution" />
                     </div>
                 </div>
 
@@ -219,7 +236,7 @@ const cancelChallenge = () => {
                     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
                         <p class="text-xs text-neutral-500 dark:text-neutral-400">Survivors</p>
                         <p class="text-xl font-bold text-blue-600 dark:text-blue-400">
-                            {{ survivors.length }}
+                            {{ survivorsList.length }}
                         </p>
                     </div>
                     <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
@@ -311,6 +328,17 @@ const cancelChallenge = () => {
                     >
                         Cancel Challenge
                     </button>
+
+                    <!-- Dispute Button (for completed challenges) -->
+                    <DisputeButton
+                        v-if="challenge.status === 'completed'"
+                        item-type="elimination"
+                        :item-id="challenge.id"
+                        :can-dispute="canDispute"
+                        :existing-dispute-id="dispute?.id"
+                        :dispute-reason="!canDispute && !dispute ? 'Dispute window has closed' : undefined"
+                        :survivors="survivors"
+                    />
                 </div>
             </div>
 
@@ -321,13 +349,13 @@ const cancelChallenge = () => {
                 </h2>
 
                 <!-- Survivors -->
-                <div v-if="survivors.length > 0" class="mb-6">
+                <div v-if="survivorsList.length > 0" class="mb-6">
                     <h3 class="text-sm font-medium text-green-600 dark:text-green-400 mb-3">
-                        Survivors ({{ survivors.length }})
+                        Survivors ({{ survivorsList.length }})
                     </h3>
                     <div class="space-y-2">
                         <div
-                            v-for="participant in survivors"
+                            v-for="participant in survivorsList"
                             :key="participant.id"
                             class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg"
                         >

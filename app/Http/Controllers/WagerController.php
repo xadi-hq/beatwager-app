@@ -331,7 +331,8 @@ class WagerController extends Controller
             'creator:id,name',
             'group:id,name,platform_chat_title,points_currency_name',
             'entries.user:id,name',
-            'settler:id,name'
+            'settler:id,name',
+            'dispute:id,status,resolution',
         ])->findOrFail($wagerId);
 
         // Eager load user balances for entry users
@@ -394,6 +395,12 @@ class WagerController extends Controller
             'canSettle' => $canSettle,
             'isPastDeadline' => $isPastDeadline,
             'type_config' => $wager->type_config,
+            'canDispute' => $wager->canBeDisputed(),
+            'dispute' => $wager->dispute ? [
+                'id' => $wager->dispute->id,
+                'status' => $wager->dispute->status->value,
+                'resolution' => $wager->dispute->resolution?->value,
+            ] : null,
         ]);
     }
 

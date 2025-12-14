@@ -88,6 +88,11 @@ class AppServiceProvider extends ServiceProvider
             $registry->register(new \App\Callbacks\Handlers\EliminationTapInCallbackHandler($messenger));
             $registry->register(new \App\Callbacks\Handlers\EliminationViewCallbackHandler($messenger));
 
+            // Dispute handlers
+            $disputeService = $app->make(\App\Services\DisputeService::class);
+            $registry->register(new \App\Callbacks\Handlers\DisputeVoteCallbackHandler($messenger, $disputeService));
+            $registry->register(new \App\Callbacks\Handlers\DisputeViewCallbackHandler($messenger));
+
             return $registry;
         });
     }

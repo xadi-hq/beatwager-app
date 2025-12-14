@@ -2272,4 +2272,220 @@ class MessageService
 
         return implode("\n", $lines);
     }
+
+    /**
+     * Create dispute created notification message
+     */
+    public function disputeCreated(\App\Models\Dispute $dispute): Message
+    {
+        $meta = __('messages.dispute.created');
+        $group = $dispute->group;
+        $currency = $group->points_currency_name ?? 'points';
+        $disputable = $dispute->disputable;
+
+        // Determine item type and title
+        $itemType = match (class_basename($disputable)) {
+            'Wager' => 'wager',
+            'Challenge' => 'challenge',
+            'GroupEvent' => 'event',
+            default => 'item',
+        };
+        $itemTitle = $disputable->title ?? $disputable->description ?? 'Unknown';
+
+        $ctx = new MessageContext(
+            key: 'dispute.created',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'item_type' => $itemType,
+                'item_title' => $itemTitle,
+                'reporter_name' => $dispute->reporter->name ?? 'Someone',
+                'accused_name' => $dispute->accused->name ?? 'Someone',
+                'is_self_report' => $dispute->is_self_report,
+                'original_outcome' => $dispute->original_outcome,
+                'votes_required' => $dispute->votes_required,
+                'expires_at' => $group->toGroupTimezone($dispute->expires_at)->format('M j, Y g:i A'),
+                'currency' => $currency,
+            ],
+            group: $group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $group);
+
+        // Build voting buttons
+        $buttons = [
+            [
+                new Button(
+                    label: '✅ Original Correct',
+                    action: ButtonAction::Callback,
+                    value: "dispute_vote:{$dispute->id}:original_correct"
+                ),
+                new Button(
+                    label: '❌ Different Outcome',
+                    action: ButtonAction::Callback,
+                    value: "dispute_vote:{$dispute->id}:different_outcome"
+                ),
+            ],
+            [
+                new Button(
+                    label: '⏳ Not Yet Determinable',
+                    action: ButtonAction::Callback,
+                    value: "dispute_vote:{$dispute->id}:not_yet_determinable"
+                ),
+                new Button(
+                    label: '👀 View Details',
+                    action: ButtonAction::Callback,
+                    value: "dispute_view:{$dispute->id}"
+                ),
+            ],
+        ];
+
+        return new Message(
+            content: $content,
+            type: MessageType::Warning,
+            variables: [],
+            buttons: $buttons,
+            context: $dispute,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create dispute resolved notification message
+     */
+    public function disputeResolved(\App\Models\Dispute $dispute): Message
+    {
+        $meta = __('messages.dispute.resolved');
+        $group = $dispute->group;
+        $currency = $group->points_currency_name ?? 'points';
+        $disputable = $dispute->disputable;
+
+        // Determine item type and title
+        $itemType = match (class_basename($disputable)) {
+            'Wager' => 'wager',
+            'Challenge' => 'challenge',
+            'GroupEvent' => 'event',
+            default => 'item',
+        };
+        $itemTitle = $disputable->title ?? $disputable->description ?? 'Unknown';
+
+        // Get resolution description
+        $resolutionDescription = match ($dispute->resolution?->value) {
+            'original_correct' => 'Original outcome was correct (false dispute)',
+            'fraud_confirmed' => 'Fraud confirmed - outcome has been corrected',
+            'premature_settlement' => 'Premature settlement - outcome cleared for re-settlement',
+            default => 'Resolution unknown',
+        };
+
+        // Determine penalty applied
+        $penaltyDescription = match ($dispute->resolution?->value) {
+            'original_correct' => "{$dispute->reporter->name} received a 10% penalty for false dispute",
+            'fraud_confirmed' => $dispute->is_self_report
+                ? "{$dispute->accused->name} received a 5% penalty for honest mistake"
+                : "{$dispute->accused->name} received a penalty for fraudulent settlement",
+            'premature_settlement' => "{$dispute->accused->name} received a penalty for premature settlement and is banned from this item",
+            default => '',
+        };
+
+        $ctx = new MessageContext(
+            key: 'dispute.resolved',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'item_type' => $itemType,
+                'item_title' => $itemTitle,
+                'resolution' => $dispute->resolution?->value,
+                'resolution_description' => $resolutionDescription,
+                'penalty_description' => $penaltyDescription,
+                'original_outcome' => $dispute->original_outcome,
+                'corrected_outcome' => $dispute->corrected_outcome,
+                'currency' => $currency,
+            ],
+            group: $group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $group);
+
+        return new Message(
+            content: $content,
+            type: MessageType::Announcement,
+            variables: [],
+            buttons: [],
+            context: $dispute,
+            currencyName: $currency
+        );
+    }
+
+    /**
+     * Create dispute vote reminder message (24h before expiration)
+     */
+    public function disputeVoteReminder(\App\Models\Dispute $dispute): Message
+    {
+        $meta = __('messages.dispute.vote_reminder');
+        $group = $dispute->group;
+        $currency = $group->points_currency_name ?? 'points';
+        $disputable = $dispute->disputable;
+
+        // Determine item type and title
+        $itemType = match (class_basename($disputable)) {
+            'Wager' => 'wager',
+            'Challenge' => 'challenge',
+            'GroupEvent' => 'event',
+            default => 'item',
+        };
+        $itemTitle = $disputable->title ?? $disputable->description ?? 'Unknown';
+
+        // Get current vote counts
+        $voteCounts = $dispute->votes->groupBy('vote_outcome')->map->count();
+        $totalVotes = $dispute->votes->count();
+
+        $ctx = new MessageContext(
+            key: 'dispute.vote_reminder',
+            intent: $meta['intent'],
+            requiredFields: $meta['required_fields'],
+            data: [
+                'item_type' => $itemType,
+                'item_title' => $itemTitle,
+                'votes_received' => $totalVotes,
+                'votes_required' => $dispute->votes_required,
+                'expires_at' => $group->toGroupTimezone($dispute->expires_at)->format('M j, Y g:i A'),
+                'currency' => $currency,
+            ],
+            group: $group
+        );
+
+        $content = $this->contentGenerator->generate($ctx, $group);
+
+        // Build voting buttons
+        $buttons = [
+            [
+                new Button(
+                    label: '✅ Original Correct',
+                    action: ButtonAction::Callback,
+                    value: "dispute_vote:{$dispute->id}:original_correct"
+                ),
+                new Button(
+                    label: '❌ Different Outcome',
+                    action: ButtonAction::Callback,
+                    value: "dispute_vote:{$dispute->id}:different_outcome"
+                ),
+            ],
+            [
+                new Button(
+                    label: '⏳ Not Yet Determinable',
+                    action: ButtonAction::Callback,
+                    value: "dispute_vote:{$dispute->id}:not_yet_determinable"
+                ),
+            ],
+        ];
+
+        return new Message(
+            content: $content,
+            type: MessageType::Reminder,
+            variables: [],
+            buttons: $buttons,
+            context: $dispute,
+            currencyName: $currency
+        );
+    }
 }

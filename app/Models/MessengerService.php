@@ -19,12 +19,17 @@ class MessengerService extends Model
         'photo_url',
         'metadata',
         'is_primary',
+        'fraud_offense_count',
+        'last_fraud_at',
     ];
 
     protected function casts(): array
     {
         return [
             'metadata' => 'array',
+            'is_primary' => 'boolean',
+            'fraud_offense_count' => 'integer',
+            'last_fraud_at' => 'datetime',
         ];
     }
 
@@ -74,5 +79,41 @@ class MessengerService extends Model
         return self::where('platform', $platform)
             ->where('platform_user_id', $platformUserId)
             ->first();
+    }
+
+    // Fraud tracking methods
+
+    /**
+     * Increment the fraud offense count and record the timestamp.
+     */
+    public function incrementFraudCount(): void
+    {
+        $this->increment('fraud_offense_count');
+        $this->update(['last_fraud_at' => now()]);
+    }
+
+    /**
+     * Get the penalty percentage based on fraud offense count.
+     * First offense: 25%, subsequent: 50%
+     */
+    public function getFraudPenaltyPercentage(): int
+    {
+        return $this->fraud_offense_count > 0 ? 50 : 25;
+    }
+
+    /**
+     * Check if this is a repeat offender.
+     */
+    public function isRepeatOffender(): bool
+    {
+        return $this->fraud_offense_count > 0;
+    }
+
+    /**
+     * Get the fraud offense count.
+     */
+    public function getFraudOffenseCount(): int
+    {
+        return $this->fraud_offense_count ?? 0;
     }
 }

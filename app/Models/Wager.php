@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\Disputable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Wager extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, Disputable;
 
     protected $fillable = [
         'group_id',
@@ -42,6 +43,7 @@ class Wager extends Model
         'outcome_value',
         'settlement_note',
         'settler_id',
+        'dispute_id',
         'total_points_wagered',
         'participants_count',
         'last_settlement_reminder_sent_at',
@@ -286,5 +288,19 @@ class Wager extends Model
         return $query->where('status', 'open')
                     ->where('betting_closes_at', '<', now())
                     ->where('participants_count', 0);
+    }
+
+    /**
+     * Disputable trait overrides
+     */
+
+    public function isSettled(): bool
+    {
+        return $this->status === 'settled';
+    }
+
+    public function getDisputeOutcomeOptions(): array
+    {
+        return $this->getDisplayOptions();
     }
 }

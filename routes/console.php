@@ -123,3 +123,15 @@ Schedule::job(new ProcessEliminationAutoResolution())
     ->everyFifteenMinutes()  // Check frequently for deadline resolution
     ->withoutOverlapping()
     ->onOneServer();
+
+// Process expired disputes (48h voting window passed)
+Schedule::command('disputes:expire')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Send dispute vote reminders (24h before expiration)
+Schedule::command('disputes:send-reminders')
+    ->everyFourHours()  // Check every 4 hours for disputes needing reminders
+    ->withoutOverlapping()
+    ->onOneServer();

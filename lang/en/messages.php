@@ -570,6 +570,38 @@ return [
         ],
     ],
 
+    'dispute' => [
+        'created' => [
+            'intent' => 'Announce a dispute has been filed and encourage group voting',
+            'required_fields' => ['item_type', 'item_title', 'reporter_name', 'accused_name', 'original_outcome', 'votes_required', 'expires_at'],
+            'optional_fields' => ['is_self_report', 'currency'],
+            'fallback_template' => "⚠️ DISPUTE FILED\n\nThe {item_type} \"{item_title}\" has been disputed!\n\n📝 Reporter: {reporter_name}\n👤 Accused: {accused_name}\n🎯 Original outcome: {original_outcome}\n\n🗳️ {votes_required} vote(s) needed to resolve\n⏰ Vote by: {expires_at}\n\nPlease review and cast your vote below.",
+            'tone_hints' => ['neutral', 'official', 'clear'],
+            'personality_notes' => 'Be factual and neutral. Present the information clearly for voters to make informed decisions. If is_self_report is true, mention they are reporting their own mistake.',
+            'max_words' => 60,
+        ],
+
+        'resolved' => [
+            'intent' => 'Announce dispute resolution with outcome and any penalties applied',
+            'required_fields' => ['item_type', 'item_title', 'resolution', 'resolution_description'],
+            'optional_fields' => ['penalty_description', 'original_outcome', 'corrected_outcome', 'currency'],
+            'fallback_template' => "✅ DISPUTE RESOLVED\n\nThe dispute on \"{item_title}\" has been resolved.\n\n📋 Result: {resolution_description}\n{penalty_description}",
+            'tone_hints' => ['official', 'conclusive', 'fair'],
+            'personality_notes' => 'Announce the outcome clearly. Include any penalties applied. If outcome was corrected, mention the new outcome.',
+            'max_words' => 50,
+        ],
+
+        'vote_reminder' => [
+            'intent' => 'Remind group members to vote on pending dispute before expiration',
+            'required_fields' => ['item_type', 'item_title', 'votes_received', 'votes_required', 'expires_at'],
+            'optional_fields' => ['currency'],
+            'fallback_template' => "🗳️ VOTE REMINDER\n\nThe dispute on \"{item_title}\" needs more votes!\n\n📊 Votes: {votes_received}/{votes_required}\n⏰ Expires: {expires_at}\n\nCast your vote below before time runs out!",
+            'tone_hints' => ['urgent', 'encouraging', 'clear'],
+            'personality_notes' => 'Create urgency without being pushy. Encourage participation to reach a fair resolution.',
+            'max_words' => 40,
+        ],
+    ],
+
     'buttons' => [
         'yes' => '✅ Yes',
         'no' => '❌ No',

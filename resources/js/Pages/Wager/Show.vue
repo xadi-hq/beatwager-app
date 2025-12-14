@@ -6,12 +6,20 @@ import Toast from '@/Components/Toast.vue';
 import FormError from '@/Components/FormError.vue';
 import FormErrorBox from '@/Components/FormErrorBox.vue';
 import RankingInput from '@/Components/RankingInput.vue';
+import DisputeButton from '@/Components/DisputeButton.vue';
+import DisputeStatusBadge from '@/Components/DisputeStatusBadge.vue';
 
 const props = defineProps<{
     wager: any;
     user: any;
     canSettle: boolean;
     isPastDeadline: boolean;
+    canDispute: boolean;
+    dispute?: {
+        id: string;
+        status: 'pending' | 'resolved';
+        resolution: string | null;
+    } | null;
     type_config?: {
         options?: string[];
         n?: number;
@@ -239,8 +247,11 @@ const submitSettlement = () => {
 
                     <!-- Settled wager: outcome -->
                     <div v-else>
-                        <div class="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
-                            ✅ Outcome: {{ formatAnswer(wager.outcome_value, wager.type) }}
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+                                ✅ Outcome: {{ formatAnswer(wager.outcome_value, wager.type) }}
+                            </div>
+                            <DisputeStatusBadge v-if="dispute" :status="dispute.status" :resolution="dispute.resolution" />
                         </div>
                         <div v-if="wager.settlement_note" class="mb-3 p-3 bg-neutral-50 dark:bg-neutral-700 rounded border-l-4 border-blue-500">
                             <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Settlement Note:</p>
@@ -290,6 +301,17 @@ const submitSettlement = () => {
                         <a href="/me" class="block w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors">
                             ← Back to Dashboard
                         </a>
+                    </div>
+
+                    <!-- Dispute Button (for settled wagers) -->
+                    <div v-if="wager.status === 'settled'" class="mt-4">
+                        <DisputeButton
+                            item-type="wager"
+                            :item-id="wager.id"
+                            :can-dispute="canDispute"
+                            :existing-dispute-id="dispute?.id"
+                            :dispute-reason="!canDispute && !dispute ? 'Dispute window has closed' : undefined"
+                        />
                     </div>
                 </div>
 
@@ -496,8 +518,11 @@ const submitSettlement = () => {
 
                             <!-- Settled wager: outcome -->
                             <div v-else>
-                                <div class="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
-                                    ✅ Outcome: {{ formatAnswer(wager.outcome_value, wager.type) }}
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+                                        ✅ Outcome: {{ formatAnswer(wager.outcome_value, wager.type) }}
+                                    </div>
+                                    <DisputeStatusBadge v-if="dispute" :status="dispute.status" :resolution="dispute.resolution" />
                                 </div>
                                 <div v-if="wager.settlement_note" class="mb-3 p-3 bg-neutral-50 dark:bg-neutral-700 rounded border-l-4 border-blue-500">
                                     <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Settlement Note:</p>
@@ -547,6 +572,17 @@ const submitSettlement = () => {
                             <a href="/me" class="block w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors">
                                 ← Back to Dashboard
                             </a>
+                        </div>
+
+                        <!-- Dispute Button (for settled wagers) -->
+                        <div v-if="wager.status === 'settled'" class="mt-4">
+                            <DisputeButton
+                                item-type="wager"
+                                :item-id="wager.id"
+                                :can-dispute="canDispute"
+                                :existing-dispute-id="dispute?.id"
+                                :dispute-reason="!canDispute && !dispute ? 'Dispute window has closed' : undefined"
+                            />
                         </div>
                     </div>
 

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\TransactionType;
 use App\Exceptions\InsufficientPointsException;
 use App\Models\Challenge;
+use App\Models\Dispute;
 use App\Models\Group;
 use App\Models\User;
 use App\Models\Transaction;
@@ -376,5 +378,127 @@ class ChallengeService
             'challenge_failed',
             $challenge  // Pass the challenge
         );
+    }
+
+    /**
+     * Reverse a challenge verification and re-verify with corrected outcome.
+     * Used when a dispute confirms fraud.
+     */
+    public function reverseAndResettleChallenge(Challenge $challenge, string $correctedOutcome, Dispute $dispute): void
+    {
+        DB::transaction(function () use ($challenge, $correctedOutcome, $dispute) {
+            // Step 1: Reverse the completion transaction
+            $this->reverseCompletionTransaction($challenge, $dispute);
+
+            // Step 2: Apply the correct outcome
+            if ($correctedOutcome === 'completed') {
+                // Should have been completed - transfer to payee
+                $this->settleHoldToAcceptor($challenge);
+                $challenge->update([
+                    'status' => 'completed',
+                    'verified_at' => now(),
+                ]);
+            } else {
+                // Should have been failed - release hold
+                $this->releaseHold($challenge);
+                $challenge->update([
+                    'status' => 'failed',
+                    'failed_at' => now(),
+                    'failure_reason' => "Corrected via dispute #{$dispute->id}",
+                ]);
+            }
+
+            // Audit log
+            AuditService::log(
+                action: 'challenge.dispute_corrected',
+                auditable: $challenge,
+                metadata: [
+                    'dispute_id' => $dispute->id,
+                    'original_outcome' => $dispute->original_outcome,
+                    'corrected_outcome' => $correctedOutcome,
+                ]
+            );
+        });
+    }
+
+    /**
+     * Clear a challenge verification for premature settlement cases.
+     * Bans the specified user from the challenge.
+     */
+    public function clearSettlementAndBanUser(Challenge $challenge, string $bannedUserId, Dispute $dispute): void
+    {
+        DB::transaction(function () use ($challenge, $bannedUserId, $dispute) {
+            // Step 1: Reverse the completion transaction
+            $this->reverseCompletionTransaction($challenge, $dispute);
+
+            // Step 2: Reset challenge to accepted state
+            $challenge->update([
+                'status' => 'accepted',
+                'verified_at' => null,
+                'verified_by_id' => null,
+                'completed_at' => null,
+                'failed_at' => null,
+                'failure_reason' => null,
+            ]);
+
+            // Note: For challenges, "banning" differs from wagers:
+            // - Wagers: The banned user's entry is removed from participation
+            // - Challenges: The challenge state is reset for re-verification
+            // Since challenges are 1:1 (creator vs acceptor), we can't remove participants
+            // Instead, resetting allows proper re-verification by other party or timeout
+
+            // Audit log
+            AuditService::log(
+                action: 'challenge.settlement_cleared',
+                auditable: $challenge,
+                metadata: [
+                    'dispute_id' => $dispute->id,
+                    'banned_user_id' => $bannedUserId,
+                    'reason' => 'premature_settlement',
+                ]
+            );
+        });
+    }
+
+    /**
+     * Reverse completion transaction for a challenge.
+     */
+    private function reverseCompletionTransaction(Challenge $challenge, Dispute $dispute): void
+    {
+        // Find completion transaction
+        $completionTransaction = Transaction::where('transactionable_type', Challenge::class)
+            ->where('transactionable_id', $challenge->id)
+            ->where('type', 'challenge_completed')
+            ->first();
+
+        if ($completionTransaction && $completionTransaction->amount > 0) {
+            // This was a credit to payee - need to deduct
+            $payee = $challenge->getPayee();
+            $this->pointService->deductPoints(
+                $payee,
+                $challenge->group,
+                $completionTransaction->amount,
+                TransactionType::DisputeCorrection->value,
+                $dispute
+            );
+        }
+
+        // Also check for failed transaction (hold release)
+        $failedTransaction = Transaction::where('transactionable_type', Challenge::class)
+            ->where('transactionable_id', $challenge->id)
+            ->where('type', 'challenge_failed')
+            ->first();
+
+        if ($failedTransaction && $failedTransaction->amount > 0) {
+            // Hold was released to payer - need to deduct
+            $payer = $challenge->getPayer();
+            $this->pointService->deductPoints(
+                $payer,
+                $challenge->group,
+                $failedTransaction->amount,
+                TransactionType::DisputeCorrection->value,
+                $dispute
+            );
+        }
     }
 }

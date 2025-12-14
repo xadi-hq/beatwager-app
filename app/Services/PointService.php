@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\TransactionType;
 use App\Exceptions\InsufficientPointsException;
 use App\Models\Challenge;
 use App\Models\Group;
@@ -158,6 +159,45 @@ class PointService
             "wager_refunded",
             $wagerEntry
         );
+    }
+
+    /**
+     * Deduct a percentage of user's balance.
+     * Used for dispute penalties.
+     *
+     * @param int $percentage Percentage to deduct (e.g., 10 for 10%)
+     */
+    public function deductPercentage(
+        User $user,
+        Group $group,
+        int $percentage,
+        TransactionType $type,
+        ?Model $relatedEntity = null
+    ): Transaction {
+        $balance = $this->getBalance($user, $group);
+        $amount = (int) ceil($balance * ($percentage / 100));
+
+        // Ensure at least 1 point is deducted if balance > 0
+        if ($balance > 0 && $amount === 0) {
+            $amount = 1;
+        }
+
+        if ($amount === 0) {
+            // Create a zero-amount transaction for record keeping
+            return Transaction::create([
+                'user_id' => $user->id,
+                'group_id' => $group->id,
+                'type' => $type->value,
+                'amount' => 0,
+                'balance_before' => $balance,
+                'balance_after' => $balance,
+                'transactionable_type' => $relatedEntity ? get_class($relatedEntity) : null,
+                'transactionable_id' => $relatedEntity?->id,
+                'description' => "Penalty: {$percentage}% (no points to deduct)",
+            ]);
+        }
+
+        return $this->deductPoints($user, $group, $amount, $type->value, $relatedEntity);
     }
 
     /**

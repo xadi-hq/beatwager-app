@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\ChallengeType;
 use App\Enums\EliminationMode;
+use App\Models\Traits\Disputable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -61,7 +62,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  */
 class Challenge extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, Disputable;
 
     protected $fillable = [
         'group_id',
@@ -96,6 +97,7 @@ class Challenge extends Model
         'submission_note',
         'submission_media',
         'hold_transaction_id',
+        'dispute_id',
     ];
 
     protected function casts(): array
@@ -599,5 +601,81 @@ class Challenge extends Model
             ->whereNotNull('tap_in_deadline')
             ->where('tap_in_deadline', '<', now())
             ->whereRaw('(SELECT COUNT(*) FROM challenge_participants WHERE challenge_id = challenges.id) < min_participants');
+    }
+
+    /**
+     * Disputable trait overrides
+     *
+     * Note: Only Elimination Challenges support disputes.
+     * 1:1 Challenges have built-in 2-party verification.
+     * Super Challenges have auto-approve protection.
+     */
+
+    /**
+     * Check if this challenge can be disputed.
+     * Only elimination challenges are disputable (to report non-tapping cheaters).
+     */
+    public function canBeDisputed(): bool
+    {
+        // Only elimination challenges support disputes
+        if (!$this->isEliminationChallenge()) {
+            return false;
+        }
+
+        // Challenge must be active (open)
+        if (!$this->isOpen()) {
+            return false;
+        }
+
+        // Must not already have an active dispute
+        if ($this->isDisputed()) {
+            return false;
+        }
+
+        // Must have participants
+        return $this->participants()->count() > 0;
+    }
+
+    /**
+     * Check if "settled" for dispute purposes.
+     * For elimination, this means the challenge is active and has survivors.
+     */
+    public function isSettled(): bool
+    {
+        // For elimination challenges, "settled" means active with potential cheaters
+        if ($this->isEliminationChallenge()) {
+            return $this->isOpen() && $this->getSurvivorCount() > 0;
+        }
+
+        // For other challenge types (not disputable anyway)
+        return in_array($this->status, ['completed', 'failed']);
+    }
+
+    public function getSettlementTimestamp(): ?\Carbon\Carbon
+    {
+        // For elimination, there's no single settlement time - disputes can happen while active
+        if ($this->isEliminationChallenge()) {
+            return $this->created_at; // Always within "window" while active
+        }
+
+        return $this->verified_at ?? $this->completed_at;
+    }
+
+    public function getSettler(): ?User
+    {
+        return $this->verifiedBy;
+    }
+
+    /**
+     * Get outcome options for voting.
+     * For elimination disputes: whether accused should be eliminated.
+     */
+    public function getDisputeOutcomeOptions(): array
+    {
+        if ($this->isEliminationChallenge()) {
+            return ['should_be_eliminated', 'currently_valid'];
+        }
+
+        return ['completed', 'failed'];
     }
 }

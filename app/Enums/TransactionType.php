@@ -28,4 +28,12 @@ enum TransactionType: string
     case EliminationBuyInRefund = 'elimination_buy_in_refund';
     case EliminationPrize = 'elimination_prize';
     case EliminationSystemContribution = 'elimination_system_contribution';
+
+    // Dispute-related transactions
+    case DisputePenaltyFalseReport = 'dispute_penalty_false_report';
+    case DisputePenaltyHonestMistake = 'dispute_penalty_honest_mistake';
+    case DisputePenaltyFraud = 'dispute_penalty_fraud';
+    case DisputePenaltyPremature = 'dispute_penalty_premature';
+    case DisputeRefund = 'dispute_refund';
+    case DisputeCorrection = 'dispute_correction';
 }

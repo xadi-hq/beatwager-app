@@ -284,7 +284,7 @@ class EliminationChallengeController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
-        $challenge->load(['creator', 'group', 'participants.user']);
+        $challenge->load(['creator', 'group', 'participants.user', 'dispute:id,status,resolution']);
 
         $participant = $challenge->participants->where('user_id', $user->id)->first();
 
@@ -315,6 +315,7 @@ class EliminationChallengeController extends Controller
             ],
             'participants' => $challenge->participants->map(fn($p) => [
                 'id' => $p->id,
+                'user_id' => $p->user_id,
                 'user_name' => $p->user->name ?? 'Unknown',
                 'is_eliminated' => $p->eliminated_at !== null,
                 'eliminated_at' => $p->eliminated_at?->toIso8601String(),
@@ -334,6 +335,19 @@ class EliminationChallengeController extends Controller
                 && $challenge->status === 'open',
             'canCancel' => (string) $challenge->creator_id === (string) $user->id
                 && $challenge->status === 'open',
+            'canDispute' => $challenge->canBeDisputed(),
+            'dispute' => $challenge->dispute ? [
+                'id' => $challenge->dispute->id,
+                'status' => $challenge->dispute->status->value,
+                'resolution' => $challenge->dispute->resolution?->value,
+            ] : null,
+            'survivors' => $challenge->participants
+                ->filter(fn($p) => $p->eliminated_at === null)
+                ->map(fn($p) => [
+                    'id' => $p->id,
+                    'user_id' => $p->user_id,
+                    'user_name' => $p->user->name ?? 'Unknown',
+                ])->values(),
         ]);
     }
 }

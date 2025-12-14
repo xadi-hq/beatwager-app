@@ -410,6 +410,45 @@ class EliminationChallengeService
     }
 
     /**
+     * Force elimination of a participant via dispute resolution.
+     * Used when group confirms a participant should have tapped out but didn't.
+     */
+    public function forceElimination(
+        Challenge $challenge,
+        User $accusedUser,
+        \App\Models\Dispute $dispute,
+        ?string $eliminationNote = null
+    ): ChallengeParticipant {
+        return DB::transaction(function () use ($challenge, $accusedUser, $dispute, $eliminationNote) {
+            $participant = ChallengeParticipant::where('challenge_id', $challenge->id)
+                ->where('user_id', $accusedUser->id)
+                ->firstOrFail();
+
+            if ($participant->isEliminated()) {
+                throw new \InvalidArgumentException('Participant has already been eliminated');
+            }
+
+            // Force elimination with dispute reference
+            $participant->update([
+                'eliminated_at' => now(),
+                'elimination_note' => $eliminationNote ?? "Forced elimination via dispute #{$dispute->id}",
+            ]);
+
+            // Dispatch standard tap out event
+            \App\Events\EliminationChallengeTappedOut::dispatch($participant);
+
+            // Check if challenge should resolve after this elimination
+            if ($challenge->shouldResolve()) {
+                $this->resolve($challenge);
+            } else {
+                $this->checkMilestone($challenge);
+            }
+
+            return $participant->fresh()->load(['challenge', 'user']);
+        });
+    }
+
+    /**
      * Get context for LLM messaging
      *
      * @return array{

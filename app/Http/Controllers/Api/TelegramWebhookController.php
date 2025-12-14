@@ -319,6 +319,9 @@ class TelegramWebhookController extends Controller
             ]);
         }
 
+        // Handle active disputes before removing user
+        app(\App\Listeners\HandleDisputeParticipantLeft::class)->handle($group, $user);
+
         // Remove from group
         $group->users()->detach($user->id);
 

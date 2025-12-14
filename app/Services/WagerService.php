@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\TransactionType;
 use App\Exceptions\InvalidAnswerException;
 use App\Exceptions\InvalidStakeException;
 use App\Exceptions\InvalidWagerStateException;
 use App\Exceptions\UserAlreadyJoinedException;
 use App\Exceptions\WagerNotOpenException;
+use App\Models\Dispute;
 use App\Models\Group;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wager;
 use App\Models\WagerEntry;
@@ -721,15 +724,15 @@ class WagerService
     {
         // Refresh wager to get latest entries with results
         $wager->load(['entries.user', 'group']);
-        
+
         // For 1v1 wagers, create detailed winner/loser events
         if ($wager->entries->count() === 2) {
             $winner = $wager->entries->firstWhere('is_winner', true);
             $loser = $wager->entries->firstWhere('is_winner', false);
-            
+
             if ($winner && $loser) {
                 $pointsGained = $winner->points_won - $winner->points_wagered;
-                
+
                 AuditEventService::wagerWon(
                     group: $wager->group,
                     winner: $winner->user,
@@ -741,19 +744,19 @@ class WagerService
             }
             return;
         }
-        
+
         // For multi-participant wagers, create a generic summary
         $winners = $wager->entries->where('is_winner', true);
         $losers = $wager->entries->where('is_winner', false);
-        
+
         if ($winners->isNotEmpty()) {
             $winnerNames = $winners->pluck('user.username')->join(', ');
             $totalWon = $winners->sum(fn($e) => $e->points_won - $e->points_wagered);
-            
+
             $summary = $winners->count() === 1
                 ? "{$winnerNames} won '{$wager->title}' and gained {$totalWon} points"
                 : "{$winnerNames} won '{$wager->title}' and split {$totalWon} points";
-            
+
             AuditEventService::create(
                 group: $wager->group,
                 eventType: 'wager.multi_winner',
@@ -769,7 +772,7 @@ class WagerService
         } elseif ($losers->isNotEmpty()) {
             // All refunded or no winners
             $summary = "'{$wager->title}' ended with no winners - all {$wager->entries->count()} participants were refunded";
-            
+
             AuditEventService::create(
                 group: $wager->group,
                 eventType: 'wager.no_winner',
@@ -778,6 +781,141 @@ class WagerService
                 impact: ['refund_count' => $wager->entries->count()],
                 metadata: ['wager_id' => $wager->id]
             );
+        }
+    }
+
+    /**
+     * Reverse a wager settlement and re-settle with corrected outcome.
+     * Used when a dispute confirms fraud.
+     */
+    public function reverseAndResettleWager(Wager $wager, string $correctedOutcome, Dispute $dispute): void
+    {
+        DB::transaction(function () use ($wager, $correctedOutcome, $dispute) {
+            // Step 1: Reverse all settlement transactions
+            $this->reverseSettlementTransactions($wager, $dispute);
+
+            // Step 2: Reset entry results
+            $wager->entries()->update([
+                'result' => null,
+                'is_winner' => false,
+                'points_won' => 0,
+                'points_lost' => 0,
+            ]);
+
+            // Step 3: Re-settle with correct outcome
+            $wager->update([
+                'status' => 'locked', // Temporarily unlock for settlement
+                'outcome_value' => null,
+                'settled_at' => null,
+            ]);
+
+            // Re-run settlement
+            $this->settleWager(
+                $wager,
+                $correctedOutcome,
+                "Corrected via dispute #{$dispute->id}",
+                null // No settler for dispute correction
+            );
+
+            // Audit log
+            AuditService::log(
+                action: 'wager.dispute_corrected',
+                auditable: $wager,
+                metadata: [
+                    'dispute_id' => $dispute->id,
+                    'original_outcome' => $dispute->original_outcome,
+                    'corrected_outcome' => $correctedOutcome,
+                ]
+            );
+        });
+    }
+
+    /**
+     * Clear a wager settlement for premature settlement cases.
+     * Bans the specified user from the wager.
+     */
+    public function clearSettlementAndBanUser(Wager $wager, string $bannedUserId, Dispute $dispute): void
+    {
+        DB::transaction(function () use ($wager, $bannedUserId, $dispute) {
+            // Step 1: Reverse all settlement transactions
+            $this->reverseSettlementTransactions($wager, $dispute);
+
+            // Step 2: Reset entry results
+            $wager->entries()->update([
+                'result' => null,
+                'is_winner' => false,
+                'points_won' => 0,
+                'points_lost' => 0,
+            ]);
+
+            // Step 3: Ban the user - remove their entry and refund
+            $bannedEntry = $wager->entries()->where('user_id', $bannedUserId)->first();
+            if ($bannedEntry) {
+                // Create refund transaction for the banned user
+                $this->pointService->awardPoints(
+                    User::find($bannedUserId),
+                    $wager->group,
+                    $bannedEntry->points_wagered,
+                    TransactionType::DisputeRefund->value,
+                    $dispute
+                );
+
+                // Remove the entry
+                $bannedEntry->delete();
+
+                // Update wager stats
+                $wager->decrement('total_points_wagered', $bannedEntry->points_wagered);
+                $wager->decrement('participants_count');
+            }
+
+            // Step 4: Reset wager to locked state for re-settlement
+            $wager->update([
+                'status' => 'locked',
+                'outcome_value' => null,
+                'settlement_note' => null,
+                'settler_id' => null,
+                'settled_at' => null,
+            ]);
+
+            // Audit log
+            AuditService::log(
+                action: 'wager.settlement_cleared',
+                auditable: $wager,
+                metadata: [
+                    'dispute_id' => $dispute->id,
+                    'banned_user_id' => $bannedUserId,
+                    'reason' => 'premature_settlement',
+                ]
+            );
+        });
+    }
+
+    /**
+     * Reverse all settlement-related transactions for a wager.
+     */
+    private function reverseSettlementTransactions(Wager $wager, Dispute $dispute): void
+    {
+        $entries = $wager->entries()->with('user')->get();
+
+        foreach ($entries as $entry) {
+            // Find settlement transactions for this entry (won or refunded)
+            $settlementTransactions = Transaction::where('transactionable_type', WagerEntry::class)
+                ->where('transactionable_id', $entry->id)
+                ->whereIn('type', ['wager_won', 'wager_refunded'])
+                ->get();
+
+            foreach ($settlementTransactions as $transaction) {
+                if ($transaction->amount > 0) {
+                    // This was a credit (won/refunded) - need to deduct
+                    $this->pointService->deductPoints(
+                        $entry->user,
+                        $wager->group,
+                        $transaction->amount,
+                        TransactionType::DisputeCorrection->value,
+                        $dispute
+                    );
+                }
+            }
         }
     }
 }

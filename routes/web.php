@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\EliminationChallengeController;
 use App\Http\Controllers\EventController;
@@ -203,4 +204,17 @@ Route::middleware(['signed.auth'])->group(function () {
     Route::get('/donations/create', [DonationController::class, 'create'])->name('donations.create');
     Route::get('/donations/groups/{group}/recipients', [DonationController::class, 'recipients'])->name('donations.recipients');
     Route::post('/donations', [DonationController::class, 'store'])->name('donations.store');
+
+    // Dispute routes
+    Route::get('/disputes/{dispute}', [DisputeController::class, 'show'])
+        ->name('disputes.show');
+    Route::post('/wager/{wager}/dispute', [DisputeController::class, 'createWagerDispute'])
+        ->middleware(['throttle:5,1', 'group.member'])
+        ->name('disputes.create.wager');
+    Route::post('/elimination/{challenge}/dispute', [DisputeController::class, 'createEliminationDispute'])
+        ->middleware(['throttle:5,1', 'group.member'])
+        ->name('disputes.create.elimination');
+    Route::post('/disputes/{dispute}/vote', [DisputeController::class, 'vote'])
+        ->middleware('throttle:10,1')
+        ->name('disputes.vote');
 });

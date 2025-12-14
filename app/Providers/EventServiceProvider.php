@@ -10,6 +10,9 @@ use App\Events\ChallengeDeadlineMissed;
 use App\Events\ChallengeExpired;
 use App\Events\ChallengeRejected;
 use App\Events\ChallengeSubmitted;
+use App\Events\DisputeCreated;
+use App\Events\DisputeResolved;
+use App\Events\DisputeVoteReceived;
 use App\Events\EventCancelled;
 use App\Events\EventCreated;
 use App\Events\SuperChallengeAccepted;
@@ -29,6 +32,7 @@ use App\Events\WagerBettingClosed;
 use App\Events\WagerCreated;
 use App\Events\WagerJoined;
 use App\Events\WagerSettled;
+use App\Listeners\CheckDisputeThreshold;
 use App\Listeners\SendChallengeAcceptedAnnouncement;
 use App\Listeners\SendChallengeAnnouncement;
 use App\Listeners\SendChallengeApprovedAnnouncement;
@@ -37,6 +41,8 @@ use App\Listeners\SendChallengeDeadlineMissedAnnouncement;
 use App\Listeners\SendChallengeExpiredAnnouncement;
 use App\Listeners\SendChallengeRejectedAnnouncement;
 use App\Listeners\SendChallengeSubmittedAnnouncement;
+use App\Listeners\SendDisputeNotification;
+use App\Listeners\SendDisputeResolutionNotification;
 use App\Listeners\SendEventAnnouncement;
 use App\Listeners\SendEventCancelledAnnouncement;
 use App\Listeners\SendSuperChallengeAcceptedNotification;
@@ -146,6 +152,15 @@ class EventServiceProvider extends ServiceProvider
         ],
         EliminationChallengeCancelled::class => [
             SendEliminationCancelledAnnouncement::class,
+        ],
+        DisputeCreated::class => [
+            SendDisputeNotification::class,
+        ],
+        DisputeResolved::class => [
+            SendDisputeResolutionNotification::class,
+        ],
+        DisputeVoteReceived::class => [
+            CheckDisputeThreshold::class,
         ],
     ];
 
