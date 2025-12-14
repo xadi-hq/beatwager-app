@@ -115,15 +115,16 @@ class DashboardController extends Controller
             ];
         });
 
-        // Get user's recent settled wagers
-        $settledWagers = Wager::where('status', 'settled')
+        // Get user's recent settled wagers (including disputed ones)
+        $settledWagers = Wager::whereIn('status', ['settled', 'disputed'])
             ->where(function($query) use ($user) {
                 $query->where('creator_id', $user->id)
                       ->orWhereHas('entries', function($q) use ($user) {
                           $q->where('user_id', $user->id);
                       });
             })
-            ->with(['group', 'entries.user'])
+            ->with(['group', 'entries.user', 'dispute'])
+            ->orderByRaw("CASE WHEN status = 'disputed' THEN 0 ELSE 1 END") // Disputed first
             ->orderBy('settled_at', 'desc')
             ->limit(10)
             ->get()
@@ -140,6 +141,7 @@ class DashboardController extends Controller
                         'currency' => $wager->group->points_currency_name ?? 'points',
                     ],
                     'type' => $wager->type,
+                    'status' => $wager->status,
                     'outcome_value' => $wager->outcome_value,
                     'settled_at' => $wager->settled_at?->toIso8601String(),
                     'is_creator' => $wager->creator_id === $user->id,
@@ -148,6 +150,11 @@ class DashboardController extends Controller
                     'is_winner' => $userEntry?->is_winner,
                     'payout_amount' => $userEntry?->payout_amount,
                     'result' => $userEntry?->result,
+                    'dispute' => $wager->dispute ? [
+                        'id' => $wager->dispute->id,
+                        'status' => $wager->dispute->status->value,
+                        'resolution' => $wager->dispute->resolution?->value,
+                    ] : null,
                 ];
             });
 

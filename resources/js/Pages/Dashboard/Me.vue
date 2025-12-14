@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import DisputeStatusBadge from '@/Components/DisputeStatusBadge.vue';
 
 const props = defineProps<{
     user: any;
@@ -420,11 +421,22 @@ function formatDate(dateStr: string): string {
                                         </div>
                                     </div>
                                     <div class="flex items-center justify-between">
-                                        <div class="text-sm">
-                                            <span v-if="wager.result === 'refunded'" class="text-blue-600 dark:text-blue-400 font-medium">Refunded {{ wager.user_points_wagered }} {{ wager.group.currency }}</span>
-                                            <span v-else-if="wager.is_winner" class="text-green-600 dark:text-green-400 font-medium">Won {{ wager.payout_amount }} {{ wager.group.currency }}</span>
-                                            <span v-else class="text-red-600 dark:text-red-400">Lost {{ wager.user_points_wagered }} {{ wager.group.currency }}</span>
-                                            <span class="ml-2 text-neutral-600 dark:text-neutral-400">Outcome: {{ wager.outcome_value }}</span>
+                                        <div class="text-sm flex items-center gap-2 flex-wrap">
+                                            <template v-if="wager.status === 'disputed'">
+                                                <DisputeStatusBadge
+                                                    status="disputed"
+                                                    :dispute-id="wager.dispute?.id"
+                                                    size="sm"
+                                                    clickable
+                                                />
+                                                <span class="text-neutral-500 dark:text-neutral-400">Outcome pending</span>
+                                            </template>
+                                            <template v-else>
+                                                <span v-if="wager.result === 'refunded'" class="text-blue-600 dark:text-blue-400 font-medium">Refunded {{ wager.user_points_wagered }} {{ wager.group.currency }}</span>
+                                                <span v-else-if="wager.is_winner" class="text-green-600 dark:text-green-400 font-medium">Won {{ wager.payout_amount }} {{ wager.group.currency }}</span>
+                                                <span v-else class="text-red-600 dark:text-red-400">Lost {{ wager.user_points_wagered }} {{ wager.group.currency }}</span>
+                                                <span class="text-neutral-600 dark:text-neutral-400">Outcome: {{ wager.outcome_value }}</span>
+                                            </template>
                                         </div>
                                         <a :href="wager.url" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm">View →</a>
                                     </div>
