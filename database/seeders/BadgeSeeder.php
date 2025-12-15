@@ -1,0 +1,346 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Database\Seeders;
+
+use App\Enums\BadgeCategory;
+use App\Enums\BadgeCriteriaType;
+use App\Enums\BadgeTier;
+use App\Models\Badge;
+use Illuminate\Database\Seeder;
+
+/**
+ * Seeds all system badges from the badge design guide.
+ *
+ * Run with: php artisan db:seed --class=BadgeSeeder
+ */
+class BadgeSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $badges = $this->getBadgeDefinitions();
+
+        foreach ($badges as $badge) {
+            Badge::updateOrCreate(
+                ['slug' => $badge['slug']],
+                $badge
+            );
+        }
+
+        $this->command->info('Seeded ' . count($badges) . ' badges.');
+    }
+
+    private function getBadgeDefinitions(): array
+    {
+        return [
+            // ===== EVENTS CATEGORY =====
+            [
+                'slug' => 'first_event_created',
+                'name' => 'Event Starter',
+                'description' => 'Created your first event',
+                'category' => BadgeCategory::Events,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'event_created',
+                'criteria_threshold' => null,
+                'image_slug' => 'events-first-created',
+                'sort_order' => 1,
+            ],
+            [
+                'slug' => 'first_event_attended',
+                'name' => 'Team Player',
+                'description' => 'Attended your first event',
+                'category' => BadgeCategory::Events,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'event_attended',
+                'criteria_threshold' => null,
+                'image_slug' => 'events-attendance-first',
+                'sort_order' => 2,
+            ],
+            [
+                'slug' => 'event_streak_5',
+                'name' => 'Reliable',
+                'description' => 'Attended 5 events in a row',
+                'category' => BadgeCategory::Events,
+                'tier' => BadgeTier::Bronze,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::Streak,
+                'criteria_event' => 'event_attended',
+                'criteria_threshold' => 5,
+                'image_slug' => 'events-attendance-streak-5',
+                'sort_order' => 3,
+            ],
+            [
+                'slug' => 'event_streak_10',
+                'name' => 'Dependable',
+                'description' => 'Attended 10 events in a row',
+                'category' => BadgeCategory::Events,
+                'tier' => BadgeTier::Silver,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::Streak,
+                'criteria_event' => 'event_attended',
+                'criteria_threshold' => 10,
+                'image_slug' => 'events-attendance-streak-10',
+                'sort_order' => 4,
+            ],
+            [
+                'slug' => 'event_streak_20',
+                'name' => 'Iron Will',
+                'description' => 'Attended 20 events in a row',
+                'category' => BadgeCategory::Events,
+                'tier' => BadgeTier::Gold,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::Streak,
+                'criteria_event' => 'event_attended',
+                'criteria_threshold' => 20,
+                'image_slug' => 'events-attendance-streak-20',
+                'sort_order' => 5,
+            ],
+            [
+                'slug' => 'first_no_show',
+                'name' => 'Ghost',
+                'description' => 'Missed your first event',
+                'category' => BadgeCategory::Events,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => true,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'event_missed',
+                'criteria_threshold' => null,
+                'image_slug' => 'events-noshow-first',
+                'sort_order' => 6,
+            ],
+            [
+                'slug' => 'no_show_5',
+                'name' => 'Phantom',
+                'description' => 'Missed 5 events',
+                'category' => BadgeCategory::Events,
+                'tier' => BadgeTier::Bronze,
+                'is_shame' => true,
+                'criteria_type' => BadgeCriteriaType::Count,
+                'criteria_event' => 'event_missed',
+                'criteria_threshold' => 5,
+                'image_slug' => 'events-noshow-5',
+                'sort_order' => 7,
+            ],
+
+            // ===== CHALLENGES CATEGORY =====
+            [
+                'slug' => 'first_challenge_requested',
+                'name' => 'Challenger',
+                'description' => 'Requested your first challenge',
+                'category' => BadgeCategory::Challenges,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'challenge_requested',
+                'criteria_threshold' => null,
+                'image_slug' => 'challenge-request-first',
+                'sort_order' => 1,
+            ],
+            [
+                'slug' => 'first_challenge_given',
+                'name' => 'Generous',
+                'description' => 'Gave your first challenge',
+                'category' => BadgeCategory::Challenges,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'challenge_given',
+                'criteria_threshold' => null,
+                'image_slug' => 'challenge-given-first',
+                'sort_order' => 2,
+            ],
+            [
+                'slug' => 'super_challenge',
+                'name' => 'Super Challenge Champion',
+                'description' => 'Won a group super challenge',
+                'category' => BadgeCategory::Challenges,
+                'tier' => BadgeTier::Gold,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'super_challenge_won',
+                'criteria_threshold' => null,
+                'image_slug' => 'challenge-super-champion',
+                'sort_order' => 3,
+            ],
+            [
+                'slug' => 'elimination_tap_out',
+                'name' => 'Tapped Out',
+                'description' => 'Eliminated from an elimination challenge',
+                'category' => BadgeCategory::Challenges,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => true,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'elimination_tap_out',
+                'criteria_threshold' => null,
+                'image_slug' => 'challenge-elimination-out',
+                'sort_order' => 4,
+            ],
+            [
+                'slug' => 'elimination_winner',
+                'name' => 'Last One Standing',
+                'description' => 'Won an elimination challenge',
+                'category' => BadgeCategory::Challenges,
+                'tier' => BadgeTier::Gold,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'elimination_winner',
+                'criteria_threshold' => null,
+                'image_slug' => 'challenge-elimination-winner',
+                'sort_order' => 5,
+            ],
+
+            // ===== WAGERS CATEGORY =====
+            [
+                'slug' => 'first_wager_created',
+                'name' => 'Bet Maker',
+                'description' => 'Created your first wager',
+                'category' => BadgeCategory::Wagers,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'wager_created',
+                'criteria_threshold' => null,
+                'image_slug' => 'wager-created-first',
+                'sort_order' => 1,
+            ],
+            [
+                'slug' => 'first_wager_won',
+                'name' => 'Winner',
+                'description' => 'Won your first wager',
+                'category' => BadgeCategory::Wagers,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'wager_won',
+                'criteria_threshold' => null,
+                'image_slug' => 'wager-won-first',
+                'sort_order' => 2,
+            ],
+            [
+                'slug' => 'wager_lost_3',
+                'name' => 'Bad Luck',
+                'description' => 'Lost 3 wagers',
+                'category' => BadgeCategory::Wagers,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => true,
+                'criteria_type' => BadgeCriteriaType::Count,
+                'criteria_event' => 'wager_lost',
+                'criteria_threshold' => 3,
+                'image_slug' => 'wager-lost-3',
+                'sort_order' => 3,
+            ],
+            [
+                'slug' => 'wager_won_5',
+                'name' => 'Hot Streak',
+                'description' => 'Won 5 wagers',
+                'category' => BadgeCategory::Wagers,
+                'tier' => BadgeTier::Bronze,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::Count,
+                'criteria_event' => 'wager_won',
+                'criteria_threshold' => 5,
+                'image_slug' => 'wager-won-5',
+                'sort_order' => 4,
+            ],
+            [
+                'slug' => 'wager_won_10',
+                'name' => 'High Roller',
+                'description' => 'Won 10 wagers',
+                'category' => BadgeCategory::Wagers,
+                'tier' => BadgeTier::Silver,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::Count,
+                'criteria_event' => 'wager_won',
+                'criteria_threshold' => 10,
+                'image_slug' => 'wager-won-10',
+                'sort_order' => 5,
+            ],
+            [
+                'slug' => 'wager_won_20',
+                'name' => 'Legendary Bettor',
+                'description' => 'Won 20 wagers',
+                'category' => BadgeCategory::Wagers,
+                'tier' => BadgeTier::Gold,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::Count,
+                'criteria_event' => 'wager_won',
+                'criteria_threshold' => 20,
+                'image_slug' => 'wager-won-20',
+                'sort_order' => 6,
+            ],
+            [
+                'slug' => 'most_wagers_settled',
+                'name' => 'Wager King',
+                'description' => 'Most wagers settled in the group',
+                'category' => BadgeCategory::Wagers,
+                'tier' => BadgeTier::Gold,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::Comparative,
+                'criteria_event' => 'wager_settled',
+                'criteria_threshold' => null,
+                'criteria_config' => ['scope' => 'group', 'metric' => 'most'],
+                'image_slug' => 'wager-king',
+                'sort_order' => 7,
+            ],
+
+            // ===== DISPUTES CATEGORY =====
+            [
+                'slug' => 'fraudster',
+                'name' => 'Fraudster',
+                'description' => 'Found guilty of fraud in a dispute',
+                'category' => BadgeCategory::Disputes,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => true,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'fraud_confirmed',
+                'criteria_threshold' => null,
+                'image_slug' => 'dispute-fraudster',
+                'sort_order' => 1,
+            ],
+            [
+                'slug' => 'judge_1',
+                'name' => 'Judge',
+                'description' => 'Participated in 1 dispute resolution',
+                'category' => BadgeCategory::Disputes,
+                'tier' => BadgeTier::Standard,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::First,
+                'criteria_event' => 'dispute_judged',
+                'criteria_threshold' => null,
+                'image_slug' => 'dispute-judge',
+                'sort_order' => 2,
+            ],
+            [
+                'slug' => 'judge_5',
+                'name' => 'Arbiter',
+                'description' => 'Participated in 5 dispute resolutions',
+                'category' => BadgeCategory::Disputes,
+                'tier' => BadgeTier::Bronze,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::Count,
+                'criteria_event' => 'dispute_judged',
+                'criteria_threshold' => 5,
+                'image_slug' => 'dispute-judge-5',
+                'sort_order' => 3,
+            ],
+            [
+                'slug' => 'judge_10',
+                'name' => 'Supreme Judge',
+                'description' => 'Participated in 10 dispute resolutions',
+                'category' => BadgeCategory::Disputes,
+                'tier' => BadgeTier::Silver,
+                'is_shame' => false,
+                'criteria_type' => BadgeCriteriaType::Count,
+                'criteria_event' => 'dispute_judged',
+                'criteria_threshold' => 10,
+                'image_slug' => 'dispute-judge-10',
+                'sort_order' => 4,
+            ],
+        ];
+    }
+}

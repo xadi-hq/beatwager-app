@@ -9,6 +9,7 @@ use App\Models\GroupEvent;
 use App\Models\OneTimeToken;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\UserBadge;
 use App\Models\Wager;
 use App\Models\WagerEntry;
 use App\Services\EventService;
@@ -386,6 +387,31 @@ class DashboardController extends Controller
         // Calculate upcoming events count
         $upcomingEventsCount = $upcomingEvents->count();
 
+        // Load user badges
+        $userBadges = UserBadge::where('user_id', $user->id)
+            ->active()
+            ->with(['badge', 'group'])
+            ->recent()
+            ->get()
+            ->map(function ($userBadge) {
+                return [
+                    'id' => $userBadge->id,
+                    'badge' => [
+                        'id' => $userBadge->badge->id,
+                        'slug' => $userBadge->badge->slug,
+                        'name' => $userBadge->badge->name,
+                        'description' => $userBadge->badge->description,
+                        'category' => $userBadge->badge->category->value,
+                        'tier' => $userBadge->badge->tier->value,
+                        'is_shame' => $userBadge->badge->is_shame,
+                        'image_url' => $userBadge->badge->imageUrl,
+                    ],
+                    'group_id' => $userBadge->group_id,
+                    'group_name' => $userBadge->group?->name,
+                    'awarded_at' => $userBadge->awarded_at->toIso8601String(),
+                ];
+            });
+
         return Inertia::render('Dashboard/Me', [
             'user' => [
                 'id' => $user->id,
@@ -414,6 +440,7 @@ class DashboardController extends Controller
             'pastProcessedEvents' => $pastProcessedEvents,
             'pastUnprocessedEvents' => $pastUnprocessedEvents,
             'userChallenges' => $userChallenges,
+            'userBadges' => $userBadges,
             'focus' => $focus,
         ]);
     }

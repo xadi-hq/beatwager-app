@@ -3,6 +3,8 @@ import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DisputeStatusBadge from '@/Components/DisputeStatusBadge.vue';
+import BadgeCollection from '@/Components/BadgeCollection.vue';
+import type { UserBadge } from '@/types';
 
 const props = defineProps<{
     user: any;
@@ -17,6 +19,7 @@ const props = defineProps<{
     pastProcessedEvents: any[];
     pastUnprocessedEvents: any[];
     userChallenges: any[];
+    userBadges: UserBadge[];
     focus: string;
 }>();
 
@@ -25,6 +28,7 @@ const getDefaultTab = () => {
     if (props.focus === 'transactions') return 'transactions';
     if (props.focus === 'events') return 'events';
     if (props.focus === 'challenges') return 'challenges';
+    if (props.focus === 'badges') return 'badges';
     return 'wagers';
 };
 
@@ -356,6 +360,7 @@ function isRefundType(type: string): boolean {
                         <option value="challenges">Challenges</option>
                         <option value="events">Events</option>
                         <option value="transactions">Transactions</option>
+                        <option value="badges">Badges</option>
                         <option v-if="showLeaderboard" value="leaderboard">Leaderboard</option>
                     </select>
                 </div>
@@ -406,6 +411,20 @@ function isRefundType(type: string): boolean {
                             ]"
                         >
                             Transactions
+                        </button>
+                        <button
+                            @click="activeTab = 'badges'"
+                            :class="[
+                                'px-6 py-3 text-sm font-medium border-b-2',
+                                activeTab === 'badges'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300'
+                            ]"
+                        >
+                            Badges
+                            <span v-if="userBadges.length > 0" class="ml-1 text-xs bg-neutral-200 dark:bg-neutral-600 px-1.5 py-0.5 rounded-full">
+                                {{ userBadges.length }}
+                            </span>
                         </button>
                         <button
                             v-if="showLeaderboard"
@@ -823,6 +842,16 @@ function isRefundType(type: string): boolean {
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Badges Tab -->
+                    <div v-if="activeTab === 'badges'">
+                        <BadgeCollection
+                            :badges="userBadges"
+                            title="Your Badges"
+                            show-empty
+                            show-group
+                        />
                     </div>
 
                     <!-- Leaderboard Tab -->

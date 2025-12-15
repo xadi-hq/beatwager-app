@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Events\AttendanceRecorded;
+use App\Events\BadgeAwarded;
+use App\Events\BadgeRevoked;
 use App\Events\ChallengeAccepted;
 use App\Events\ChallengeApproved;
 use App\Events\ChallengeCancelled;
@@ -32,7 +35,20 @@ use App\Events\WagerBettingClosed;
 use App\Events\WagerCreated;
 use App\Events\WagerJoined;
 use App\Events\WagerSettled;
+use App\Listeners\CheckBadgesOnAttendanceRecorded;
+use App\Listeners\CheckBadgesOnChallengeAccepted;
+use App\Listeners\CheckBadgesOnChallengeApproved;
+use App\Listeners\CheckBadgesOnDisputeResolved;
+use App\Listeners\CheckBadgesOnDisputeVote;
+use App\Listeners\CheckBadgesOnEliminationResolved;
+use App\Listeners\CheckBadgesOnEliminationTappedOut;
+use App\Listeners\CheckBadgesOnEventCreated;
+use App\Listeners\CheckBadgesOnSuperChallengeValidated;
+use App\Listeners\CheckBadgesOnWagerCreated;
+use App\Listeners\CheckBadgesOnWagerSettled;
 use App\Listeners\CheckDisputeThreshold;
+use App\Listeners\SendBadgeNotification;
+use App\Listeners\SendBadgeRevocationNotification;
 use App\Listeners\SendChallengeAcceptedAnnouncement;
 use App\Listeners\SendChallengeAnnouncement;
 use App\Listeners\SendChallengeApprovedAnnouncement;
@@ -77,12 +93,14 @@ class EventServiceProvider extends ServiceProvider
         ],
         ChallengeAccepted::class => [
             SendChallengeAcceptedAnnouncement::class,
+            CheckBadgesOnChallengeAccepted::class,
         ],
         ChallengeSubmitted::class => [
             SendChallengeSubmittedAnnouncement::class,
         ],
         ChallengeApproved::class => [
             SendChallengeApprovedAnnouncement::class,
+            CheckBadgesOnChallengeApproved::class,
         ],
         ChallengeRejected::class => [
             SendChallengeRejectedAnnouncement::class,
@@ -98,18 +116,21 @@ class EventServiceProvider extends ServiceProvider
         ],
         EventCreated::class => [
             SendEventAnnouncement::class,
+            CheckBadgesOnEventCreated::class,
         ],
         EventCancelled::class => [
             SendEventCancelledAnnouncement::class,
         ],
         WagerCreated::class => [
             SendWagerAnnouncement::class,
+            CheckBadgesOnWagerCreated::class,
         ],
         WagerJoined::class => [
             SendWagerJoinAnnouncement::class,
         ],
         WagerSettled::class => [
             SendWagerSettlement::class,
+            CheckBadgesOnWagerSettled::class,
         ],
         WagerBettingClosed::class => [
             SendBettingClosedAnnouncement::class,
@@ -128,6 +149,7 @@ class EventServiceProvider extends ServiceProvider
         ],
         SuperChallengeCompletionValidated::class => [
             SendSuperChallengeValidatedNotification::class,
+            CheckBadgesOnSuperChallengeValidated::class,
         ],
         SuperChallengeAutoValidated::class => [
             SendSuperChallengeAutoValidatedNotification::class,
@@ -143,12 +165,14 @@ class EventServiceProvider extends ServiceProvider
         ],
         EliminationChallengeTappedOut::class => [
             SendEliminationTappedOutAnnouncement::class,
+            CheckBadgesOnEliminationTappedOut::class,
         ],
         EliminationChallengeMilestone::class => [
             SendEliminationMilestoneAnnouncement::class,
         ],
         EliminationChallengeResolved::class => [
             SendEliminationResolvedAnnouncement::class,
+            CheckBadgesOnEliminationResolved::class,
         ],
         EliminationChallengeCancelled::class => [
             SendEliminationCancelledAnnouncement::class,
@@ -158,9 +182,20 @@ class EventServiceProvider extends ServiceProvider
         ],
         DisputeResolved::class => [
             SendDisputeResolutionNotification::class,
+            CheckBadgesOnDisputeResolved::class,
         ],
         DisputeVoteReceived::class => [
             CheckDisputeThreshold::class,
+            CheckBadgesOnDisputeVote::class,
+        ],
+        AttendanceRecorded::class => [
+            CheckBadgesOnAttendanceRecorded::class,
+        ],
+        BadgeAwarded::class => [
+            SendBadgeNotification::class,
+        ],
+        BadgeRevoked::class => [
+            SendBadgeRevocationNotification::class,
         ],
     ];
 

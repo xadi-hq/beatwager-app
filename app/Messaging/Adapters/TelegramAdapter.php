@@ -99,6 +99,42 @@ class TelegramAdapter implements MessengerAdapterInterface
         );
     }
 
+    /**
+     * Send a photo message to a chat.
+     *
+     * @param string $chatId The chat ID to send to
+     * @param string $photoUrl URL of the photo to send
+     * @param string|null $caption Optional caption for the photo
+     * @param string|null $parseMode Parse mode for caption (HTML, Markdown, etc.)
+     * @param array<int, array<int, \App\DTOs\Button|array<string, mixed>>>|null $buttons Optional inline keyboard buttons
+     */
+    public function sendPhoto(
+        string $chatId,
+        string $photoUrl,
+        ?string $caption = null,
+        ?string $parseMode = 'HTML',
+        ?array $buttons = null
+    ): void {
+        $params = [
+            'chat_id' => $chatId,
+            'photo' => $photoUrl,
+        ];
+
+        if ($caption !== null) {
+            $params['caption'] = $caption;
+        }
+
+        if ($parseMode !== null) {
+            $params['parse_mode'] = $parseMode;
+        }
+
+        if ($buttons !== null) {
+            $params['reply_markup'] = $this->buildInlineKeyboard($buttons);
+        }
+
+        $this->bot->call('sendPhoto', $params);
+    }
+
     public function createAuthenticatedUrl(string $route, array $params, int $expiryMinutes = 30): string
     {
         return URL::temporarySignedRoute(

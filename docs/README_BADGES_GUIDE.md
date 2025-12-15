@@ -146,7 +146,7 @@ Create a circular badge icon in the style of classic Foursquare/app achievement 
 
 **Number bubble:** Small circle in bottom-right corner containing "[NUMBER]"
 
-Output: Single badge with attached number bubble, transparent background, PNG format, 512x512px
+Output: Single badge, perfectly circular, PNG format, 512x512px, the area outside the circular badge must be fully transparent (alpha = 0), not white or off-white. Export as PNG-24 with transparency.
 ```
 
 ### Template: Shame/Negative Badge
@@ -179,7 +179,7 @@ Create a circular badge icon in the style of classic Foursquare/app achievement 
 
 **Icon:** [ICON DESCRIPTION - keep playful, not aggressive]
 
-Output: Single badge, perfectly circular, transparent background outside the badge, PNG format, 512x512px
+Output: Single badge, perfectly circular, PNG format, 512x512px, the area outside the circular badge must be fully transparent (alpha = 0), not white or off-white. Export as PNG-24 with transparency.
 ```
 
 ---

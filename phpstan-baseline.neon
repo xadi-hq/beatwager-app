@@ -1,10 +1,454 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getTelegramService\(\)\.$#'
+			message: '#^Strict comparison using \=\=\= between int and string will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 2
+			path: app/Callbacks/Handlers/DisputeVoteCallbackHandler.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Callbacks/Handlers/DisputeVoteCallbackHandler.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Callbacks/Handlers/EventRsvpCallbackHandler.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string\|null and int will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Callbacks/Handlers/SettleChallengeCallbackHandler.php
+
+		-
+			message: '#^Method App\\Callbacks\\Handlers\\SettleItemCallbackHandler\:\:buildChallengeOptions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Callbacks/Handlers/SettleItemCallbackHandler.php
+
+		-
+			message: '#^Method App\\Callbacks\\Handlers\\SettleItemCallbackHandler\:\:buildEventOptions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Callbacks/Handlers/SettleItemCallbackHandler.php
+
+		-
+			message: '#^Method App\\Callbacks\\Handlers\\SettleItemCallbackHandler\:\:buildSettlementOptions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Callbacks/Handlers/SettleItemCallbackHandler.php
+
+		-
+			message: '#^Method App\\Callbacks\\Handlers\\SettleItemCallbackHandler\:\:buildWagerOptions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Callbacks/Handlers/SettleItemCallbackHandler.php
+
+		-
+			message: '#^Parameter \#1 \$value of function collect expects Illuminate\\Contracts\\Support\\Arrayable\<\(int\|string\), mixed\>\|iterable\<\(int\|string\), mixed\>\|null, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Callbacks/Handlers/SettleItemCallbackHandler.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Callbacks/Handlers/SettleItemCallbackHandler.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Callbacks/Handlers/SettleItemCallbackHandler.php
+
+		-
+			message: '#^Empty array passed to foreach\.$#'
+			identifier: foreach.emptyArray
+			count: 1
+			path: app/Callbacks/Handlers/SettleWagerCallbackHandler.php
+
+		-
+			message: '#^Match arm comparison between ''date'' and ''date'' is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 1
+			path: app/Callbacks/Handlers/SettleWagerCallbackHandler.php
+
+		-
+			message: '#^Parameter \$settlerId of method App\\Services\\WagerService\:\:settleWager\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Callbacks/Handlers/SettleWagerCallbackHandler.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:toGroupTimezone\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Callbacks/Handlers/TrackEventProgressCallbackHandler.php
+
+		-
+			message: '#^Cannot call method diffForHumans\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Callbacks/Handlers/TrackWagerProgressCallbackHandler.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$points_currency_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Callbacks/Handlers/WagerCallbackHandler.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: app/Callbacks/Handlers/WagerCallbackHandler.php
+
+		-
+			message: '#^Match arm comparison between ''date'' and ''date'' is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 1
+			path: app/Callbacks/Handlers/WagerCallbackHandler.php
+
+		-
+			message: '#^Method App\\Callbacks\\Handlers\\WagerCallbackHandler\:\:findMatchingOption\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Callbacks/Handlers/WagerCallbackHandler.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>points" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Callbacks/Handlers/WagerCallbackHandler.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Commands/Handlers/BalanceCommandHandler.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Commands/Handlers/BalanceCommandHandler.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$points\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Commands/Handlers/BalanceCommandHandler.php
+
+		-
+			message: '#^Method App\\Commands\\Handlers\\ChallengesCommandHandler\:\:formatChallengesMessage\(\) has parameter \$challenges with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Commands/Handlers/ChallengesCommandHandler.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Commands/Handlers/ChallengesCommandHandler.php
+
+		-
+			message: '#^Method App\\Commands\\Handlers\\DonateCommandHandler\:\:escapeMarkdown\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Commands/Handlers/DonateCommandHandler.php
+
+		-
+			message: '#^Method App\\Commands\\Handlers\\EventsCommandHandler\:\:formatEventsMessage\(\) has parameter \$events with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Commands/Handlers/EventsCommandHandler.php
+
+		-
+			message: '#^Method App\\Commands\\Handlers\\LeaderboardCommandHandler\:\:formatLeaderboardMessage\(\) has parameter \$leaderboard with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Commands/Handlers/LeaderboardCommandHandler.php
+
+		-
+			message: '#^Method App\\Commands\\Handlers\\MyWagersCommandHandler\:\:formatWagersMessage\(\) has parameter \$activeWagers with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Commands/Handlers/MyWagersCommandHandler.php
+
+		-
+			message: '#^Method App\\Commands\\Handlers\\SettleCommandHandler\:\:getUnsettledItems\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Commands/Handlers/SettleCommandHandler.php
+
+		-
+			message: '#^Method App\\Commands\\Handlers\\WagersCommandHandler\:\:formatWagersMessage\(\) has parameter \$wagers with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Commands/Handlers/WagersCommandHandler.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\AggregateLLMMetrics\:\:parseLogsForDate\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Console/Commands/AggregateLLMMetrics.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Console/Commands/AggregateLLMMetrics.php
+
+		-
+			message: '#^Parameter \#2 \$daysInactive of method App\\Services\\MessageService\:\:revivalMessage\(\) expects int, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/CheckGroupActivity.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/CheckSeasonEndings.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$season_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/CheckSeasonEndings.php
+
+		-
+			message: '#^Parameter \#5 \$contextId of method App\\Services\\MessageTrackingService\:\:recordMessage\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/CheckSeasonEndings.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Console/Commands/ExpireDisputes.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$resolution\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/ExpireDisputes.php
+
+		-
+			message: '#^Parameter \#1 \$dispute of method App\\Services\\DisputeService\:\:handleExpiredDispute\(\) expects App\\Models\\Dispute, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/ExpireDisputes.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Group\:\:\$telegram_chat_title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/ReconcilePoints.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\ReconcilePoints\:\:findDiscrepancies\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Console/Commands/ReconcilePoints.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\ReconcilePoints\:\:fixDiscrepancy\(\) has parameter \$discrepancy with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Console/Commands/ReconcilePoints.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\ReconcilePoints\:\:logDiscrepancies\(\) has parameter \$discrepancies with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Console/Commands/ReconcilePoints.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\ReconcilePoints\:\:logDiscrepancies\(\) has parameter \$group with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Console/Commands/ReconcilePoints.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 2
+			path: app/Console/Commands/ReconcilePoints.php
+
+		-
+			message: '#^Parameter \#1 \$groupId of method App\\Console\\Commands\\ReconcilePoints\:\:findDiscrepancies\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/ReconcilePoints.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Console/Commands/SendDisputeReminders.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$drop_amount\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Console/Commands/SendScheduledMessages.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$group\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/SendScheduledMessages.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Console/Commands/SendScheduledMessages.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_drop_event\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Console/Commands/SendScheduledMessages.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$message_type\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Console/Commands/SendScheduledMessages.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Console/Commands/SendScheduledMessages.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:distributeDropToGroup\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Console/Commands/SendScheduledMessages.php
+
+		-
+			message: '#^Parameter \#1 \$message of method App\\Services\\ScheduledMessageService\:\:markAsSent\(\) expects App\\Models\\ScheduledMessage, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/SendScheduledMessages.php
+
+		-
+			message: '#^Parameter \#2 \$scheduledMessage of method App\\Services\\MessageService\:\:scheduledMessage\(\) expects App\\Models\\ScheduledMessage, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/SendScheduledMessages.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Console/Commands/SendSettlementReminders.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$platform\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Console/Commands/SendSettlementReminders.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$platform_chat_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/SendSettlementReminders.php
+
+		-
+			message: '#^Argument of an invalid type App\\DTOs\\Button supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: app/Console/Commands/SendSettlementReminders.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getMessengerService\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Console/Commands/SendSettlementReminders.php
+
+		-
+			message: '#^Cannot call method diffInDays\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Console/Commands/SendSettlementReminders.php
+
+		-
+			message: '#^Cannot call method diffInHours\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Console/Commands/SendSettlementReminders.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\SetTelegramCommands\:\:handle\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Console/Commands/SetTelegramCommands.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Console/Commands/TestBirthdayReminders.php
+
+		-
+			message: '#^Cannot call method setYear\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Console/Commands/TestBirthdayReminders.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\TestBirthdayReminders\:\:handle\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Console/Commands/TestBirthdayReminders.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\SuperChallengeNudge\:\:\$sent_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/TestSuperChallenge.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/TestSuperChallenge.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Console/Commands/TestSuperChallenge.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Console/Commands/TestSuperChallenge.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Console/Commands/TestSuperChallenge.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\TestSuperChallenge\:\:handle\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Console/Commands/TestSuperChallenge.php
 
 		-
 			message: '#^Method App\\Contracts\\MessengerInterface\:\:buildButtons\(\) has parameter \$buttons with no value type specified in iterable type array\.$#'
@@ -17,6 +461,18 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/DTOs/Message.php
+
+		-
+			message: '#^Method App\\DTOs\\MessageContext\:\:__construct\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/DTOs/MessageContext.php
+
+		-
+			message: '#^Method App\\DTOs\\MessageContext\:\:__construct\(\) has parameter \$requiredFields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/DTOs/MessageContext.php
 
 		-
 			message: '#^Method App\\Exceptions\\InvalidAnswerException\:\:forMultipleChoice\(\) has parameter \$validOptions with no value type specified in iterable type array\.$#'
@@ -37,46 +493,106 @@ parameters:
 			path: app/Exceptions/InvalidWagerStateException.php
 
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$points\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Controllers/Api/TelegramWebhookController.php
 
 		-
+			message: '#^Parameter \#2 \$user of method App\\Listeners\\HandleDisputeParticipantLeft\:\:handle\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
+			message: '#^Property App\\Http\\Controllers\\Api\\TelegramWebhookController\:\:\$bot is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: app/Http/Controllers/Api/TelegramWebhookController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$answer_value\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 7
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_winner\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$points_wagered\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$points_won\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$resolution\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$result\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
 			identifier: method.notFound
-			count: 2
-			path: app/Http/Controllers/Api/TelegramWebhookController.php
-
-		-
-			message: '#^Cannot call method getChat\(\) on string\.$#'
-			identifier: method.nonObject
 			count: 1
-			path: app/Http/Controllers/Api/TelegramWebhookController.php
-
-		-
-			message: '#^Parameter \#2 \$text of method TelegramBot\\Api\\BotApi\:\:answerCallbackQuery\(\) expects string\|null, array\<string, string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/Api/TelegramWebhookController.php
-
-		-
-			message: '#^Parameter \#2 \$text of method TelegramBot\\Api\\BotApi\:\:answerCallbackQuery\(\) expects string\|null, array\<string, string\|false\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/Api/TelegramWebhookController.php
-
-		-
-			message: '#^Parameter \#2 \$text of method TelegramBot\\Api\\BotApi\:\:answerCallbackQuery\(\) expects string\|null, array\<string, string\|true\> given\.$#'
-			identifier: argument.type
-			count: 7
-			path: app/Http/Controllers/Api/TelegramWebhookController.php
-
-		-
-			message: '#^Parameter \$userId of static method App\\Models\\OneTimeToken\:\:generate\(\) expects string\|null, int given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Http/Controllers/Api/TelegramWebhookController.php
+			path: app/Http/Controllers/DashboardController.php
 
 		-
 			message: '#^Cannot call method format\(\) on string\.$#'
@@ -87,7 +603,7 @@ parameters:
 		-
 			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
 			identifier: method.nonObject
-			count: 3
+			count: 5
 			path: app/Http/Controllers/DashboardController.php
 
 		-
@@ -115,6 +631,12 @@ parameters:
 			path: app/Http/Controllers/DashboardController.php
 
 		-
+			message: '#^Parameter \#1 \$group of method App\\Services\\EventService\:\:getEventsForGroup\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
 			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Transaction\>\:\:map\(\) contains unresolvable type\.$#'
 			identifier: method.unresolvableReturnType
 			count: 1
@@ -133,10 +655,646 @@ parameters:
 			path: app/Http/Controllers/DashboardController.php
 
 		-
+			message: '#^Strict comparison using \=\=\= between string\|null and int will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Enums\\ChallengeType\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DisputeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DisputeController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between int and string will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 2
+			path: app/Http/Controllers/DisputeController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$platform_user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/DonationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/DonationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/DonationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DonationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$points\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/DonationController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/DonationController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: app/Http/Controllers/DonationController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 2
+			path: app/Http/Controllers/DonationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/EliminationChallengeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$resolution\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/EliminationChallengeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/EliminationChallengeController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\MessengerService\:\:\$platform_username\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$attended\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$platform_chat_title\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$response\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\EventController\:\:cancel\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\EventController\:\:recordAttendance\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\EventController\:\:rsvp\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\EventController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ended_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$prize_structure\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$season_number\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$started_at\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$points\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getDurationInDays\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getTelegramService\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getWinner\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 2
+			path: app/Http/Controllers/GroupController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\GroupSettingsController\:\:update\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/GroupSettingsController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\GroupStreakController\:\:show\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/GroupStreakController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\GroupStreakController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/GroupStreakController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\LLMModelsController\:\:fetchAnthropicModels\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Controllers/LLMModelsController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\LLMModelsController\:\:fetchOpenAIModels\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Controllers/LLMModelsController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\LLMModelsController\:\:fetchRequestyModels\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Controllers/LLMModelsController.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 3
+			path: app/Http/Controllers/LLMModelsController.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 3
+			path: app/Http/Controllers/LLMModelsController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$birthday\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$drop_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_drop_event\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_recurring\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$last_sent_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$message_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$recurrence_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$scheduled_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getNextOccurrence\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/ScheduledMessageController.php
+
+		-
 			message: '#^Method App\\Http\\Controllers\\ShortUrlController\:\:redirect\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
 			path: app/Http/Controllers/ShortUrlController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$platform_chat_title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SuperChallengeController\:\:accept\(\) should return Illuminate\\Http\\RedirectResponse\|Inertia\\Response but returns Symfony\\Component\\HttpFoundation\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SuperChallengeController\:\:calculatePrizePreview\(\) has parameter \$group with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SuperChallengeController\:\:calculatePrizePreview\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SuperChallengeController\:\:complete\(\) should return Illuminate\\Http\\RedirectResponse\|Inertia\\Response but returns Symfony\\Component\\HttpFoundation\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SuperChallengeController\:\:getStaticExamples\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string\|null and int will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Http/Controllers/SuperChallengeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$answer_value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$betting_closes_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$creator\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$entries\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$expected_settlement_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$group\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$group_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 10
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_winner\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$max_length\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$n\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 12
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$options\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$participants_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$platform_chat_title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$points_wagered\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$points_won\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$resolution\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$result\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$stake_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$total_points_wagered\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/WagerController.php
 
 		-
 			message: '#^Array has 2 duplicate keys with value ''settled_at'' \(''settled_at'', ''settled_at''\)\.$#'
@@ -147,29 +1305,17 @@ parameters:
 		-
 			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
 			identifier: method.nonObject
-			count: 5
+			count: 8
 			path: app/Http/Controllers/WagerController.php
 
 		-
-			message: '#^Left side of && is always true\.$#'
-			identifier: booleanAnd.leftAlwaysTrue
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:joinSuccess\(\) has no return type specified\.$#'
+			identifier: missingType.return
 			count: 1
 			path: app/Http/Controllers/WagerController.php
 
 		-
-			message: '#^Method App\\Http\\Controllers\\WagerController\:\:postSettlementToTelegram\(\) has parameter \$wager with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: app/Http/Controllers/WagerController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\WagerController\:\:postWagerToTelegram\(\) has parameter \$group with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: app/Http/Controllers/WagerController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\WagerController\:\:postWagerToTelegram\(\) has parameter \$wager with no type specified\.$#'
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:joinSuccess\(\) has parameter \$entryId with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
 			path: app/Http/Controllers/WagerController.php
@@ -217,6 +1363,12 @@ parameters:
 			path: app/Http/Controllers/WagerController.php
 
 		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:showJoinForm\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
 			message: '#^Method App\\Http\\Controllers\\WagerController\:\:showSettlementForm\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -224,6 +1376,12 @@ parameters:
 
 		-
 			message: '#^Method App\\Http\\Controllers\\WagerController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/WagerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\WagerController\:\:submitJoin\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
 			path: app/Http/Controllers/WagerController.php
@@ -277,16 +1435,472 @@ parameters:
 			path: app/Http/Controllers/WagerController.php
 
 		-
-			message: '#^Ternary operator condition is always true\.$#'
-			identifier: ternary.alwaysTrue
+			message: '#^Method App\\Http\\Middleware\\AuthenticateFromSignedUrl\:\:redirectToCleanUrl\(\) has no return type specified\.$#'
+			identifier: missingType.return
 			count: 1
-			path: app/Http/Controllers/WagerController.php
+			path: app/Http/Middleware/AuthenticateFromSignedUrl.php
 
 		-
-			message: '#^Method App\\Http\\Middleware\\AuthenticateFromSignedUrl\:\:findUserByIdentifier\(\) should return App\\Models\\User\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			message: '#^Method App\\Http\\Middleware\\EnsureUserInGroup\:\:extractGroupFromRequest\(\) should return App\\Models\\Group\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: return.type
 			count: 2
-			path: app/Http/Middleware/AuthenticateFromSignedUrl.php
+			path: app/Http/Middleware/EnsureUserInGroup.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Middleware/HandleInertiaRequests.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Jobs/SendBettingClosedNotifications.php
+
+		-
+			message: '#^Parameter \#1 \$group of method App\\Services\\MessageTrackingService\:\:canSendMessage\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Jobs/SendBettingClosedNotifications.php
+
+		-
+			message: '#^Parameter \#1 \$group of method App\\Services\\MessageTrackingService\:\:recordMessage\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Jobs/SendBettingClosedNotifications.php
+
+		-
+			message: '#^Parameter \#4 \$contextId of method App\\Services\\MessageTrackingService\:\:canSendMessage\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Jobs/SendBettingClosedNotifications.php
+
+		-
+			message: '#^Parameter \#5 \$contextId of method App\\Services\\MessageTrackingService\:\:recordMessage\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Jobs/SendBettingClosedNotifications.php
+
+		-
+			message: '#^Cannot call method setYear\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Jobs/SendBirthdayReminders.php
+
+		-
+			message: '#^Method App\\Jobs\\SendBirthdayReminders\:\:getUpcomingBirthdays\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Jobs/SendBirthdayReminders.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Jobs/SendEngagementPrompts.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:sendMessage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Jobs/SendEngagementPrompts.php
+
+		-
+			message: '#^Parameter \#1 \$group of method App\\Services\\MessageTrackingService\:\:canSendMessage\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Jobs/SendEngagementPrompts.php
+
+		-
+			message: '#^Parameter \#1 \$group of method App\\Services\\MessageTrackingService\:\:recordMessage\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Jobs/SendEngagementPrompts.php
+
+		-
+			message: '#^Parameter \#4 \$contextId of method App\\Services\\MessageTrackingService\:\:canSendMessage\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Jobs/SendEngagementPrompts.php
+
+		-
+			message: '#^Parameter \#5 \$contextId of method App\\Services\\MessageTrackingService\:\:recordMessage\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Jobs/SendEngagementPrompts.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Jobs/SendSeasonMilestoneDrops.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Jobs/SendSeasonMilestoneDrops.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$started_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Jobs/SendSeasonMilestoneDrops.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:adjustPoints\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Jobs/SendSeasonMilestoneDrops.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Group\:\:\$platform_group_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Listeners/CheckDisputeThreshold.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\MessengerFactory\:\:make\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/CheckDisputeThreshold.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Listeners/HandleDisputeParticipantLeft.php
+
+		-
+			message: '#^Call to function method_exists\(\) with Illuminate\\Database\\Eloquent\\Model and ''getAttribute'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Listeners/HandleDisputeParticipantLeft.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: app/Listeners/HandleDisputeParticipantLeft.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:sendMessage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendAttendanceAnnouncement.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Listeners/SendBettingClosedAnnouncement.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:sendMessage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendBettingClosedAnnouncement.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendBettingClosedAnnouncement.php
+
+		-
+			message: '#^Parameter \#2 \$entries of method App\\Services\\MessageService\:\:bettingClosedReveal\(\) expects Illuminate\\Support\\Collection&iterable\<App\\Services\\WagerEntry\>, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Listeners/SendBettingClosedAnnouncement.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Listeners/SendDisputeNotification.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Listeners/SendDisputeResolutionNotification.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:sendMessage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendEventAnnouncement.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:sendMessage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendEventCancelledAnnouncement.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$llm_api_key\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Listeners/SendRsvpAnnouncement.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:sendMessage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendRsvpAnnouncement.php
+
+		-
+			message: '#^Access to an undefined property App\\Events\\SuperChallengeAccepted\:\:\$participant\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Listeners/SendSuperChallengeAcceptedNotification.php
+
+		-
+			message: '#^Call to an undefined method App\\Contracts\\MessengerInterface\:\:getAdapter\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendSuperChallengeCompletionClaimedNotification.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Listeners/SendSuperChallengeNudge.php
+
+		-
+			message: '#^Call to an undefined method App\\Contracts\\MessengerInterface\:\:getAdapter\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendSuperChallengeNudge.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getChatId\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendSuperChallengeNudge.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getTelegramService\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendSuperChallengeNudge.php
+
+		-
+			message: '#^Parameter \#1 \$group of static method App\\Services\\MessengerFactory\:\:for\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Listeners/SendSuperChallengeNudge.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:sendMessage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendWagerAnnouncement.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:sendMessage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendWagerJoinAnnouncement.php
+
+		-
+			message: '#^Parameter \#4 \$group of method App\\Services\\EngagementTriggerService\:\:detectTriggers\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Listeners/SendWagerJoinAnnouncement.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:sendMessage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Listeners/SendWagerSettlement.php
+
+		-
+			message: '#^Method App\\Messaging\\Adapters\\TelegramAdapter\:\:buildInlineKeyboard\(\) has parameter \$buttons with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/Adapters/TelegramAdapter.php
+
+		-
+			message: '#^Method App\\Messaging\\Adapters\\TelegramAdapter\:\:buildReplyKeyboard\(\) has parameter \$keyboard with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/Adapters/TelegramAdapter.php
+
+		-
+			message: '#^Method App\\Messaging\\Adapters\\TelegramAdapter\:\:buildReplyKeyboard\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/Adapters/TelegramAdapter.php
+
+		-
+			message: '#^Method App\\Messaging\\Adapters\\TelegramAdapter\:\:buttonToTelegram\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/Adapters/TelegramAdapter.php
+
+		-
+			message: '#^Method App\\Messaging\\Adapters\\TelegramAdapter\:\:createAuthenticatedUrl\(\) has parameter \$params with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/Adapters/TelegramAdapter.php
+
+		-
+			message: '#^Method App\\Messaging\\Adapters\\TelegramAdapter\:\:parseCallback\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/Adapters/TelegramAdapter.php
+
+		-
+			message: '#^Method App\\Messaging\\Adapters\\TelegramAdapter\:\:parseWebhook\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/Adapters/TelegramAdapter.php
+
+		-
+			message: '#^Method App\\Messaging\\Adapters\\TelegramAdapter\:\:verifyWebhook\(\) has parameter \$headers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/Adapters/TelegramAdapter.php
+
+		-
+			message: '#^Method App\\Messaging\\Adapters\\TelegramAdapter\:\:verifyWebhook\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/Adapters/TelegramAdapter.php
+
+		-
+			message: '#^Method App\\Messaging\\DTOs\\IncomingCallback\:\:__construct\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/DTOs/IncomingCallback.php
+
+		-
+			message: '#^Method App\\Messaging\\DTOs\\IncomingCallback\:\:fromTelegram\(\) has parameter \$callbackQuery with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/DTOs/IncomingCallback.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Messaging/DTOs/IncomingCallback.php
+
+		-
+			message: '#^Method App\\Messaging\\DTOs\\IncomingMessage\:\:__construct\(\) has parameter \$commandArgs with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/DTOs/IncomingMessage.php
+
+		-
+			message: '#^Method App\\Messaging\\DTOs\\IncomingMessage\:\:__construct\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/DTOs/IncomingMessage.php
+
+		-
+			message: '#^Method App\\Messaging\\DTOs\\OutgoingMessage\:\:__construct\(\) has parameter \$buttons with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/DTOs/OutgoingMessage.php
+
+		-
+			message: '#^Method App\\Messaging\\DTOs\\OutgoingMessage\:\:__construct\(\) has parameter \$keyboard with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/DTOs/OutgoingMessage.php
+
+		-
+			message: '#^Method App\\Messaging\\DTOs\\OutgoingMessage\:\:__construct\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/DTOs/OutgoingMessage.php
+
+		-
+			message: '#^Method App\\Messaging\\DTOs\\OutgoingMessage\:\:withButtons\(\) has parameter \$buttons with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/DTOs/OutgoingMessage.php
+
+		-
+			message: '#^Method App\\Messaging\\MessengerAdapterInterface\:\:createAuthenticatedUrl\(\) has parameter \$params with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/MessengerAdapterInterface.php
+
+		-
+			message: '#^Method App\\Messaging\\MessengerAdapterInterface\:\:parseCallback\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/MessengerAdapterInterface.php
+
+		-
+			message: '#^Method App\\Messaging\\MessengerAdapterInterface\:\:parseWebhook\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/MessengerAdapterInterface.php
+
+		-
+			message: '#^Method App\\Messaging\\MessengerAdapterInterface\:\:verifyWebhook\(\) has parameter \$headers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/MessengerAdapterInterface.php
+
+		-
+			message: '#^Method App\\Messaging\\MessengerAdapterInterface\:\:verifyWebhook\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Messaging/MessengerAdapterInterface.php
+
+		-
+			message: '#^Method App\\Models\\AuditEvent\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/AuditEvent.php
+
+		-
+			message: '#^Method App\\Models\\AuditEvent\:\:recentForGroup\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/AuditEvent.php
+
+		-
+			message: '#^Method App\\Models\\AuditEvent\:\:scopeInvolvingUser\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/AuditEvent.php
+
+		-
+			message: '#^Method App\\Models\\AuditEvent\:\:scopeInvolvingUser\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/AuditEvent.php
+
+		-
+			message: '#^Method App\\Models\\AuditEvent\:\:scopeOfType\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/AuditEvent.php
+
+		-
+			message: '#^Method App\\Models\\AuditEvent\:\:scopeOfType\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/AuditEvent.php
+
+		-
+			message: '#^Method App\\Models\\AuditEvent\:\:scopeRecent\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/AuditEvent.php
+
+		-
+			message: '#^Method App\\Models\\AuditEvent\:\:scopeRecent\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/AuditEvent.php
 
 		-
 			message: '#^Method App\\Models\\AuditLog\:\:actor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
@@ -343,7 +1957,673 @@ parameters:
 			path: app/Models/AuditLog.php
 
 		-
+			message: '#^Class App\\Models\\Badge has PHPDoc tag @property for property \$criteria_config with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Class App\\Models\\Badge uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:byCategories\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:forEvent\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeByCategory\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeByCategory\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeByEvent\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeByEvent\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeByTier\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeByTier\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeOrdered\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeOrdered\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopePositive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopePositive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeShame\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:scopeShame\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:userBadges\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Method App\\Models\\Badge\:\:users\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasManyThrough does not specify its types\: TRelatedModel, TIntermediateModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Badge.php
+
+		-
+			message: '#^Class App\\Models\\Challenge uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:acceptor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:activeDispute\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:cancelledBy\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:dispute\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:disputes\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:getDisputeOutcomeOptions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:getSurvivors\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:holdTransaction\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:participants\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeAccepted\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeAccepted\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeActiveSuperChallenges\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeActiveSuperChallenges\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeByGroup\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeByGroup\(\) has parameter \$groupId with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeByGroup\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeCancelled\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeCancelled\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeCompleted\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeCompleted\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeExpired\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeExpired\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeFailed\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeFailed\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeForUser\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeForUser\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeForUser\(\) has parameter \$userId with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeNeedingAutoCancel\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeNeedingAutoCancel\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeOpen\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeOpen\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopePendingReview\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopePendingReview\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeSuperChallenges\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeSuperChallenges\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeUserChallenges\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:scopeUserChallenges\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:transactions\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Method App\\Models\\Challenge\:\:verifiedBy\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Challenge.php
+
+		-
+			message: '#^Class App\\Models\\ChallengeParticipant uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:buyInTransaction\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:challenge\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:prizeTransaction\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeAwaitingValidation\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeAwaitingValidation\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeCompleted\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeCompleted\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeEliminated\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeEliminated\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeNeedingAutoValidation\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeNeedingAutoValidation\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopePending\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopePending\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeRejected\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeRejected\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeSurvivors\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeSurvivors\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeValidated\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:scopeValidated\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Method App\\Models\\ChallengeParticipant\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ChallengeParticipant.php
+
+		-
+			message: '#^Class App\\Models\\Dispute uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:accused\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:disputable\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:getEligibleVoters\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:getVoteTally\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:reporter\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:scopeExpired\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:scopeExpired\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:scopePending\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:scopePending\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:scopeResolved\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:scopeResolved\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Method App\\Models\\Dispute\:\:votes\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 1
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between int and string will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 2
+			path: app/Models/Dispute.php
+
+		-
+			message: '#^Class App\\Models\\DisputeVote uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/DisputeVote.php
+
+		-
+			message: '#^Method App\\Models\\DisputeVote\:\:dispute\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/DisputeVote.php
+
+		-
+			message: '#^Method App\\Models\\DisputeVote\:\:voter\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/DisputeVote.php
+
+		-
+			message: '#^Class App\\Models\\EventStreakConfig uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/EventStreakConfig.php
+
+		-
+			message: '#^Method App\\Models\\EventStreakConfig\:\:getNextMilestone\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/EventStreakConfig.php
+
+		-
+			message: '#^Method App\\Models\\EventStreakConfig\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/EventStreakConfig.php
+
+		-
 			message: '#^Class App\\Models\\Group uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Method App\\Models\\Group\:\:currentSeason\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Method App\\Models\\Group\:\:events\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/Group.php
@@ -351,6 +2631,18 @@ parameters:
 		-
 			message: '#^Method App\\Models\\Group\:\:getChatId\(\) should return string but returns int\.$#'
 			identifier: return.type
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Method App\\Models\\Group\:\:scheduledMessages\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Method App\\Models\\Group\:\:seasons\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
 			count: 1
 			path: app/Models/Group.php
 
@@ -377,6 +2669,174 @@ parameters:
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/Group.php
+
+		-
+			message: '#^Class App\\Models\\GroupEvent uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Method App\\Models\\GroupEvent\:\:attendance\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Method App\\Models\\GroupEvent\:\:cancelledBy\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Method App\\Models\\GroupEvent\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Method App\\Models\\GroupEvent\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Method App\\Models\\GroupEvent\:\:rsvps\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Method App\\Models\\GroupEvent\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Method App\\Models\\GroupEvent\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Method App\\Models\\GroupEvent\:\:scopeExpired\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Method App\\Models\\GroupEvent\:\:scopeExpired\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Method App\\Models\\GroupEvent\:\:transactions\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEvent.php
+
+		-
+			message: '#^Class App\\Models\\GroupEventAttendance uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEventAttendance.php
+
+		-
+			message: '#^Method App\\Models\\GroupEventAttendance\:\:event\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEventAttendance.php
+
+		-
+			message: '#^Method App\\Models\\GroupEventAttendance\:\:reportedBy\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEventAttendance.php
+
+		-
+			message: '#^Method App\\Models\\GroupEventAttendance\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEventAttendance.php
+
+		-
+			message: '#^Class App\\Models\\GroupEventRsvp uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEventRsvp.php
+
+		-
+			message: '#^Method App\\Models\\GroupEventRsvp\:\:event\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEventRsvp.php
+
+		-
+			message: '#^Method App\\Models\\GroupEventRsvp\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupEventRsvp.php
+
+		-
+			message: '#^Cannot call method diffInDays\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/GroupSeason.php
+
+		-
+			message: '#^Class App\\Models\\GroupSeason uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupSeason.php
+
+		-
+			message: '#^Method App\\Models\\GroupSeason\:\:getTopPlayers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/GroupSeason.php
+
+		-
+			message: '#^Method App\\Models\\GroupSeason\:\:getWinner\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/GroupSeason.php
+
+		-
+			message: '#^Method App\\Models\\GroupSeason\:\:getWinner\(\) should return array\|null but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/GroupSeason.php
+
+		-
+			message: '#^Method App\\Models\\GroupSeason\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/GroupSeason.php
+
+		-
+			message: '#^Parameter \#1 \$value of function collect expects Illuminate\\Contracts\\Support\\Arrayable\<\(int\|string\), mixed\>\|iterable\<\(int\|string\), mixed\>\|null, non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Models/GroupSeason.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 2
+			path: app/Models/GroupSeason.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 2
+			path: app/Models/GroupSeason.php
+
+		-
+			message: '#^Method App\\Models\\LlmUsageDaily\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/LlmUsageDaily.php
 
 		-
 			message: '#^Method App\\Models\\MessengerService\:\:scopeDiscord\(\) has no return type specified\.$#'
@@ -421,22 +2881,40 @@ parameters:
 			path: app/Models/MessengerService.php
 
 		-
-			message: '#^Class App\\Models\\OneTimeToken uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
 			count: 1
-			path: app/Models/OneTimeToken.php
+			path: app/Models/ScheduledMessage.php
 
 		-
-			message: '#^Method App\\Models\\OneTimeToken\:\:generate\(\) has parameter \$context with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
 			count: 1
-			path: app/Models/OneTimeToken.php
+			path: app/Models/ScheduledMessage.php
 
 		-
-			message: '#^Method App\\Models\\OneTimeToken\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			message: '#^Class App\\Models\\ScheduledMessage uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
-			path: app/Models/OneTimeToken.php
+			path: app/Models/ScheduledMessage.php
+
+		-
+			message: '#^Method App\\Models\\ScheduledMessage\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ScheduledMessage.php
+
+		-
+			message: '#^Method App\\Models\\SentMessage\:\:context\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/SentMessage.php
+
+		-
+			message: '#^Method App\\Models\\SentMessage\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/SentMessage.php
 
 		-
 			message: '#^Method App\\Models\\ShortUrl\:\:scopeActive\(\) has no return type specified\.$#'
@@ -451,13 +2929,175 @@ parameters:
 			path: app/Models/ShortUrl.php
 
 		-
+			message: '#^Cannot call method diffInHours\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Class App\\Models\\SuperChallengeNudge uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:createdChallenge\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:nudgedUser\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeAccepted\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeAccepted\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeDeclined\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeDeclined\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeExpired\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeExpired\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeForGroup\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeForGroup\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeNeedingExpiration\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeNeedingExpiration\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopePending\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopePending\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeRecentForUser\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Method App\\Models\\SuperChallengeNudge\:\:scopeRecentForUser\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\NudgeResponse\:\:ACCEPTED will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\NudgeResponse\:\:DECLINED will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\NudgeResponse\:\:EXPIRED will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\NudgeResponse\:\:PENDING will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/SuperChallengeNudge.php
+
+		-
 			message: '#^Class App\\Models\\Transaction uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/Transaction.php
 
 		-
+			message: '#^Method App\\Models\\Transaction\:\:challenge\(\) should return App\\Models\\Challenge\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Transaction.php
+
+		-
+			message: '#^Method App\\Models\\Transaction\:\:event\(\) should return App\\Models\\GroupEvent\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Transaction.php
+
+		-
+			message: '#^Method App\\Models\\Transaction\:\:getWager\(\) should return App\\Models\\Wager\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Transaction.php
+
+		-
 			message: '#^Method App\\Models\\Transaction\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Transaction.php
+
+		-
+			message: '#^Method App\\Models\\Transaction\:\:transactionable\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/Transaction.php
@@ -469,14 +3109,14 @@ parameters:
 			path: app/Models/Transaction.php
 
 		-
-			message: '#^Method App\\Models\\Transaction\:\:wager\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			message: '#^Method App\\Models\\Transaction\:\:wager\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasOneThrough does not specify its types\: TRelatedModel, TIntermediateModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/Transaction.php
 
 		-
-			message: '#^Method App\\Models\\Transaction\:\:wagerEntry\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
+			message: '#^Method App\\Models\\Transaction\:\:wagerEntry\(\) should return App\\Models\\WagerEntry\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Models/Transaction.php
 
@@ -489,6 +3129,12 @@ parameters:
 		-
 			message: '#^Method App\\Models\\User\:\:getMessengerService\(\) should return App\\Models\\MessengerService\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: return.type
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:groupMembership\(\) has no return type specified\.$#'
+			identifier: missingType.return
 			count: 1
 			path: app/Models/User.php
 
@@ -523,6 +3169,114 @@ parameters:
 			path: app/Models/User.php
 
 		-
+			message: '#^Class App\\Models\\UserBadge has PHPDoc tag @property for property \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Class App\\Models\\UserBadge uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:badge\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:getContext\(\) has parameter \$default with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeForGroup\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeForGroup\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeGlobal\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeGlobal\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeRecent\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeRecent\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeRevoked\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeRevoked\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeUnnotified\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:scopeUnnotified\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
+			message: '#^Method App\\Models\\UserBadge\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/UserBadge.php
+
+		-
 			message: '#^Method App\\Models\\UserGroup\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
@@ -535,6 +3289,36 @@ parameters:
 			path: app/Models/UserGroup.php
 
 		-
+			message: '#^Access to an undefined property \$this\(App\\Models\\Wager\)\:\:\$verifiedBy\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Wager\:\:\$completed_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Wager\:\:\$verified_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Call to function method_exists\(\) with \$this\(App\\Models\\Wager\) and ''settler'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Class App\\Models\\OneTimeToken not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Wager.php
+
+		-
 			message: '#^Class App\\Models\\Wager uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
@@ -543,11 +3327,29 @@ parameters:
 		-
 			message: '#^Match arm comparison between ''date'' and ''date'' is always true\.$#'
 			identifier: match.alwaysTrue
+			count: 2
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:activeDispute\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
 			count: 1
 			path: app/Models/Wager.php
 
 		-
 			message: '#^Method App\\Models\\Wager\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:dispute\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:disputes\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/Wager.php
@@ -565,6 +3367,36 @@ parameters:
 			path: app/Models/Wager.php
 
 		-
+			message: '#^Method App\\Models\\Wager\:\:getDisputeOutcomeOptions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:getSettlementTimestamp\(\) should return Carbon\\Carbon\|null but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:getSettlementTriggerDate\(\) should return Carbon\\Carbon but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:getSettler\(\) should return App\\Models\\User\|null but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:getTypeConfig\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Wager.php
+
+		-
 			message: '#^Method App\\Models\\Wager\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
@@ -573,6 +3405,30 @@ parameters:
 		-
 			message: '#^Method App\\Models\\Wager\:\:oneTimeTokens\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:scopeExpired\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Method App\\Models\\Wager\:\:scopeExpired\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
 			count: 1
 			path: app/Models/Wager.php
 
@@ -589,6 +3445,24 @@ parameters:
 			path: app/Models/Wager.php
 
 		-
+			message: '#^Parameter \#1 \$related of method Illuminate\\Database\\Eloquent\\Model\:\:hasMany\(\) expects class\-string\<Illuminate\\Database\\Eloquent\\Model\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Unable to resolve the template type TRelatedModel in call to method Illuminate\\Database\\Eloquent\\Model\:\:hasMany\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Models/Wager.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/WagerEntry.php
+
+		-
 			message: '#^Class App\\Models\\WagerEntry uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
@@ -596,6 +3470,12 @@ parameters:
 
 		-
 			message: '#^Method App\\Models\\WagerEntry\:\:group\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/WagerEntry.php
+
+		-
+			message: '#^Method App\\Models\\WagerEntry\:\:transactions\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/WagerEntry.php
@@ -643,6 +3523,42 @@ parameters:
 			path: app/Models/WagerTemplate.php
 
 		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$username\.$#'
+			identifier: property.notFound
+			count: 16
+			path: app/Services/AuditEventService.php
+
+		-
+			message: '#^Method App\\Services\\AuditEventService\:\:badgeEarned\(\) has parameter \$impact with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/AuditEventService.php
+
+		-
+			message: '#^Method App\\Services\\AuditEventService\:\:create\(\) has parameter \$impact with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/AuditEventService.php
+
+		-
+			message: '#^Method App\\Services\\AuditEventService\:\:create\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/AuditEventService.php
+
+		-
+			message: '#^Method App\\Services\\AuditEventService\:\:create\(\) has parameter \$participants with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/AuditEventService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/AuditService.php
+
+		-
 			message: '#^Method App\\Services\\AuditService\:\:log\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -661,8 +3577,374 @@ parameters:
 			path: app/Services/AuditService.php
 
 		-
+			message: '#^Method App\\Services\\BadgeService\:\:award\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/BadgeService.php
+
+		-
+			message: '#^Method App\\Services\\BadgeService\:\:checkAndAward\(\) has parameter \$context with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/BadgeService.php
+
+		-
+			message: '#^Method App\\Services\\BadgeService\:\:getBadgeProgress\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/BadgeService.php
+
+		-
+			message: '#^Method App\\Services\\BadgeService\:\:getUserBadges\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/BadgeService.php
+
+		-
+			message: '#^Parameter \#1 \$userId of static method App\\Models\\UserBadge\:\:exists\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Services/BadgeService.php
+
+		-
+			message: '#^Parameter \#3 \$groupId of static method App\\Models\\UserBadge\:\:exists\(\) expects string\|null, int\|null given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Services/BadgeService.php
+
+		-
+			message: '#^Method App\\Services\\ChallengeService\:\:createChallenge\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/ChallengeService.php
+
+		-
+			message: '#^Method App\\Services\\ChallengeService\:\:submitChallenge\(\) has parameter \$media with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/ChallengeService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string\|null and int will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: app/Services/ChallengeService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string\|null and int will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Services/ChallengeService.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 2
+			path: app/Services/ChallengeService.php
+
+		-
+			message: '#^Parameter \#2 \$groupId of static method App\\Services\\LogService\:\:llm\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/ContentGenerator.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$group\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/DisputeService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/DisputeService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getOutcomeValue\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/DisputeService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getSettler\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/DisputeService.php
+
+		-
+			message: '#^Method App\\Services\\DisputeService\:\:getExpiredDisputes\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/DisputeService.php
+
+		-
+			message: '#^Method App\\Services\\DisputeService\:\:getPendingDisputesForGroup\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/DisputeService.php
+
+		-
+			message: '#^Called ''firstWhere'' on Laravel collection, but could have been retrieved as a query\.$#'
+			identifier: larastan.noUnnecessaryCollectionCall
+			count: 1
+			path: app/Services/EngagementTriggerService.php
+
+		-
+			message: '#^Method App\\Services\\EngagementTriggerService\:\:detectTriggers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/EngagementTriggerService.php
+
+		-
+			message: '#^Method App\\Services\\EngagementTriggerService\:\:getDaysInactive\(\) never returns int so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Services/EngagementTriggerService.php
+
+		-
+			message: '#^Method App\\Services\\EngagementTriggerService\:\:getDaysInactive\(\) should return int\|null but returns float\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/EngagementTriggerService.php
+
+		-
+			message: '#^Method App\\Services\\EngagementTriggerService\:\:getSideDistribution\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/EngagementTriggerService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Services/EventService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:active\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/EventService.php
+
+		-
+			message: '#^Method App\\Services\\EventService\:\:createEvent\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/EventService.php
+
+		-
+			message: '#^Method App\\Services\\EventService\:\:getEventsForGroup\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/EventService.php
+
+		-
+			message: '#^Method App\\Services\\EventService\:\:getEventsPendingAttendancePrompt\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/EventService.php
+
+		-
+			message: '#^Method App\\Services\\EventService\:\:getEventsPendingRsvpReminder\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/EventService.php
+
+		-
+			message: '#^Method App\\Services\\EventService\:\:getRsvpCounts\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/EventService.php
+
+		-
+			message: '#^Method App\\Services\\EventService\:\:recordAttendance\(\) has parameter \$attendeeIds with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/EventService.php
+
+		-
+			message: '#^Parameter \#2 \$group of method App\\Services\\PointService\:\:awardPoints\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/EventService.php
+
+		-
+			message: '#^Method App\\Services\\FallbackContentGenerator\:\:flattenData\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/FallbackContentGenerator.php
+
+		-
+			message: '#^Method App\\Services\\FallbackContentGenerator\:\:flattenData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/FallbackContentGenerator.php
+
+		-
+			message: '#^Method App\\Services\\FallbackContentGenerator\:\:getMeta\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/FallbackContentGenerator.php
+
+		-
+			message: '#^Method App\\Services\\FallbackContentGenerator\:\:interpolate\(\) has parameter \$vars with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/FallbackContentGenerator.php
+
+		-
+			message: '#^Method App\\Services\\GrudgeService\:\:generateNarrative\(\) has parameter \$events with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/GrudgeService.php
+
+		-
+			message: '#^Method App\\Services\\GrudgeService\:\:getRecentHistory\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/GrudgeService.php
+
+		-
+			message: '#^Offset ''user_id'' does not exist on string\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: app/Services/GrudgeService.php
+
+		-
+			message: '#^Parameter \#1 \$value of function collect expects Illuminate\\Contracts\\Support\\Arrayable\<\(int\|string\), mixed\>\|iterable\<\(int\|string\), mixed\>\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/GrudgeService.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/GrudgeService.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/GrudgeService.php
+
+		-
+			message: '#^Method App\\Services\\LLMService\:\:buildTriggersGuidance\(\) has parameter \$triggers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/LLMService.php
+
+		-
+			message: '#^Method App\\Services\\LLMService\:\:formatList\(\) has parameter \$items with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/LLMService.php
+
+		-
+			message: '#^Parameter \#2 \$groupId of static method App\\Services\\LogService\:\:llm\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/LLMService.php
+
+		-
+			message: '#^Method App\\Services\\LogService\:\:error\(\) has parameter \$context with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/LogService.php
+
+		-
+			message: '#^Method App\\Services\\LogService\:\:feature\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/LogService.php
+
+		-
+			message: '#^Method App\\Services\\LogService\:\:llm\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/LogService.php
+
+		-
+			message: '#^Method App\\Services\\LogService\:\:performance\(\) has parameter \$context with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/LogService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Anonymous function has an unused use \$currency\.$#'
+			identifier: closure.unusedUse
+			count: 2
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:toGroupTimezone\(\)\.$#'
+			identifier: method.notFound
+			count: 9
+			path: app/Services/MessageService.php
+
+		-
 			message: '#^Cannot call method format\(\) on string\.$#'
 			identifier: method.nonObject
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: non\-falsy\-string$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 2
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Method App\\Services\\MessageService\:\:attendanceRecorded\(\) has parameter \$attendees with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Method App\\Services\\MessageService\:\:bettingClosedReveal\(\) has parameter \$entries with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Method App\\Services\\MessageService\:\:buildLandingPageButton\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Method App\\Services\\MessageService\:\:buildSettlementButtons\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Method App\\Services\\MessageService\:\:buildStreakContext\(\) has parameter \$attendeesData with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Method App\\Services\\MessageService\:\:buildStreakContext\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: app/Services/MessageService.php
 
@@ -673,28 +3955,220 @@ parameters:
 			path: app/Services/MessageService.php
 
 		-
+			message: '#^Method App\\Services\\MessageService\:\:formatBetsSummary\(\) has parameter \$entries with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
 			message: '#^Method App\\Services\\MessageService\:\:settlementResult\(\) has parameter \$winners with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Services/MessageService.php
 
 		-
+			message: '#^Method App\\Services\\MessageService\:\:wagerJoined\(\) has parameter \$engagementTriggers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Offset ''biggest_win'' does not exist on array\{\}\|string\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Offset ''biggest_win'' on array\{\}\|string in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Offset ''description'' does not exist on non\-falsy\-string\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Offset ''most_active_creator'' does not exist on array\{\}\|string\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Offset ''most_active_creator'' on array\{\}\|string in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Offset ''most_participated_wager'' does not exist on array\{\}\|string\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Offset ''most_participated…'' on array\{\}\|string in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Offset ''position'' does not exist on non\-falsy\-string\.$#'
+			identifier: offsetAccess.notFound
+			count: 4
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Offset ''total_participants'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Offset ''total_wagers'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Parameter \#1 \$value of function collect expects Illuminate\\Contracts\\Support\\Arrayable\<\(int\|string\), mixed\>\|iterable\<\(int\|string\), mixed\>\|null, non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/MessageService.php
+
+		-
 			message: '#^Parameter \#1 \$value of function collect expects Illuminate\\Contracts\\Support\\Arrayable\<\(int\|string\), mixed\>\|iterable\<\(int\|string\), mixed\>\|null, string\|null given\.$#'
 			identifier: argument.type
+			count: 2
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Parameter \#2 \$group of method App\\Services\\ContentGenerator\:\:generate\(\) expects App\\Models\\Group\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 14
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Parameter \#3 \$group of method App\\Services\\GrudgeService\:\:getRecentHistory\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Parameter \$buttons of class App\\DTOs\\Message constructor expects array\<App\\DTOs\\Button\>, array\<int, array\<int, App\\DTOs\\Button\>\> given\.$#'
+			identifier: argument.type
+			count: 10
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Parameter \$entries of method App\\Services\\MessageService\:\:bettingClosedReveal\(\) has invalid type App\\Services\\WagerEntry\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Parameter \$group of class App\\DTOs\\MessageContext constructor expects App\\Models\\Group\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 14
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''date'' and ''date'' will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
 			count: 1
 			path: app/Services/MessageService.php
 
 		-
 			message: '#^Unable to resolve the template type TKey in call to function collect$#'
 			identifier: argument.templateType
-			count: 1
+			count: 4
 			path: app/Services/MessageService.php
 
 		-
 			message: '#^Unable to resolve the template type TValue in call to function collect$#'
 			identifier: argument.templateType
+			count: 4
+			path: app/Services/MessageService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>value" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/MessageService.php
+
+		-
+			message: '#^Cannot call method diffForHumans\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/MessageTrackingService.php
+
+		-
+			message: '#^Cannot call method diffInHours\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/MessageTrackingService.php
+
+		-
+			message: '#^Method App\\Services\\MessageTrackingService\:\:getRecentHistory\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/MessageTrackingService.php
+
+		-
+			message: '#^Method App\\Services\\MessageTrackingService\:\:recordMessage\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/MessageTrackingService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\SentMessage\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/MessageTrackingService.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\SentMessage\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Services/MessageTrackingService.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Services/MessageTrackingService.php
+
+		-
+			message: '#^Call to function is_array\(\) with App\\DTOs\\Button will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Services/Messengers/MessengerBridge.php
+
+		-
+			message: '#^Instanceof between App\\DTOs\\Button and App\\DTOs\\Button will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Services/Messengers/MessengerBridge.php
+
+		-
+			message: '#^Method App\\Services\\Messengers\\MessengerBridge\:\:buildButtons\(\) has parameter \$buttons with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/Messengers/MessengerBridge.php
+
+		-
+			message: '#^Variable \$convertedRow in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: app/Services/Messengers/MessengerBridge.php
 
 		-
 			message: '#^Match expression does not handle remaining value\: mixed$#'
@@ -709,10 +4183,16 @@ parameters:
 			path: app/Services/Messengers/TelegramMessenger.php
 
 		-
-			message: '#^Offset 0 on non\-empty\-list\<string\> in isset\(\) always exists and is not nullable\.$#'
-			identifier: isset.offset
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/PointService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
 			count: 1
-			path: app/Services/Messengers/TelegramMessenger.php
+			path: app/Services/PointService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$created_at\.$#'
@@ -727,22 +4207,244 @@ parameters:
 			path: app/Services/PointService.php
 
 		-
+			message: '#^Comparison operation "\>\=" between int\<14, max\> and 14 is always true\.$#'
+			identifier: greaterOrEqual.alwaysTrue
+			count: 1
+			path: app/Services/PointService.php
+
+		-
+			message: '#^Method App\\Services\\PointService\:\:applyDecayForGroup\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/PointService.php
+
+		-
+			message: '#^Method App\\Services\\PointService\:\:shouldSendDecayWarning\(\) has parameter \$userGroupPivot with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Services/PointService.php
+
+		-
+			message: '#^Parameter \#4 \$contextId of method App\\Services\\MessageTrackingService\:\:canSendMessage\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/PointService.php
+
+		-
+			message: '#^Parameter \#5 \$contextId of method App\\Services\\MessageTrackingService\:\:recordMessage\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/PointService.php
+
+		-
 			message: '#^Using nullsafe property access "\?\-\>points" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/PointService.php
 
 		-
-			message: '#^Method App\\Services\\TokenService\:\:getActiveTokensForWager\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
-			identifier: missingType.generics
+			message: '#^Method App\\Services\\ScheduledMessageService\:\:create\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: app/Services/TokenService.php
+			path: app/Services/ScheduledMessageService.php
 
 		-
-			message: '#^Parameter \$userId of static method App\\Models\\OneTimeToken\:\:generate\(\) expects string\|null, int given\.$#'
-			identifier: argument.type
+			message: '#^Method App\\Services\\ScheduledMessageService\:\:getForGroup\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/ScheduledMessageService.php
+
+		-
+			message: '#^Method App\\Services\\ScheduledMessageService\:\:getForGroup\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/ScheduledMessageService.php
+
+		-
+			message: '#^Method App\\Services\\ScheduledMessageService\:\:getMessagesToSendToday\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/ScheduledMessageService.php
+
+		-
+			message: '#^Method App\\Services\\ScheduledMessageService\:\:update\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/ScheduledMessageService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model&object\{pivot\: Illuminate\\Database\\Eloquent\\Relations\\Pivot\}\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$entries\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
 			count: 2
-			path: app/Services/TokenService.php
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$season_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getDurationInDays\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Cannot call method diffInDays\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Method App\\Services\\SeasonService\:\:calculateFinalLeaderboard\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Method App\\Services\\SeasonService\:\:calculateSeasonStats\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Method App\\Services\\SeasonService\:\:createSeason\(\) has parameter \$prizeStructure with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Method App\\Services\\SeasonService\:\:endSeason\(\) should return App\\Models\\GroupSeason but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Method App\\Services\\SeasonService\:\:generateHighlights\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),array\<string, mixed\>\>\:\:sortByDesc\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Parameter \#2 \$season of method App\\Services\\SeasonService\:\:calculateSeasonStats\(\) expects App\\Models\\GroupSeason, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Parameter \#2 \$season of method App\\Services\\SeasonService\:\:generateHighlights\(\) expects App\\Models\\GroupSeason, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/SeasonService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model&object\{pivot\: Illuminate\\Database\\Eloquent\\Relations\\Pivot\}\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SuperChallengeService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/SuperChallengeService.php
+
+		-
+			message: '#^Method App\\Services\\SuperChallengeService\:\:calculatePrizeStructure\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/SuperChallengeService.php
+
+		-
+			message: '#^Method App\\Services\\SuperChallengeService\:\:calculatePrizeStructure\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/SuperChallengeService.php
+
+		-
+			message: '#^Method App\\Services\\SuperChallengeService\:\:getEligibleGroups\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Services/SuperChallengeService.php
+
+		-
+			message: '#^Parameter \#1 \$groupId of static method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\SuperChallengeNudge\>\:\:forGroup\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/SuperChallengeService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string\|null and int will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Services/SuperChallengeService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string\|null and int will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Services/SuperChallengeService.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Services/SuperChallengeService.php
 
 		-
 			message: '#^Method App\\Services\\UserMessengerService\:\:findByPlatform\(\) should return App\\Models\\User\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
@@ -769,9 +4471,57 @@ parameters:
 			path: app/Services/UserMessengerService.php
 
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$answer_value\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$points_wagered\.$#'
+			identifier: property.notFound
+			count: 8
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$points_won\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
 			message: '#^Cannot call method format\(\) on string\.$#'
 			identifier: method.nonObject
-			count: 6
+			count: 8
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Match arm comparison between ''date'' and ''date'' is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 2
 			path: app/Services/WagerService.php
 
 		-
@@ -782,6 +4532,12 @@ parameters:
 
 		-
 			message: '#^Method App\\Services\\WagerService\:\:createWager\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:placeWager\(\) has parameter \$answerValue with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/Services/WagerService.php
@@ -805,21 +4561,75 @@ parameters:
 			path: app/Services/WagerService.php
 
 		-
+			message: '#^Method App\\Services\\WagerService\:\:settleRankingWager\(\) has parameter \$entries with generic class Illuminate\\Database\\Eloquent\\Collection but does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:settleRankingWager\(\) has parameter \$outcome with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:settleShortAnswerWager\(\) has parameter \$entries with generic class Illuminate\\Database\\Eloquent\\Collection but does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:settleShortAnswerWager\(\) has parameter \$outcome with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:settleWager\(\) has parameter \$outcomeValue with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:validateAnswer\(\) has parameter \$answerValue with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:validateRanking\(\) has parameter \$answer with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Method App\\Services\\WagerService\:\:validateShortAnswer\(\) has parameter \$answer with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/WagerService.php
+
+		-
 			message: '#^Parameter \#1 \$entry of method App\\Services\\WagerService\:\:awardWinner\(\) expects App\\Models\\WagerEntry, Illuminate\\Database\\Eloquent\\Model given\.$#'
 			identifier: argument.type
-			count: 3
+			count: 4
 			path: app/Services/WagerService.php
 
 		-
 			message: '#^Parameter \#1 \$entry of method App\\Services\\WagerService\:\:recordLoss\(\) expects App\\Models\\WagerEntry, Illuminate\\Database\\Eloquent\\Model given\.$#'
 			identifier: argument.type
-			count: 3
+			count: 5
 			path: app/Services/WagerService.php
 
 		-
 			message: '#^Parameter \#1 \$entry of method App\\Services\\WagerService\:\:refundEntry\(\) expects App\\Models\\WagerEntry, Illuminate\\Database\\Eloquent\\Model given\.$#'
 			identifier: argument.type
-			count: 4
+			count: 9
 			path: app/Services/WagerService.php
 
 		-
@@ -843,13 +4653,13 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$group of method App\\Services\\PointService\:\:awardPoints\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 2
 			path: app/Services/WagerService.php
 
 		-
 			message: '#^Parameter \#2 \$group of method App\\Services\\PointService\:\:deductPoints\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 2
 			path: app/Services/WagerService.php
 
 		-
@@ -877,20 +4687,26 @@ parameters:
 			path: app/Services/WagerService.php
 
 		-
-			message: '#^Parameter \#4 \$wager of method App\\Services\\PointService\:\:recordLoss\(\) expects App\\Models\\Wager, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			message: '#^Parameter \$group of static method App\\Services\\AuditEventService\:\:create\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/WagerService.php
+
+		-
+			message: '#^Parameter \$group of static method App\\Services\\AuditEventService\:\:wagerWon\(\) expects App\\Models\\Group, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/WagerService.php
 
 		-
-			message: '#^Parameter \#4 \$wager of method App\\Services\\PointService\:\:refundPoints\(\) expects App\\Models\\Wager, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			message: '#^Parameter \$wagerId of static method App\\Services\\AuditEventService\:\:wagerWon\(\) expects string, int given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/WagerService.php
 
 		-
-			message: '#^Parameter \#5 \$wager of method App\\Services\\PointService\:\:awardPoints\(\) expects App\\Models\\Wager\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
 			count: 1
 			path: app/Services/WagerService.php
 
