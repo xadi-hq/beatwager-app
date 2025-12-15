@@ -36,14 +36,31 @@ class DashboardController extends Controller
         $focus = $request->query('focus', 'wagers');
         $groupId = $request->query('group_id');
 
-        // Get user's groups with balances
-        $groups = $user->groups()->get()->map(fn($g) => [
-            'id' => $g->id,
-            'name' => $g->name,
-            'balance' => $g->pivot->points,
-            'role' => $g->pivot->role,
-            'currency' => $g->points_currency_name ?? 'points',
-        ]);
+        // Get user's groups with balances and leaderboard data
+        $groups = $user->groups()->get()->map(function($g) {
+            // Get all members with their points for leaderboard
+            $members = $g->users()
+                ->withPivot(['points', 'points_earned', 'points_spent'])
+                ->orderByPivot('points', 'desc')
+                ->get()
+                ->map(fn($member, $index) => [
+                    'id' => $member->id,
+                    'name' => $member->name,
+                    'points' => $member->pivot->points,
+                    'points_earned' => $member->pivot->points_earned,
+                    'points_spent' => $member->pivot->points_spent,
+                    'rank' => $index + 1,
+                ]);
+
+            return [
+                'id' => $g->id,
+                'name' => $g->name,
+                'balance' => $g->pivot->points,
+                'role' => $g->pivot->role,
+                'currency' => $g->points_currency_name ?? 'points',
+                'leaderboard' => $members,
+            ];
+        });
 
         // Get user's active wagers (created or joined) - split by deadline
         // Using active() scope to exclude expired wagers with no participants
@@ -148,7 +165,7 @@ class DashboardController extends Controller
                     'user_answer' => $userEntry?->answer_value,
                     'user_points_wagered' => $userEntry?->points_wagered,
                     'is_winner' => $userEntry?->is_winner,
-                    'payout_amount' => $userEntry?->payout_amount,
+                    'points_won' => $userEntry?->points_won,
                     'result' => $userEntry?->result,
                     'dispute' => $wager->dispute ? [
                         'id' => $wager->dispute->id,

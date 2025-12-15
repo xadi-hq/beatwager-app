@@ -140,6 +140,35 @@ const filteredTransactions = computed(() => {
     return props.recentTransactions.filter(t => t.group && t.group.id === selectedGroupFilter.value);
 });
 
+// Leaderboard: show when single group exists or specific group is selected
+const showLeaderboard = computed(() => {
+    return props.groups.length === 1 || selectedGroupFilter.value !== 'all';
+});
+
+// Get leaderboard data for the active group
+const leaderboardData = computed(() => {
+    if (!showLeaderboard.value) return [];
+
+    // If only one group, use that; otherwise use selected group
+    const groupId = props.groups.length === 1
+        ? props.groups[0].id
+        : selectedGroupFilter.value;
+
+    const group = props.groups.find(g => g.id === groupId);
+    return group?.leaderboard || [];
+});
+
+// Get the active group for leaderboard display
+const leaderboardGroup = computed(() => {
+    if (!showLeaderboard.value) return null;
+
+    const groupId = props.groups.length === 1
+        ? props.groups[0].id
+        : selectedGroupFilter.value;
+
+    return props.groups.find(g => g.id === groupId);
+});
+
 // Time formatting helpers
 function formatTimeRemaining(deadlineStr: string): string {
     const deadline = new Date(deadlineStr);
@@ -172,6 +201,46 @@ function formatRelativeTime(dateStr: string): string {
 
 function formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Format transaction type to human-readable title
+function formatTransactionType(type: string): string {
+    const typeMap: Record<string, string> = {
+        'wager_placed': 'Wager placed',
+        'wager_won': 'Won wager',
+        'wager_lost': 'Lost wager',
+        'wager_refunded': 'Wager refunded',
+        'point_decay': 'Point decay',
+        'admin_adjustment': 'Admin adjustment',
+        'initial_balance': 'Initial balance',
+        'event_attendance_bonus': 'Event attendance bonus',
+        'challenge_hold': 'Challenge stake held',
+        'challenge_completed': 'Challenge completed',
+        'challenge_failed': 'Challenge failed',
+        'challenge_cancelled': 'Challenge cancelled',
+        'drop': 'Drop received',
+        'donation_sent': 'Donation sent',
+        'donation_received': 'Donation received',
+        'super_challenge_acceptance_bonus': 'Super Challenge acceptance bonus',
+        'super_challenge_prize': 'Super Challenge prize',
+        'super_challenge_validation_bonus': 'Super Challenge validation bonus',
+        'elimination_buy_in': 'Elimination buy-in',
+        'elimination_buy_in_refund': 'Elimination buy-in refund',
+        'elimination_prize': 'Elimination prize',
+        'elimination_system_contribution': 'Elimination system contribution',
+        'dispute_penalty_false_report': 'Dispute penalty (false report)',
+        'dispute_penalty_honest_mistake': 'Dispute penalty (honest mistake)',
+        'dispute_penalty_fraud': 'Dispute penalty (fraud)',
+        'dispute_penalty_premature': 'Dispute penalty (premature settlement)',
+        'dispute_refund': 'Dispute refund',
+        'dispute_correction': 'Dispute correction',
+    };
+    return typeMap[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// Check if transaction type is a refund type
+function isRefundType(type: string): boolean {
+    return ['wager_refunded', 'elimination_buy_in_refund', 'dispute_refund'].includes(type);
 }
 </script>
 
@@ -287,6 +356,7 @@ function formatDate(dateStr: string): string {
                         <option value="challenges">Challenges</option>
                         <option value="events">Events</option>
                         <option value="transactions">Transactions</option>
+                        <option v-if="showLeaderboard" value="leaderboard">Leaderboard</option>
                     </select>
                 </div>
 
@@ -336,6 +406,18 @@ function formatDate(dateStr: string): string {
                             ]"
                         >
                             Transactions
+                        </button>
+                        <button
+                            v-if="showLeaderboard"
+                            @click="activeTab = 'leaderboard'"
+                            :class="[
+                                'px-6 py-3 text-sm font-medium border-b-2',
+                                activeTab === 'leaderboard'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300'
+                            ]"
+                        >
+                            Leaderboard
                         </button>
                     </nav>
                 </div>
@@ -433,7 +515,7 @@ function formatDate(dateStr: string): string {
                                             </template>
                                             <template v-else>
                                                 <span v-if="wager.result === 'refunded'" class="text-blue-600 dark:text-blue-400 font-medium">Refunded {{ wager.user_points_wagered }} {{ wager.group.currency }}</span>
-                                                <span v-else-if="wager.is_winner" class="text-green-600 dark:text-green-400 font-medium">Won {{ wager.payout_amount }} {{ wager.group.currency }}</span>
+                                                <span v-else-if="wager.is_winner" class="text-green-600 dark:text-green-400 font-medium">Won {{ wager.points_won }} {{ wager.group.currency }}</span>
                                                 <span v-else class="text-red-600 dark:text-red-400">Lost {{ wager.user_points_wagered }} {{ wager.group.currency }}</span>
                                                 <span class="text-neutral-600 dark:text-neutral-400">Outcome: {{ wager.outcome_value }}</span>
                                             </template>
@@ -718,8 +800,8 @@ function formatDate(dateStr: string): string {
                             <div v-for="tx in filteredTransactions" :key="tx.id" class="flex justify-between items-center bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2">
-                                        <div class="font-medium text-neutral-900 dark:text-neutral-100">{{ tx.description || tx.type }}</div>
-                                        <span v-if="tx.type === 'wager_refunded'" class="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">REFUND</span>
+                                        <div class="font-medium text-neutral-900 dark:text-neutral-100">{{ tx.description || formatTransactionType(tx.type) }}</div>
+                                        <span v-if="isRefundType(tx.type)" class="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">REFUND</span>
                                     </div>
                                     <div class="text-xs text-neutral-600 dark:text-neutral-400">
                                         <span v-if="tx.group">{{ tx.group.name }}</span>
@@ -730,13 +812,63 @@ function formatDate(dateStr: string): string {
                                 <div class="text-right">
                                     <div :class="[
                                         'font-bold',
-                                        tx.type === 'wager_refunded' ? 'text-blue-600 dark:text-blue-400' :
+                                        isRefundType(tx.type) ? 'text-blue-600 dark:text-blue-400' :
                                         tx.amount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                                     ]">
                                         {{ tx.amount >= 0 ? '+' : '' }}{{ tx.amount }} {{ tx.currency || 'points' }}
                                     </div>
                                     <div class="text-xs text-neutral-500 dark:text-neutral-400">
                                         Balance: {{ tx.balance_after }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Tab -->
+                    <div v-if="activeTab === 'leaderboard' && showLeaderboard">
+                        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
+                            {{ leaderboardGroup?.name }} Leaderboard
+                        </h3>
+                        <div v-if="leaderboardData.length === 0" class="text-neutral-500 dark:text-neutral-400 text-center py-8">
+                            No members found
+                        </div>
+                        <div v-else class="space-y-2">
+                            <div
+                                v-for="member in leaderboardData"
+                                :key="member.id"
+                                class="flex justify-between items-center bg-neutral-50 dark:bg-neutral-700 rounded p-4 border border-neutral-200 dark:border-neutral-600"
+                                :class="{ 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20': member.id === user.id }"
+                            >
+                                <div class="flex items-center gap-3">
+                                    <!-- Rank badge -->
+                                    <div
+                                        class="w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm"
+                                        :class="{
+                                            'bg-yellow-400 text-yellow-900': member.rank === 1,
+                                            'bg-gray-300 text-gray-700': member.rank === 2,
+                                            'bg-amber-600 text-white': member.rank === 3,
+                                            'bg-neutral-200 dark:bg-neutral-600 text-neutral-700 dark:text-neutral-300': member.rank > 3
+                                        }"
+                                    >
+                                        {{ member.rank }}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-neutral-900 dark:text-neutral-100">
+                                            {{ member.name }}
+                                            <span v-if="member.id === user.id" class="text-xs text-blue-600 dark:text-blue-400 ml-1">(You)</span>
+                                        </div>
+                                        <div class="text-xs text-neutral-500 dark:text-neutral-400">
+                                            Won: {{ member.points_earned }} · Spent: {{ member.points_spent }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                                        {{ member.points }}
+                                    </div>
+                                    <div class="text-xs text-neutral-500 dark:text-neutral-400">
+                                        {{ leaderboardGroup?.currency || 'points' }}
                                     </div>
                                 </div>
                             </div>

@@ -101,7 +101,23 @@ class DisputeVoteCallbackHandler extends AbstractCallbackHandler
             ]
         );
 
-        // Check if user can vote
+        // Handle view action - redirect to web UI (accessible to all group members)
+        if ($voteType === 'v') {
+            // Check if user is a group member (reporter, accused, or general member)
+            $isGroupMember = $dispute->group->users()->where('user_id', $user->id)->exists();
+            if (!$isGroupMember) {
+                $this->messenger->answerCallback(
+                    $callback->callbackId,
+                    '⚠️ You are not a member of this group',
+                    showAlert: true
+                );
+                return;
+            }
+            $this->redirectToWebVoting($callback, $dispute, 'view');
+            return;
+        }
+
+        // Check if user can vote (only for voting actions, not view)
         if (!$dispute->canUserVote($user)) {
             // Check specific reason
             if ($user->id === $dispute->reporter_id) {
@@ -129,12 +145,6 @@ class DisputeVoteCallbackHandler extends AbstractCallbackHandler
                     showAlert: true
                 );
             }
-            return;
-        }
-
-        // Handle view action - redirect to web UI
-        if ($voteType === 'v') {
-            $this->redirectToWebVoting($callback, $dispute, 'view');
             return;
         }
 

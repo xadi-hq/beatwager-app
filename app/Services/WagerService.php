@@ -868,9 +868,10 @@ class WagerService
                 $wager->decrement('participants_count');
             }
 
-            // Step 4: Reset wager to locked state for re-settlement
+            // Step 4: Reset wager to open state for re-settlement
+            // Using 'open' instead of 'locked' so it appears in dashboard and can be settled
             $wager->update([
-                'status' => 'locked',
+                'status' => 'open',
                 'outcome_value' => null,
                 'settlement_note' => null,
                 'settler_id' => null,
