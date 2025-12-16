@@ -137,7 +137,7 @@ const positiveBadgeCount = computed(() =>
                             class="group relative"
                         >
                             <BadgeIcon
-                                :image-url="userBadge.badge.image_url"
+                                :image-url="userBadge.badge.small_image_url"
                                 :tier="userBadge.badge.tier"
                                 :name="userBadge.badge.name"
                                 :is-shame="userBadge.badge.is_shame"

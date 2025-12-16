@@ -17,6 +17,7 @@ export interface Badge {
     tier: BadgeTier;
     is_shame: boolean;
     image_url: string;
+    small_image_url: string;
 }
 
 export interface UserBadge {

@@ -405,6 +405,7 @@ class DashboardController extends Controller
                         'tier' => $userBadge->badge->tier->value,
                         'is_shame' => $userBadge->badge->is_shame,
                         'image_url' => $userBadge->badge->imageUrl,
+                        'small_image_url' => $userBadge->badge->smallImageUrl,
                     ],
                     'group_id' => $userBadge->group_id,
                     'group_name' => $userBadge->group?->name,

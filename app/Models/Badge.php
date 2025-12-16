@@ -137,12 +137,21 @@ class Badge extends Model
     // Accessors
 
     /**
-     * Get the web-accessible URL for this badge image.
+     * Get the web-accessible URL for this badge image (default size).
      * Used for displaying in web UI and sending via messaging platforms.
      */
     public function getImageUrlAttribute(): string
     {
         return $this->getImageUrl();
+    }
+
+    /**
+     * Get the web-accessible URL for the small badge image.
+     * Optimized for avatar-like displays (thumbnails, icons).
+     */
+    public function getSmallImageUrlAttribute(): string
+    {
+        return $this->getImageUrl('small');
     }
 
     /**

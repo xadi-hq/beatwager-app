@@ -62,7 +62,7 @@ const tierBadgeClasses = computed(() => {
         :class="{ 'p-2': compact }"
     >
         <BadgeIcon
-            :image-url="badge.image_url"
+            :image-url="badge.small_image_url"
             :tier="badge.tier"
             :name="badge.name"
             :is-shame="badge.is_shame"
