@@ -136,6 +136,7 @@ class GroupController extends Controller
                 'current_season' => $currentSeason,
                 'season_ends_at' => $group->season_ends_at?->toIso8601String(),
                 'superchallenge_frequency' => $group->superchallenge_frequency ?? 'off',
+                'house_pot' => $group->house_pot ?? 0,
             ],
             'members' => $members,
             'stats' => $stats,

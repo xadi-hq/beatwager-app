@@ -314,7 +314,7 @@ function isRefundType(type: string): boolean {
             </div>
 
             <!-- Clickable Stats Overview -->
-            <div class="grid grid-cols-3 gap-4 mb-8">
+            <div :class="['grid gap-4 mb-8', selectedGroup?.house_pot > 0 ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-3']">
                 <button
                     @click="activeTab = 'transactions'"
                     class="bg-white dark:bg-neutral-800 rounded-lg shadow p-4 text-left hover:shadow-md transition-shadow"
@@ -345,6 +345,13 @@ function isRefundType(type: string): boolean {
                     <div class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Win Rate</div>
                     <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ filteredStats.win_rate }}%</div>
                     <div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{{ filteredStats.won_wagers }}/{{ filteredStats.total_wagers }} won</div>
+                </div>
+
+                <!-- House Pot - only shown when a group is selected and has pot > 0 -->
+                <div v-if="selectedGroup?.house_pot > 0" class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg shadow p-4 border border-amber-200 dark:border-amber-800">
+                    <div class="text-sm text-amber-700 dark:text-amber-400 mb-1">House Pot</div>
+                    <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ selectedGroup.house_pot }}</div>
+                    <div class="text-xs text-amber-600/70 dark:text-amber-500/70 mt-1">{{ selectedGroup.currency }} unclaimed</div>
                 </div>
             </div>
 

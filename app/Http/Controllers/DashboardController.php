@@ -59,6 +59,7 @@ class DashboardController extends Controller
                 'balance' => $g->pivot->points,
                 'role' => $g->pivot->role,
                 'currency' => $g->points_currency_name ?? 'points',
+                'house_pot' => $g->house_pot ?? 0,
                 'leaderboard' => $members,
             ];
         });

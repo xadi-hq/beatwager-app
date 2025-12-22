@@ -45,6 +45,7 @@ class Group extends Model
         'season_milestones_triggered',
         'superchallenge_frequency',
         'last_superchallenge_at',
+        'house_pot',
     ];
 
     protected function casts(): array
@@ -66,6 +67,7 @@ class Group extends Model
             'surprise_drops_enabled' => 'boolean',
             'season_milestones_triggered' => 'array',
             'last_superchallenge_at' => 'datetime',
+            'house_pot' => 'integer',
         ];
     }
 

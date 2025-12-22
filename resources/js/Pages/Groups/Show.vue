@@ -63,6 +63,7 @@ const props = defineProps<{
         };
         current_season: CurrentSeason | null;
         season_ends_at: string | null;
+        house_pot: number;
     };
     members: Array<{
         id: string;
@@ -163,7 +164,11 @@ const sortedMembers = [...props.members].sort((a, b) => b.balance - a.balance);
                             <div class="text-2xl font-bold text-neutral-900 dark:text-white">{{ stats.upcoming_events }}</div>
                             <div class="text-xs text-neutral-500 dark:text-neutral-400">Upcoming Events</div>
                         </div>
-                        <div class="text-center p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+                        <div v-if="group.house_pot > 0" class="text-center p-4 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-lg border border-amber-200 dark:border-amber-700">
+                            <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ group.house_pot }}</div>
+                            <div class="text-xs text-amber-600/70 dark:text-amber-500/70">House Pot</div>
+                        </div>
+                        <div v-else class="text-center p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
                             <div class="text-2xl font-bold text-neutral-900 dark:text-white">{{ group.starting_balance }}</div>
                             <div class="text-xs text-neutral-500 dark:text-neutral-400">Starting Balance</div>
                         </div>
@@ -290,7 +295,11 @@ const sortedMembers = [...props.members].sort((a, b) => b.balance - a.balance);
                                 <div class="text-2xl font-bold text-neutral-900 dark:text-white">{{ stats.upcoming_events }}</div>
                                 <div class="text-xs text-neutral-500 dark:text-neutral-400">Upcoming Events</div>
                             </div>
-                            <div class="text-center p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+                            <div v-if="group.house_pot > 0" class="text-center p-4 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-lg border border-amber-200 dark:border-amber-700">
+                                <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ group.house_pot }}</div>
+                                <div class="text-xs text-amber-600/70 dark:text-amber-500/70">House Pot</div>
+                            </div>
+                            <div v-else class="text-center p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
                                 <div class="text-2xl font-bold text-neutral-900 dark:text-white">{{ group.starting_balance }}</div>
                                 <div class="text-xs text-neutral-500 dark:text-neutral-400">Starting Balance</div>
                             </div>

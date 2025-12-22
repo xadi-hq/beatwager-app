@@ -265,7 +265,12 @@ class EliminationChallengeService
             $survivorCount = $survivors->count();
 
             if ($survivorCount === 0) {
-                // No survivors - mark as failed, no points distributed
+                // No survivors - mark as failed, add pot to group's house pot
+                $group = $challenge->group;
+                if ($group && $challenge->point_pot > 0) {
+                    $group->increment('house_pot', $challenge->point_pot);
+                }
+
                 $challenge->update([
                     'status' => 'failed',
                     'failed_at' => now(),
