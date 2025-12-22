@@ -72,12 +72,14 @@ class Transaction extends Model
 
         // If transactionable is already loaded, use it
         if ($this->relationLoaded('transactionable') && $this->transactionable instanceof WagerEntry) {
-            return $this->transactionable->wager;
+            $wager = $this->transactionable->wager;
+            return $wager instanceof Wager ? $wager : null;
         }
 
         // Load via query
         $entry = WagerEntry::with('wager')->find($this->transactionable_id);
-        return $entry?->wager;
+        $wager = $entry?->wager;
+        return $wager instanceof Wager ? $wager : null;
     }
 
     /**
