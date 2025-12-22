@@ -501,15 +501,16 @@ return [
         ],
 
         'tapped_out' => [
-            'intent' => 'Announce elimination with drama and updated survivor count',
-            'required_fields' => ['user_name', 'challenge_name', 'days_survived', 'survivor_count', 'eliminated_count'],
-            'optional_fields' => ['elimination_note', 'pot_per_survivor', 'currency'],
-            'fallback_template' => "💀 {user_name} is OUT!\n\n{elimination_note_section}Survived: {days_survived} days\n\n👥 {survivor_count} survivors remain\n💰 Pot per survivor: {pot_per_survivor} {currency}",
+            'intent' => 'Announce elimination with drama and updated survivor count. CRITICAL: Use survivor_status field for accurate survivor info.',
+            'required_fields' => ['user_name', 'challenge_name', 'days_survived', 'survivor_count', 'eliminated_count', 'survivor_status'],
+            'optional_fields' => ['elimination_note', 'pot_per_survivor', 'currency', 'is_wipeout'],
+            'fallback_template' => "💀 {user_name} is OUT!\n\n{elimination_note_section}Survived: {days_survived} days\n\n{survivor_status}",
             'tone_hints' => ['dramatic', 'fallen_soldier', 'suspenseful'],
-            'personality_notes' => 'Honor their attempt while building drama. If elimination_note exists, use it to tell the story of their downfall. Update stakes for remaining survivors.',
+            'personality_notes' => 'Honor their attempt while building drama. IMPORTANT: Check survivor_status for the exact survivor situation. If is_wipeout is true, everyone is out and there is no winner - make this dramatic! If survivor_count is 0, do NOT say survivors remain.',
             'examples' => [
                 'With note: "💀 Mike is OUT! He heard \'Last Christmas\' at the mall food court. 5 days survived. 4 survivors remain fighting for 200 points each!"',
                 'Without note: "💀 Sarah tapped out after 12 brave days. 3 survivors left - stakes just got higher!"',
+                'Wipeout: "💀 Mike is OUT and that\'s EVERYONE! All 5 competitors have fallen. No survivors, no winner. The Whamageddon curse claims all!"',
             ],
             'max_words' => 45,
         ],

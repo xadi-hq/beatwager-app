@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Commands\Handlers;
 
 use App\Commands\AbstractCommandHandler;
+use App\Enums\ChallengeType;
 use App\Messaging\DTOs\IncomingMessage;
 use App\Messaging\DTOs\OutgoingMessage;
 use App\Messaging\MessengerAdapterInterface;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Handle /challenges command - Show top 3 most recent open challenges in the group
+ * Includes 1-on-1 challenges, super challenges, and elimination challenges
  */
 class ChallengesCommandHandler extends AbstractCommandHandler
 {
@@ -32,7 +34,7 @@ class ChallengesCommandHandler extends AbstractCommandHandler
                 OutgoingMessage::text(
                     $message->chatId,
                     "❌ Please use /challenges in a group chat to see that group's challenges.\n\n" .
-                    "Challenges are 1-on-1 contests between group members!"
+                    "Challenges are contests between group members!"
                 )
             );
             return;
@@ -57,10 +59,29 @@ class ChallengesCommandHandler extends AbstractCommandHandler
             return;
         }
 
-        // Get top 3 most recent open challenges (pending or accepted but not completed)
+        // Get top 3 most recent active challenges (all types)
+        // - 1-on-1: status pending or accepted
+        // - Super/Elimination: status open
         $challenges = Challenge::where('group_id', $group->id)
-            ->whereIn('status', ['pending', 'accepted'])
-            ->with(['creator', 'acceptor'])
+            ->where(function ($q) {
+                // 1-on-1 challenges with pending/accepted status
+                $q->where(function ($q2) {
+                    $q2->where('type', ChallengeType::USER_CHALLENGE->value)
+                       ->whereIn('status', ['pending', 'accepted']);
+                })
+                // Super challenges that are open
+                ->orWhere(function ($q2) {
+                    $q2->where('type', ChallengeType::SUPER_CHALLENGE->value)
+                       ->where('status', 'open')
+                       ->where('completion_deadline', '>=', now());
+                })
+                // Elimination challenges that are open
+                ->orWhere(function ($q2) {
+                    $q2->where('type', ChallengeType::ELIMINATION_CHALLENGE->value)
+                       ->where('status', 'open');
+                });
+            })
+            ->with(['creator', 'acceptor', 'participants'])
             ->orderBy('created_at', 'desc')
             ->limit(3)
             ->get();
@@ -100,28 +121,20 @@ class ChallengesCommandHandler extends AbstractCommandHandler
             foreach ($challenges as $i => $challenge) {
                 $description = $this->truncateDescription($challenge->description);
                 $creatorName = $challenge->creator->name;
-                $status = $challenge->status;
-                $amount = $challenge->amount;
 
                 $message .= ($i + 1) . ". *{$description}*\n";
-                $message .= "   👤 {$creatorName}";
 
-                if ($status === 'pending') {
-                    $deadline = $this->formatDeadline($challenge->acceptance_deadline);
-                    $message .= " • 🔓 Open ({$deadline})";
+                if ($challenge->isEliminationChallenge()) {
+                    $message .= $this->formatEliminationChallenge($challenge, $currency);
+                } elseif ($challenge->isSuperChallenge()) {
+                    $message .= $this->formatSuperChallenge($challenge, $currency);
                 } else {
-                    $acceptorName = $challenge->acceptor?->name ?? 'Unknown';
-                    $deadline = $this->formatDeadline($challenge->completion_deadline);
-                    $message .= " vs {$acceptorName} • ⏰ {$deadline}";
+                    $message .= $this->formatUserChallenge($challenge, $currency);
                 }
-
-                $message .= "\n   💰 {$amount} {$currency}\n\n";
             }
 
             // Show total count if more than 3
-            $totalOpen = Challenge::where('group_id', $group->id)
-                ->whereIn('status', ['pending', 'accepted'])
-                ->count();
+            $totalOpen = $this->getTotalOpenCount($group);
 
             if ($totalOpen > 3) {
                 $message .= "_{$totalOpen} total open challenges_\n\n";
@@ -131,6 +144,79 @@ class ChallengesCommandHandler extends AbstractCommandHandler
         $message .= "👉 View all: {$shortUrl}";
 
         return $message;
+    }
+
+    private function formatUserChallenge(Challenge $challenge, string $currency): string
+    {
+        $creatorName = $challenge->creator->name;
+        $status = $challenge->status;
+        $amount = $challenge->amount;
+
+        $result = "   👤 {$creatorName}";
+
+        if ($status === 'pending') {
+            $deadline = $this->formatDeadline($challenge->acceptance_deadline);
+            $result .= " • 🔓 Open ({$deadline})";
+        } else {
+            $acceptorName = $challenge->acceptor?->name ?? 'Unknown';
+            $deadline = $this->formatDeadline($challenge->completion_deadline);
+            $result .= " vs {$acceptorName} • ⏰ {$deadline}";
+        }
+
+        $result .= "\n   💰 {$amount} {$currency}\n\n";
+
+        return $result;
+    }
+
+    private function formatSuperChallenge(Challenge $challenge, string $currency): string
+    {
+        $participantCount = $challenge->participants->count();
+        $maxParticipants = $challenge->max_participants;
+        $prizePerPerson = $challenge->prize_per_person;
+        $deadline = $this->formatDeadline($challenge->completion_deadline);
+
+        $result = "   🏆 Super Challenge • {$participantCount}";
+        if ($maxParticipants) {
+            $result .= "/{$maxParticipants}";
+        }
+        $result .= " joined\n";
+        $result .= "   💰 {$prizePerPerson} {$currency}/person • ⏰ {$deadline}\n\n";
+
+        return $result;
+    }
+
+    private function formatEliminationChallenge(Challenge $challenge, string $currency): string
+    {
+        $survivorCount = $challenge->getSurvivorCount();
+        $participantCount = $challenge->participants->count();
+        $pot = $challenge->point_pot;
+        $deadline = $this->formatDeadline($challenge->completion_deadline);
+
+        $result = "   💀 Elimination • {$survivorCount}/{$participantCount} surviving\n";
+        $result .= "   💰 {$pot} {$currency} pot • ⏰ {$deadline}\n\n";
+
+        return $result;
+    }
+
+    private function getTotalOpenCount(Group $group): int
+    {
+        return Challenge::where('group_id', $group->id)
+            ->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->where('type', ChallengeType::USER_CHALLENGE->value)
+                       ->whereIn('status', ['pending', 'accepted']);
+                })
+                ->orWhere(function ($q2) {
+                    $q2->where('type', ChallengeType::SUPER_CHALLENGE->value)
+                       ->where('status', 'open')
+                       ->where('completion_deadline', '>=', now());
+                })
+                ->orWhere(function ($q2) {
+                    $q2->where('type', ChallengeType::ELIMINATION_CHALLENGE->value)
+                       ->where('status', 'open');
+                });
+            })
+            ->count();
     }
 
     private function formatDeadline(?\DateTimeInterface $deadline): string

@@ -101,7 +101,7 @@ class DashboardController extends Controller
                 'participants_count' => $wager->participants_count,
                 'total_points_wagered' => $wager->total_points_wagered,
                 'is_creator' => $wager->creator_id === $user->id,
-                'user_answer' => $userEntry?->answer_value,
+                'user_answer' => $wager->getAnswerDisplayLabel($userEntry?->answer_value),
                 'user_points_wagered' => $userEntry?->points_wagered,
             ];
 
@@ -128,7 +128,7 @@ class DashboardController extends Controller
                 'participants_count' => $wager->participants_count,
                 'total_points_wagered' => $wager->total_points_wagered,
                 'is_creator' => $wager->creator_id === $user->id,
-                'user_answer' => $userEntry?->answer_value,
+                'user_answer' => $wager->getAnswerDisplayLabel($userEntry?->answer_value),
                 'user_points_wagered' => $userEntry?->points_wagered,
             ];
         });
@@ -160,10 +160,10 @@ class DashboardController extends Controller
                     ],
                     'type' => $wager->type,
                     'status' => $wager->status,
-                    'outcome_value' => $wager->outcome_value,
+                    'outcome_value' => $wager->getAnswerDisplayLabel($wager->outcome_value),
                     'settled_at' => $wager->settled_at?->toIso8601String(),
                     'is_creator' => $wager->creator_id === $user->id,
-                    'user_answer' => $userEntry?->answer_value,
+                    'user_answer' => $wager->getAnswerDisplayLabel($userEntry?->answer_value),
                     'user_points_wagered' => $userEntry?->points_wagered,
                     'is_winner' => $userEntry?->is_winner,
                     'points_won' => $userEntry?->points_won,

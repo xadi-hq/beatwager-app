@@ -535,6 +535,12 @@ class Challenge extends Model
             return false;
         }
 
+        // If everyone is eliminated (0 survivors), resolve immediately as failed
+        // This applies to both last man standing and deadline modes
+        if ($this->getSurvivorCount() === 0 && $this->participants()->count() > 0) {
+            return true;
+        }
+
         // Last man standing: resolve when 1 survivor
         if ($this->isLastManStanding() && $this->getSurvivorCount() === 1) {
             return true;

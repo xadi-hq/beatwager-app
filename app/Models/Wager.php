@@ -148,6 +148,26 @@ class Wager extends Model
     }
 
     /**
+     * Convert an answer value (yes/no) to its display label for binary wagers
+     */
+    public function getAnswerDisplayLabel(?string $answerValue): ?string
+    {
+        if ($answerValue === null) {
+            return null;
+        }
+
+        if ($this->type !== 'binary') {
+            return $answerValue;
+        }
+
+        return match (strtolower($answerValue)) {
+            'yes' => $this->label_option_a ?? 'Yes',
+            'no' => $this->label_option_b ?? 'No',
+            default => $answerValue,
+        };
+    }
+
+    /**
      * Check if betting is still open (before betting_closes_at)
      */
     public function isBettingOpen(): bool

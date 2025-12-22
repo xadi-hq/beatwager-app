@@ -1995,6 +1995,17 @@ class MessageService
         $challenge = $participant->challenge;
         $currency = $challenge->group->points_currency_name ?? 'points';
 
+        $survivorCount = $challenge->getSurvivorCount();
+        $eliminatedCount = $challenge->getEliminatedCount();
+        $isWipeout = $survivorCount === 0;
+
+        // Provide explicit survivor status to prevent AI confusion
+        $survivorStatus = match (true) {
+            $isWipeout => "EVERYONE IS OUT! All {$eliminatedCount} participants have been eliminated. No survivors remain. The challenge has no winner.",
+            $survivorCount === 1 => "Only 1 survivor remains! They will take the entire pot.",
+            default => "{$survivorCount} survivors still remain standing out of {$eliminatedCount} eliminated.",
+        };
+
         $ctx = new MessageContext(
             key: 'elimination.tapped_out',
             intent: $meta['intent'],
@@ -2003,8 +2014,10 @@ class MessageService
                 'user_name' => $participant->user->name ?? 'Someone',
                 'challenge_name' => $challenge->description,
                 'days_survived' => $participant->getDaysSurvived(),
-                'survivor_count' => $challenge->getSurvivorCount(),
-                'eliminated_count' => $challenge->getEliminatedCount(),
+                'survivor_count' => $survivorCount,
+                'eliminated_count' => $eliminatedCount,
+                'is_wipeout' => $isWipeout,
+                'survivor_status' => $survivorStatus,
                 'elimination_note' => $participant->elimination_note,
                 'elimination_note_section' => $participant->elimination_note
                     ? "📝 \"{$participant->elimination_note}\"\n\n"
