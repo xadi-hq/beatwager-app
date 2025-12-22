@@ -40,7 +40,12 @@ class TransactionWagerRelationshipTest extends TestCase
         ]);
 
         // Act - Test eager loading through transactionable relationship
-        $loadedTransaction = Transaction::with(['transactionable.wager:id,title'])
+        // Eager load transactionable with its wager relationship
+        $loadedTransaction = Transaction::with(['transactionable' => function ($query) {
+            $query->morphWith([
+                WagerEntry::class => ['wager'],
+            ]);
+        }])
             ->where('id', $transaction->id)
             ->first();
 

@@ -60,22 +60,24 @@ class Transaction extends Model
 
     /**
      * Get the wager through the wager entry (if this is a wager transaction)
-     * This is a proper Eloquent relationship that can be eager loaded
      *
      * Note: Will return null for non-wager transactions (Challenge, GroupEvent)
      */
-    public function wager(): HasOneThrough
+    public function getWagerAttribute(): ?Wager
     {
-        return $this->hasOneThrough(
-            Wager::class,
-            WagerEntry::class,
-            'id', // Foreign key on wager_entries table
-            'id', // Foreign key on wagers table
-            'transactionable_id', // Local key on transactions table
-            'wager_id' // Local key on wager_entries table
-        )
-        ->select('wagers.*', 'wager_entries.id as laravel_through_key')
-        ->where('transactions.transactionable_type', WagerEntry::class);
+        // Only fetch wager if this is a WagerEntry transaction
+        if ($this->transactionable_type !== WagerEntry::class) {
+            return null;
+        }
+
+        // If transactionable is already loaded, use it
+        if ($this->relationLoaded('transactionable') && $this->transactionable instanceof WagerEntry) {
+            return $this->transactionable->wager;
+        }
+
+        // Load via query
+        $entry = WagerEntry::with('wager')->find($this->transactionable_id);
+        return $entry?->wager;
     }
 
     /**
