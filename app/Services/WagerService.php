@@ -403,10 +403,7 @@ class WagerService
         $totalPot = $wager->total_points_wagered;
         $winnersTotal = $winners->sum('points_wagered');
 
-        foreach ($winners as $entry) {
-            $winnings = (int) (($entry->points_wagered / $winnersTotal) * $totalPot);
-            $this->awardWinner($entry, $winnings);
-        }
+        $this->distributePotToWinners($winners, $totalPot, $winnersTotal, $wager->group);
 
         foreach ($losers as $entry) {
             $this->recordLoss($entry);
@@ -444,10 +441,7 @@ class WagerService
         $totalPot = $wager->total_points_wagered;
         $winnersTotal = $winners->sum('points_wagered');
 
-        foreach ($winners as $entry) {
-            $winnings = (int) (($entry->points_wagered / $winnersTotal) * $totalPot);
-            $this->awardWinner($entry, $winnings);
-        }
+        $this->distributePotToWinners($winners, $totalPot, $winnersTotal, $wager->group);
 
         $losers = $entries->whereNotIn('id', $winners->pluck('id'));
         foreach ($losers as $entry) {
@@ -489,10 +483,7 @@ class WagerService
         $totalPot = $wager->total_points_wagered;
         $winnersTotal = $winners->sum('points_wagered');
 
-        foreach ($winners as $entry) {
-            $winnings = (int) (($entry->points_wagered / $winnersTotal) * $totalPot);
-            $this->awardWinner($entry, $winnings);
-        }
+        $this->distributePotToWinners($winners, $totalPot, $winnersTotal, $wager->group);
 
         $losers = $entries->whereNotIn('id', $winners->pluck('id'));
         foreach ($losers as $entry) {
@@ -531,10 +522,7 @@ class WagerService
         $totalPot = $wager->total_points_wagered;
         $winnersTotal = $winners->sum('points_wagered');
 
-        foreach ($winners as $entry) {
-            $winnings = (int) (($entry->points_wagered / $winnersTotal) * $totalPot);
-            $this->awardWinner($entry, $winnings);
-        }
+        $this->distributePotToWinners($winners, $totalPot, $winnersTotal, $wager->group);
 
         foreach ($losers as $entry) {
             $this->recordLoss($entry);
@@ -639,10 +627,7 @@ class WagerService
         $totalPot = $wager->total_points_wagered;
         $winnersTotal = $winners->sum('points_wagered');
 
-        foreach ($winners as $entry) {
-            $winnings = (int) (($entry->points_wagered / $winnersTotal) * $totalPot);
-            $this->awardWinner($entry, $winnings);
-        }
+        $this->distributePotToWinners($winners, $totalPot, $winnersTotal, $wager->group);
 
         // Record losses for non-winners
         $losers = $entries->whereNotIn('id', $winners->pluck('id'));
@@ -693,6 +678,43 @@ class WagerService
             $entry->points_wagered,
             $entry
         );
+    }
+
+    /**
+     * Distribute pot to winners proportionally and add remainder to house pot.
+     * Returns the total amount actually distributed.
+     *
+     * @param Collection<int, WagerEntry>|\Illuminate\Support\Collection<int|string, mixed> $winners
+     * @param Group|\Illuminate\Database\Eloquent\Model|null $group
+     */
+    private function distributePotToWinners(Collection|\Illuminate\Support\Collection $winners, int $totalPot, int $winnersTotal, Group|\Illuminate\Database\Eloquent\Model|null $group): int
+    {
+        if (!$group instanceof Group) {
+            // Fallback: distribute without house pot handling (shouldn't happen in practice)
+            $totalDistributed = 0;
+            foreach ($winners as $entry) {
+                $winnings = (int) (($entry->points_wagered / $winnersTotal) * $totalPot);
+                $this->awardWinner($entry, $winnings);
+                $totalDistributed += $winnings;
+            }
+            return $totalDistributed;
+        }
+
+        $totalDistributed = 0;
+
+        foreach ($winners as $entry) {
+            $winnings = (int) (($entry->points_wagered / $winnersTotal) * $totalPot);
+            $this->awardWinner($entry, $winnings);
+            $totalDistributed += $winnings;
+        }
+
+        // Add remainder to house pot (due to integer truncation)
+        $remainder = $totalPot - $totalDistributed;
+        if ($remainder > 0) {
+            $group->increment('house_pot', $remainder);
+        }
+
+        return $totalDistributed;
     }
 
     /**
