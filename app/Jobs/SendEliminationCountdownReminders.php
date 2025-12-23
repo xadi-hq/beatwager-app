@@ -44,6 +44,7 @@ class SendEliminationCountdownReminders implements ShouldQueue, ShouldBeUnique
             ->where('status', 'open')
             ->whereNotNull('completion_deadline')
             ->where('completion_deadline', '>', now())
+            ->with('group') // Eager load group for timezone
             ->get();
 
         $remindersSent = 0;
@@ -55,12 +56,31 @@ class SendEliminationCountdownReminders implements ShouldQueue, ShouldBeUnique
             Cache::lock($lockKey, 60)->get(function () use ($challenge, $messageService, &$remindersSent) {
                 try {
                     // Re-fetch the challenge with fresh data inside the lock
-                    $freshChallenge = Challenge::find($challenge->id);
+                    $freshChallenge = Challenge::with('group')->find($challenge->id);
                     if (!$freshChallenge || $freshChallenge->status !== 'open') {
                         return;
                     }
 
-                    $hoursRemaining = (int) now()->diffInHours($freshChallenge->completion_deadline, false);
+                    // Skip if no survivors remaining - challenge should be resolved soon
+                    if ($freshChallenge->getSurvivorCount() === 0) {
+                        Log::debug("Skipping countdown for challenge with no survivors", [
+                            'challenge_id' => $freshChallenge->id,
+                        ]);
+                        return;
+                    }
+
+                    // Calculate hours remaining - explicitly use UTC to avoid any timezone confusion
+                    $nowUtc = now('UTC');
+                    $deadlineUtc = $freshChallenge->completion_deadline->copy()->setTimezone('UTC');
+                    $hoursRemaining = (int) floor($nowUtc->floatDiffInHours($deadlineUtc, false));
+
+                    Log::debug("Elimination countdown check", [
+                        'challenge_id' => $freshChallenge->id,
+                        'now_utc' => $nowUtc->toIso8601String(),
+                        'deadline_utc' => $deadlineUtc->toIso8601String(),
+                        'hours_remaining' => $hoursRemaining,
+                        'last_countdown_hours' => $freshChallenge->last_countdown_hours,
+                    ]);
 
                     // Skip if deadline is past (shouldn't happen due to query, but safety check)
                     if ($hoursRemaining <= 0) {
