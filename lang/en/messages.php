@@ -248,25 +248,39 @@ return [
 
     'scheduled' => [
         'custom' => [
-            'intent' => 'Send a scheduled message for special occasions or custom dates',
+            'intent' => 'Send a simple celebratory or informational message about a special occasion. Keep it short and sweet - just acknowledge the day/event warmly. Do NOT mention wagers, betting, or stakes.',
             'required_fields' => ['title', 'scheduled_date'],
+            'optional_fields' => ['message_template', 'is_drop', 'drop_amount', 'currency'],
             'fallback_template' => "📅 {title}\n\n{message_template}",
-            'tone_hints' => ['celebratory', 'warm', 'engaging'],
-            'max_words' => 100,
+            'tone_hints' => ['celebratory', 'warm', 'simple'],
+            'personality_notes' => 'If is_drop is true, mention that everyone receives drop_amount currency as a gift. Otherwise just celebrate the occasion simply.',
+            'examples' => [
+                'Without drop: "🎄 Merry Christmas everyone! Hope you have a wonderful day with loved ones!"',
+                'With drop: "🎄 Merry Christmas everyone! To celebrate, here\'s 100 points for each of you! 🎁"',
+            ],
+            'max_words' => 50,
         ],
         'holiday' => [
-            'intent' => 'Celebrate a holiday with the group',
+            'intent' => 'Celebrate a holiday with a warm, simple message. Do NOT mention wagers, betting, or stakes.',
             'required_fields' => ['holiday_name'],
+            'optional_fields' => ['is_drop', 'drop_amount', 'currency'],
             'fallback_template' => "🎉 Happy {holiday_name}!\n\nHope everyone is enjoying the day!",
             'tone_hints' => ['festive', 'warm', 'inclusive'],
-            'max_words' => 80,
+            'personality_notes' => 'If is_drop is true, mention that everyone receives drop_amount currency as a gift to celebrate.',
+            'examples' => [
+                'Without drop: "🎉 Happy New Year everyone! Wishing you all the best in the year ahead!"',
+                'With drop: "🎉 Happy New Year! To kick off the celebration, everyone gets 50 points! 🎊"',
+            ],
+            'max_words' => 50,
         ],
         'birthday' => [
-            'intent' => 'Celebrate a member\'s birthday',
+            'intent' => 'Celebrate a member\'s birthday with a warm, personal message. Do NOT mention wagers or betting.',
             'required_fields' => ['member_name'],
+            'optional_fields' => ['is_drop', 'drop_amount', 'currency'],
             'fallback_template' => "🎂 Happy Birthday {member_name}!\n\nWishing you a fantastic day!",
             'tone_hints' => ['celebratory', 'warm', 'fun'],
-            'max_words' => 60,
+            'personality_notes' => 'If is_drop is true, mention that everyone receives drop_amount currency to celebrate the birthday.',
+            'max_words' => 50,
         ],
         'birthday_reminder' => [
             'intent' => 'Remind the group about an upcoming birthday and encourage them to organize something',

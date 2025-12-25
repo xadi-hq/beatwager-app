@@ -66,10 +66,12 @@ class CheckBadgesOnWagerSettled implements ShouldQueue
             }
         }
 
-        // Check badges for the settler (if exists)
+        // Check badges for the settler (if exists and wager had participants)
+        // Don't count settling a wager with no entries - that's just cleanup, not a real settlement
         /** @var User|null $settler */
         $settler = $wager->settler;
-        if ($wager->settler_id !== null && $settler !== null) {
+        $hadParticipants = $wager->entries()->exists();
+        if ($wager->settler_id !== null && $settler !== null && $hadParticipants) {
             $this->badgeService->checkAndAward(
                 $settler,
                 'wager_settled',

@@ -1653,6 +1653,12 @@ class MessageService
             $data['llm_instructions'] = $scheduledMessage->llm_instructions;
         }
 
+        // Add drop information if this is a drop event
+        if ($scheduledMessage->is_drop_event && $scheduledMessage->drop_amount > 0) {
+            $data['is_drop'] = true;
+            $data['drop_amount'] = $scheduledMessage->drop_amount;
+        }
+
         $ctx = new MessageContext(
             key: $messageKey,
             intent: $meta['intent'],

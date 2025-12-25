@@ -234,6 +234,14 @@ class BadgeService
             return false; // Comparative badges require group context
         }
 
+        // If threshold is set, user must meet minimum before being eligible
+        if ($badge->criteria_threshold !== null) {
+            $userStat = $this->getUserStat($user, $badge->criteria_event, $group);
+            if ($userStat < $badge->criteria_threshold) {
+                return false;
+            }
+        }
+
         $config = $badge->criteria_config ?? [];
         $metric = $config['metric'] ?? 'most';
 
