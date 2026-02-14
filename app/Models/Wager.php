@@ -258,7 +258,8 @@ class Wager extends Model
         return in_array($this->type, [
             'short_answer',
             'top_n_ranking',
-            // Future: 'numeric', 'date' for enhanced UX
+            'numeric',
+            'date',
         ]);
     }
 
