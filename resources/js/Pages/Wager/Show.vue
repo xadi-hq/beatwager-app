@@ -14,6 +14,8 @@ const props = defineProps<{
     user: any;
     canSettle: boolean;
     isPastDeadline: boolean;
+    canJoin: boolean;
+    joinUrl: string | null;
     canDispute: boolean;
     dispute?: {
         id: string;
@@ -296,6 +298,13 @@ const submitSettlement = () => {
                     </div>
                 </div>
 
+                    <!-- Join Wager Button -->
+                    <div v-if="canJoin && joinUrl" class="mt-6">
+                        <a :href="joinUrl" class="block w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-center transition-colors">
+                            Join Wager
+                        </a>
+                    </div>
+
                     <!-- Back to Dashboard Button -->
                     <div class="mt-6">
                         <a href="/me" class="block w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors">
@@ -561,6 +570,13 @@ const submitSettlement = () => {
                                 <div class="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{{ wager.stake_amount }}</div>
                                 <div class="text-sm text-neutral-500 dark:text-neutral-400">Stake</div>
                             </div>
+                        </div>
+
+                        <!-- Join Wager Button -->
+                        <div v-if="canJoin && joinUrl" class="mb-4">
+                            <a :href="joinUrl" class="block w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-center transition-colors">
+                                Join Wager
+                            </a>
                         </div>
 
                         <!-- Back to Dashboard Button -->

@@ -343,6 +343,7 @@ class WagerController extends Controller
 
         $isPastDeadline = $wager->isPastBettingDeadline();
         $canSettle = $isPastDeadline && $wager->status === 'open';
+        $hasJoined = $wager->entries()->where('user_id', $user->id)->exists();
 
         // Get user's Telegram username for display
         $telegramService = $user->getTelegramService();
@@ -394,6 +395,10 @@ class WagerController extends Controller
             ],
             'canSettle' => $canSettle,
             'isPastDeadline' => $isPastDeadline,
+            'canJoin' => $wager->isBettingOpen() && !$hasJoined,
+            'joinUrl' => $wager->isBettingOpen() && !$hasJoined
+                ? route('wager.join', ['wager' => $wager->id])
+                : null,
             'type_config' => $wager->type_config,
             'canDispute' => $wager->canBeDisputed(),
             'dispute' => $wager->dispute ? [
