@@ -65,14 +65,19 @@ class DashboardController extends Controller
         });
 
         // Get user's active wagers (created or joined) - split by deadline
-        // Using active() scope to exclude expired wagers with no participants
-        $activeWagersQuery = Wager::active()
-            ->where('status', 'open')
+        // Creators always see their own wagers; joined wagers filtered by active criteria
+        $activeWagersQuery = Wager::where('status', 'open')
             ->where(function($query) use ($user) {
                 $query->where('creator_id', $user->id)
                       ->orWhereHas('entries', function($q) use ($user) {
                           $q->where('user_id', $user->id);
                       });
+            })
+            ->where(function($query) use ($user) {
+                // Creator always sees their own wagers, even with 0 participants past deadline
+                $query->where('creator_id', $user->id)
+                      ->orWhere('betting_closes_at', '>=', now())
+                      ->orWhere('participants_count', '>', 0);
             })
             ->with(['group', 'entries.user'])
             ->orderBy('betting_closes_at', 'asc')
