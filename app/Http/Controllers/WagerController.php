@@ -552,11 +552,17 @@ class WagerController extends Controller
         ]);
 
         try {
+            // Ensure answer_value is string or array (numeric inputs arrive as int from form)
+            $answerValue = $validated['answer_value'];
+            if (!is_array($answerValue)) {
+                $answerValue = (string) $answerValue;
+            }
+
             // Place wager entry (WagerService handles all validation)
             $entry = $this->wagerService->placeWager(
                 $wager,
                 $user,
-                $validated['answer_value'],
+                $answerValue,
                 $wager->stake_amount
             );
 
