@@ -510,6 +510,12 @@ class WagerController extends Controller
                 'type_config' => $wager->getTypeConfig(),
                 'stake_amount' => $wager->stake_amount,
                 'betting_closes_at' => $wager->betting_closes_at->toIso8601String(),
+                'numeric_min' => $wager->numeric_min,
+                'numeric_max' => $wager->numeric_max,
+                'numeric_winner_type' => $wager->numeric_winner_type,
+                'date_min' => $wager->date_min,
+                'date_max' => $wager->date_max,
+                'date_winner_type' => $wager->date_winner_type,
                 'group' => [
                     'id' => $wager->group->id,
                     'name' => $wager->group->platform_chat_title ?? $wager->group->name,
