@@ -274,10 +274,16 @@ class WagerController extends Controller
 
         $wager = $token->wager;
 
+        // Ensure outcome_value is string or array (numeric inputs arrive as int from form)
+        $outcomeValue = $validated['outcome_value'];
+        if (!is_array($outcomeValue)) {
+            $outcomeValue = (string) $outcomeValue;
+        }
+
         // Settle the wager
         $settledWager = $this->wagerService->settleWager(
             $wager,
-            $validated['outcome_value'],
+            $outcomeValue,
             $validated['settlement_note'] ?? null
         );
 
@@ -436,10 +442,16 @@ class WagerController extends Controller
         // Find settler by user ID (already authenticated via session)
         $settler = \App\Models\User::findOrFail($validated['user_id']);
 
+        // Ensure outcome_value is string or array (numeric inputs arrive as int from form)
+        $outcomeValue = $validated['outcome_value'];
+        if (!is_array($outcomeValue)) {
+            $outcomeValue = (string) $outcomeValue;
+        }
+
         // Settle the wager with settler_id
         $settledWager = $this->wagerService->settleWager(
             $wager,
-            $validated['outcome_value'],
+            $outcomeValue,
             $validated['settlement_note'] ?? null,
             $settler->id
         );
