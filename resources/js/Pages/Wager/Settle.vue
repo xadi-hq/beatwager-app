@@ -279,7 +279,7 @@ const submit = () => {
                                 <input
                                     v-model="form.outcome_value"
                                     type="radio"
-                                    :value="option.toLowerCase()"
+                                    :value="option"
                                     required
                                     class="mr-2"
                                 />
