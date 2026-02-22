@@ -120,6 +120,9 @@ class WagerService
             // Validate answer based on wager type
             $this->validateAnswer($wager, $answerValue);
 
+            // Normalize answer to canonical casing (e.g., 'usa' -> 'USA')
+            $answerValue = $this->normalizeAnswer($wager, $answerValue);
+
             // Check if user already has an entry
             if ($wager->entries()->where('user_id', $user->id)->exists()) {
                 throw new UserAlreadyJoinedException($user, $wager);
@@ -189,16 +192,35 @@ class WagerService
         };
     }
 
+    /**
+     * Normalize answer to canonical casing for storage.
+     * Must be called after validateAnswer() succeeds.
+     */
+    private function normalizeAnswer(Wager $wager, string|array $answerValue): string|array
+    {
+        return match ($wager->type) {
+            'binary' => strtolower($answerValue),
+            'multiple_choice' => collect($wager->options)->first(
+                fn ($option) => strcasecmp($option, $answerValue) === 0
+            ) ?? $answerValue,
+            default => $answerValue,
+        };
+    }
+
     private function validateBinaryAnswer(string $answer): void
     {
-        if (! in_array($answer, ['yes', 'no'])) {
+        if (! in_array(strtolower($answer), ['yes', 'no'])) {
             throw InvalidAnswerException::forBinary($answer);
         }
     }
 
     private function validateMultipleChoiceAnswer(Wager $wager, string $answer): void
     {
-        if (! in_array($answer, $wager->options)) {
+        $match = collect($wager->options)->first(
+            fn ($option) => strcasecmp($option, $answer) === 0
+        );
+
+        if ($match === null) {
             throw InvalidAnswerException::forMultipleChoice($answer, $wager->options);
         }
     }
@@ -336,6 +358,9 @@ class WagerService
             // Validate outcome based on type
             $this->validateAnswer($wager, $outcomeValue);
 
+            // Normalize outcome to canonical casing (e.g., 'usa' -> 'USA')
+            $outcomeValue = $this->normalizeAnswer($wager, $outcomeValue);
+
             // Update wager
             // Convert array outcomes to JSON for complex types (top_n_ranking, etc.)
             $storedOutcomeValue = is_array($outcomeValue) ? json_encode($outcomeValue) : $outcomeValue;
@@ -389,8 +414,8 @@ class WagerService
      */
     private function settleCategoricalWager(Wager $wager, Collection $entries, string $outcome): void
     {
-        $winners = $entries->where('answer_value', $outcome);
-        $losers = $entries->where('answer_value', '!=', $outcome);
+        $winners = $entries->filter(fn ($entry) => strcasecmp($entry->answer_value, $outcome) === 0);
+        $losers = $entries->filter(fn ($entry) => strcasecmp($entry->answer_value, $outcome) !== 0);
 
         if ($winners->isEmpty()) {
             // No winners - refund everyone
