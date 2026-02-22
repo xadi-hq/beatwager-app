@@ -254,6 +254,95 @@ class WagerServiceTest extends TestCase
     }
 
     /** @test */
+    public function place_wager_accepts_case_insensitive_multiple_choice_answer()
+    {
+        $group = Group::factory()->create();
+        $user = User::factory()->create();
+        $wager = Wager::factory()->multipleChoice()->create([
+            'group_id' => $group->id,
+            'options' => ['Canada', 'USA'],
+            'stake_amount' => 100,
+        ]);
+        $wager->load('group');
+
+        $this->pointService->shouldReceive('deductPoints')
+            ->once()
+            ->with($user, Mockery::on(fn($g) => $g->id === $group->id), 100, 'wager_placed', Mockery::type(WagerEntry::class));
+
+        $entry = $this->service->placeWager($wager, $user, 'usa', 100);
+
+        // Answer should be normalized to canonical casing
+        $this->assertEquals('USA', $entry->answer_value);
+    }
+
+    /** @test */
+    public function place_wager_accepts_case_insensitive_binary_answer()
+    {
+        $group = Group::factory()->create();
+        $user = User::factory()->create();
+        $wager = Wager::factory()->binary()->create([
+            'group_id' => $group->id,
+            'stake_amount' => 100,
+        ]);
+        $wager->load('group');
+
+        $this->pointService->shouldReceive('deductPoints')
+            ->once()
+            ->with($user, Mockery::on(fn($g) => $g->id === $group->id), 100, 'wager_placed', Mockery::type(WagerEntry::class));
+
+        $entry = $this->service->placeWager($wager, $user, 'Yes', 100);
+
+        // Answer should be normalized to lowercase
+        $this->assertEquals('yes', $entry->answer_value);
+    }
+
+    /** @test */
+    public function settle_wager_accepts_case_insensitive_multiple_choice_outcome()
+    {
+        $group = Group::factory()->create();
+        $winner = User::factory()->create();
+        $loser = User::factory()->create();
+
+        $wager = Wager::factory()->multipleChoice()->create([
+            'group_id' => $group->id,
+            'options' => ['Canada', 'USA'],
+            'stake_amount' => 100,
+            'total_points_wagered' => 200,
+        ]);
+
+        WagerEntry::factory()->create([
+            'wager_id' => $wager->id,
+            'user_id' => $winner->id,
+            'group_id' => $group->id,
+            'answer_value' => 'USA',
+            'points_wagered' => 100,
+        ]);
+
+        WagerEntry::factory()->create([
+            'wager_id' => $wager->id,
+            'user_id' => $loser->id,
+            'group_id' => $group->id,
+            'answer_value' => 'Canada',
+            'points_wagered' => 100,
+        ]);
+
+        $this->pointService->shouldReceive('awardPoints')
+            ->once()
+            ->with(Mockery::type(User::class), Mockery::type(Group::class), 200, 'wager_won', Mockery::type(WagerEntry::class));
+
+        $this->pointService->shouldReceive('recordLoss')
+            ->once()
+            ->with(Mockery::type(User::class), Mockery::type(Group::class), 100, Mockery::type(WagerEntry::class));
+
+        // Settle with lowercase 'usa' - should still work
+        $settledWager = $this->service->settleWager($wager, 'usa');
+
+        $this->assertEquals('settled', $settledWager->status);
+        // Outcome should be normalized to canonical casing
+        $this->assertEquals('USA', $settledWager->outcome_value);
+    }
+
+    /** @test */
     public function place_wager_validates_numeric_range()
     {
         $group = Group::factory()->create();
