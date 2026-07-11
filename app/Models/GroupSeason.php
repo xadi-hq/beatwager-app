@@ -71,7 +71,9 @@ class GroupSeason extends Model
             return null;
         }
 
-        return $this->started_at->diffInDays($this->ended_at);
+        // Carbon 3 returns a float from diffInDays(); cast to satisfy the ?int
+        // return type under strict_types (matches usage elsewhere in the app).
+        return (int) $this->started_at->diffInDays($this->ended_at);
     }
 
     /**
